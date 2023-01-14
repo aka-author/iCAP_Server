@@ -91,14 +91,14 @@ class Table:
         return field_name in self.mandatory_field_names
 
 
-    def add_field(self, field, field_subset="out", mandatority="optional"):
+    def add_field(self, field, options="optional"):
 
         self.fields[field.get_varname()] = field
 
-        if field_subset == "arg":
+        if options == "arg":
             self.define_argument(field.get_varname())
 
-        if mandatority == "mandatory" or field_subset == "arg":
+        if options == "mandatory" or options == "arg":
             self.define_mandatory(field.get_varname())
 
         return self

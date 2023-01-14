@@ -8,7 +8,7 @@ rt.add_field(fields.UuidField("uuid"))
 rt.add_field(fields.StringField("name"))
 rt.add_field(fields.StringField("species"))
 rt.add_field(fields.IntField("weight"))
-rt.add_field(fields.TimestampField("date_of_birth"), "out", "mandatory")
+rt.add_field(fields.TimestampField("date_of_birth"), "mandatory")
 
 rt.insert_from_dic({"name": "Tuzik",  "species": "dog", "weight": 12})
 rt.insert_from_dic({"name": "Barsik", "species": "cat", "weight": 5})

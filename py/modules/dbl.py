@@ -71,9 +71,21 @@ class Sql(bureaucrat.Bureaucrat):
     def assemble_value_snippet(self, row, field_name):
 
         field = row.get_table().get_field(field_name)
+        nature = field.get_nature()
         field_value = row.get_field_value(field_name)
 
-        return field.export_sql(field_value) + " AS " + field.get_varname()
+        if nature == "string":
+            value_snippet = utils.apos(field_value)
+        elif nature == "numeric" or nature == "boolean":
+            value_snippet = field.serialize(field_value)
+        elif nature == "uuid":
+            value_snippet = utils.apos(field.serialize(field_value)) + "::uuid"
+        elif nature == "timestamp":
+            value_snippet = utils.apos(field.serialize(field_value)) + "::timestamp"
+        else:
+            value_snippet = utils.apos(field_value)
+
+        return value_snippet + " AS " + field.get_varname()
 
 
     def take_ramtable_values(self, row):

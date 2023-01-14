@@ -11,10 +11,11 @@ import utils
 
 class Field: 
 
-    def __init__(self, varname, datatype_name):
+    def __init__(self, varname, datatype_name, nature=None):
 
         self.varname = varname
         self.datatype_name = datatype_name
+        self.nature = nature if nature is not None else datatype_name
 
         self.null_value = None
         self.zero_value = None
@@ -34,6 +35,11 @@ class Field:
     def get_datatype_name(self):
 
         return self.datatype_name
+
+
+    def get_nature(self):
+
+        return self.nature
 
 
     # Dealing with empty, zero, and default values 
@@ -116,14 +122,14 @@ class Field:
 
     # Exporting values to a SELECT operator
 
-    def quote_sql(self, serialized_value):
+    # def quote_sql(self, serialized_value):
+    #
+    #    return serialized_value
 
-        return serialized_value
 
-
-    def export_sql(self, native_value):
-
-        return self.quote_sql(self.serialize(native_value))
+    # def export_sql(self, native_value):
+    #
+    #    return self.quote_sql(self.serialize(native_value))
 
 
     # Loading field values from a database 
@@ -195,8 +201,8 @@ class IntField(Field):
 
     def __init__(self, varname):
 
-        super().__init__(varname, "int")
-        
+        super().__init__(varname, "int", "numeric")
+
         self.zero_value = 0
 
 
@@ -209,7 +215,7 @@ class FloatField(Field):
 
     def __init__(self, varname):
 
-        super().__init__(varname, "float")
+        super().__init__(varname, "float", "numeric")
 
         self.zero_value = 0.0
 
