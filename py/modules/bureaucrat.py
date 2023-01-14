@@ -5,7 +5,7 @@
 # # ## ### ##### ######## ############# ##################### 
 
 import uuid
-from . import status
+import status
 
 
 class Bureaucrat:
@@ -19,6 +19,13 @@ class Bureaucrat:
         self.cfg = None
         self.db  = None
         self.req = None
+
+
+    def set_chief(self, chief):
+
+        self.chief = chief
+
+        return self
 
 
     def get_chief(self):
