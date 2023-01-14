@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Avoiding None-related errors 
 
-def ravnone(primary_value, default_value):
+def safeval(primary_value, default_value):
 
     return primary_value if primary_value is not None else default_value
 
@@ -20,12 +20,12 @@ def safedic(dic, key):
     return dic[key] if key in dic else None
 
 
-def govnone(func, val):
+def sefunc(func, val):
 
     return func(val) if val is not None else None
 
 
-# Strings
+# Formatting, assembling, and processing strings
 
 def snake_to_camel(snake):
 
@@ -40,7 +40,7 @@ def snake_to_camel(snake):
     return camel
 
 
-def isLatinUpper(c):
+def is_latin_upper(c):
 
     return c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -49,7 +49,7 @@ def camel_to_snake(camel):
 
     snake = camel[0]
     for idx in range(1, len(camel)):
-        snake += "_" + camel[idx].lower() if isLatinUpper(camel[idx]) else camel[idx]
+        snake += "_" + camel[idx].lower() if is_latin_upper(camel[idx]) else camel[idx]
         
     return snake
 
@@ -83,14 +83,14 @@ def md5(str):
 
 def str2uuid(str):
 
-    uuid_ = None
+    native_uuid = None
 
     try:
-        uuid_ = uuid.UUID(str)
+        native_uuid = uuid.UUID(str)
     except:
-        uuid_ = None
+        native_uuid = None
 
-    return uuid_ 
+    return native_uuid 
 
 
 # Date & time
@@ -102,7 +102,7 @@ def get_default_timestamp_format():
 
 def timestamp2str(timestamp, custom_format=None):
 
-    format = ravnone(custom_format, get_default_timestamp_format())
+    format = safeval(custom_format, get_default_timestamp_format())
 
     return datetime.strftime(timestamp, format) if timestamp is not None else None
 
