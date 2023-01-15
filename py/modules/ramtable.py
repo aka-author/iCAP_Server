@@ -125,7 +125,7 @@ class Table:
         return blank_row
     
 
-    def insert_from_dic(self, src_dic):
+    def insert(self, src_dic):
 
         row = self.create_blank_row()
 

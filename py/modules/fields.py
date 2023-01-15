@@ -120,18 +120,6 @@ class Field:
         return serialized_value
 
 
-    # Exporting values to a SELECT operator
-
-    # def quote_sql(self, serialized_value):
-    #
-    #    return serialized_value
-
-
-    # def export_sql(self, native_value):
-    #
-    #    return self.quote_sql(self.serialize(native_value))
-
-
     # Loading field values from a database 
 
     def set_sql_agg_expr(self, snippet):
