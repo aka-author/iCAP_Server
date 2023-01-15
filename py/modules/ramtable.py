@@ -37,6 +37,7 @@ class Table:
         self.table_name = table_name
 
         self.fields = {}
+        self.field_names = []
         self.arg_field_names = []
         self.mandatory_field_names = []
         self.rows = []
@@ -59,7 +60,7 @@ class Table:
 
     def get_field_names(self):
 
-        return self.fields.keys() 
+        return self.field_names 
 
 
     def get_field(self, field_name):
@@ -100,6 +101,8 @@ class Table:
 
         if options == "mandatory" or options == "arg":
             self.define_mandatory(field.get_varname())
+
+        self.field_names.append(field.get_varname())
 
         return self
 

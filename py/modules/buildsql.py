@@ -187,6 +187,7 @@ class Query(bureaucrat.Bureaucrat):
         self.explicit_template = None
 
         self.subquery_flag = False
+        self.selective_flag = False
 
 
     def assemble_auto_query_name(self):
@@ -214,6 +215,11 @@ class Query(bureaucrat.Bureaucrat):
         sn = self.get_schema_name()
 
         return (sn + "." if sn is not None else "") + table_name
+
+
+    def is_selective(self):
+
+        return self.selective_flag;
 
 
     def set_explicit_template(self, template):
@@ -278,6 +284,7 @@ class SelectiveQuery(Query):
 
         super().__init__(chief, operator_name, query_name, scheme_name)
 
+        self.selective_flag = True
         self.out_rt = None
 
 
@@ -297,6 +304,21 @@ class SelectiveQuery(Query):
 
         return self.out_rt
 
+
+    def fill_output_ramtable(self, query_result):
+
+        out_rt = self.get_output_ramtable()
+        field_names = out_rt.get_field_names()
+        buffer = {}
+
+        for row in query_result:
+            for field_idx in range(0, out_rt.count_fields()):
+                buffer[field_names[field_idx]] = row[field_idx]
+
+        out_rt.insert(buffer)
+
+        return self
+        
 
 class Select(SelectiveQuery):
 
