@@ -68,32 +68,51 @@ class Sql(bureaucrat.Bureaucrat):
         return self
 
 
+    def assemble_datatype_qualifier(self, nature):
+
+        datatype_qualifiers = {
+            "string":    "::varchar",
+            "numeric":   "::numeric",
+            "boolean":   "::boolean",
+            "uuid":      "::uuid",
+            "timestamp": "::timestamp"
+        }
+
+        return datatype_qualifiers[nature]
+
+
     def assemble_value_snippet(self, row, field_name):
 
         field = row.get_table().get_field(field_name)
         nature = field.get_nature()
+        dtq = self.assemble_datatype_qualifier(nature)
         field_value = row.get_field_value(field_name)
 
-        if nature == "string":
-            value_snippet = utils.apos(field_value)
-        elif nature == "numeric" or nature == "boolean":
-            value_snippet = field.serialize(field_value)
-        elif nature == "uuid":
-            value_snippet = utils.apos(field.serialize(field_value)) + "::uuid"
-        elif nature == "timestamp":
-            value_snippet = utils.apos(field.serialize(field_value)) + "::timestamp"
+        if field_value is not None:
+            if nature == "string":
+                value_snippet = utils.apos(field_value)
+            elif nature == "numeric" or nature == "boolean":
+                value_snippet = field.serialize(field_value)
+            elif nature == "uuid":
+                value_snippet = utils.apos(field.serialize(field_value)) + dtq
+            elif nature == "timestamp":
+                value_snippet = utils.apos(field.serialize(field_value)) + dtq
+            else:
+                value_snippet = utils.apos(field_value)
         else:
-            value_snippet = utils.apos(field_value)
+            value_snippet = "null" + dtq
 
         return value_snippet + " AS " + field.get_varname()
 
 
     def add_ramtable_values(self, row):
 
-        field_names = row.get_table().get_field_names()
+        table = row.get_table()
+        field_names = table.get_field_names()
 
         self.add_list_items(\
-            [self.assemble_value_snippet(row, field_name) for field_name in field_names])
+            [self.assemble_value_snippet(row, field_name) \
+                for field_name in field_names if table.is_insertable(field_name)])
 
         return self
 
@@ -188,6 +207,11 @@ class Query(bureaucrat.Bureaucrat):
 
         self.subquery_flag = False
         self.selective_flag = False
+
+
+    def is_query(self):
+
+        return True
 
 
     def assemble_auto_query_name(self):
@@ -399,25 +423,51 @@ class Insert(Query):
         self.subqueries.add(u)
 
         self.INTO.sql.add(src_rt.get_table_name())
+        self.SELECT.sql.add("*")
         self.FROM.sql.add(u.get_query_name())
 
         return self
 
 
-class QueryScript(bureaucrat.Bureaucrat):
+class Script(bureaucrat.Bureaucrat):
 
-    def __init__(self, chief):
+    def __init__(self, chief, script_name="noname"):
 
         super().__init__(chief)
 
+        self.script_name = script_name
         self.queries = []
+        self.selective_query = None
     
+
+    def is_query(self):
+
+        return False
+        
+
+    def get_script_name(self):
+
+        return self.script_name
+
+
+    def is_selective(self):
+
+        return self.selective_query is not None
+
 
     def add_query(self, query):
 
         self.queries.append(query);
 
+        if query.is_selective():
+            self.selective_query = query
+
         return self
+
+
+    def get_selective_query(self):
+
+        return self.selective_query
 
 
     def get_snippet(self):

@@ -1,43 +1,46 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Module:  cfg.py                                  (\(\
-# Func:    Retrieving configuration parameters     (^.^)                                                                                                                                                                        
+# Func:    Reading configuration parameters        (^.^)                                                                                                                                                                        
 # # ## ### ##### ######## ############# #####################
 
 import configparser
+import utils
 
 
 class Cfg:
 
-    def __init__(self, cfg_file_path):
+    def __init__(self):
+
+        self.parser = configparser.ConfigParser()
+
+        self.cfg_file_path = None
+        
+
+    def load(self, cfg_file_path):
 
         self.cfg_file_path = cfg_file_path
 
-        self.parser = configparser.ConfigParser()
-        self.parser.read(self.get_cfg_file_path())
+        self.parser.read(cfg_file_path)
 
+        return self
 
-    def get_cfg_file_path(self):
+    
+    def get_cfg_filr_path(self):
 
         return self.cfg_file_path
 
-    
+
     def get_param_value(self, sect_name, param_name):
-
-        param_value = None
-
-        if sect_name in self.parser:
-            if param_name in self.parser[sect_name]:
-                param_value = self.parser[sect_name][param_name]
-
-        return param_value
+        
+        return utils.safedic(utils.safedic(self.parser, sect_name), param_name)
 
 
     def get_default_cms_session_duration(self):
 
-        duration = self.get_param_value("CMS_SESSION", "duration")
+        duration = self.get_param_value("CMS_SESSION", "default_duration")
 
-        return int(duration) if duration is not None else 60     
+        return int(utils.safeval(duration, 60))     
 
 
     def get_db_connection_params(self):

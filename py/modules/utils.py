@@ -17,7 +17,7 @@ def safeval(primary_value, default_value):
 
 def safedic(dic, key):
 
-    return dic[key] if key in dic else None
+    return (dic[key] if key in dic else None) if dic is not None else None 
 
 
 def sefunc(func, val):
@@ -26,6 +26,11 @@ def sefunc(func, val):
 
 
 # Formatting, assembling, and processing strings
+
+def is_str(some_value):
+
+    return type(some_value) == type("foobar")
+
 
 def snake_to_camel(snake):
 
@@ -56,12 +61,12 @@ def camel_to_snake(camel):
 
 def pars(s):
 
-    return "(" + s + ")" 
+    return "(" + safeval(s, "") + ")" 
 
 
 def apos(s):
 
-    return "'" + s + "'" 
+    return "'" + safeval(s, "") + "'" 
 
 
 def consep(prefix, separ, postfix):

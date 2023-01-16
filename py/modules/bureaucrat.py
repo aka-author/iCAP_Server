@@ -5,7 +5,7 @@
 # # ## ### ##### ######## ############# ##################### 
 
 import uuid
-import status
+import status, utils
 
 
 class Bureaucrat:
@@ -14,10 +14,12 @@ class Bureaucrat:
 
         self.chief = chief
         self.id = uuid.uuid4()
+        
         self.status_code = status.OK
+
         self.app = None
         self.cfg = None
-        self.db  = None
+        self.dbl = None
         self.req = None
 
 
@@ -57,17 +59,33 @@ class Bureaucrat:
 
     def get_app(self):
 
-        return self.app if self.app is not None else self.get_chief().get_app()    
+        return utils.safeval(self.app, self.get_chief().get_app())    
+
+
+    def set_cfg(self, cfg):
+
+        self.cfg = cfg
+
+        return self
 
 
     def get_cfg(self):
 
-        return self.cfg if self.cfg is not None else self.get_chief().get_cfg()     
+        return self.cfg if self.cfg is not None \
+               else (self.get_chief().get_cfg() if self.get_chief() is not None \
+               else None)     
 
 
-    def get_db(self):
+    def set_dbl(self, dbl):
 
-        return self.db if self.db is not None else self.get_chief().get_db()  
+        self.dbl = dbl
+
+        return self
+
+
+    def get_dbl(self):
+
+        return utils.safeval(self.dbl, self.get_chief().get_dbl())  
 
     
     def set_req(self, req):
@@ -79,4 +97,4 @@ class Bureaucrat:
 
     def get_req(self):
 
-        return self.req if self.req is not None else self.get_chief().get_req()
+        return utils.safeval(self.req, self.get_chief().get_req())

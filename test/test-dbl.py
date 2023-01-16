@@ -1,7 +1,7 @@
 
 import sys
 sys.path.append("C:\privat\misha\webhelp\iCAP_Server\py\modules")
-import dbl, ramtable, fields
+import cfg, dbl, ramtable, fields
 
 rt = ramtable.Table("animals")
 rt.add_field(fields.UuidField("uuid"))
@@ -32,7 +32,7 @@ q_pets = db.new_union("pets")
 for idx in range(0, rt.count_rows()):
     subq = db.new_select("auto" + str(idx))
     subq.import_ramtable_row(rt.select_by_index(idx))
-    print(subq.get_snippet())
+    # print(subq.get_snippet())
     q_pets.subqueries.add(subq)
 
 q_cities = db.new_select("cities")
@@ -55,5 +55,42 @@ q.GROUP_BY.sql.add("country")
 
 # print(qi.get_snippet())
 
-qu = db.new_union("pets").import_source_ramtable(rt)
-print(qu.get_snippet())
+# qu = db.new_union("pets").import_source_ramtable(rt)
+# print(qu.get_snippet())
+
+
+srt = ramtable.Table("auth.sessions")
+srt.add_field(fields.UuidField("uuid"))
+srt.add_field(fields.StringField("login"))
+srt.add_field(fields.StringField("host"))
+srt.add_field(fields.TimestampField("opened_at"), "mandatory")
+srt.add_field(fields.TimestampField("expire_at"), "mandatory")
+srt.add_field(fields.TimestampField("closed_at"))
+
+cfg = cfg.Cfg().load("C:\\privat\\misha\\webhelp\\iCAP_Server\\cfg\\fserv.ini")
+
+print(cfg.get_db_connection_params())
+
+db.set_cfg(cfg)
+
+print(db.dbc.get_connection_params())
+
+q_simple = db.new_select().set_output_ramtable(srt)
+q_simple.FROM.sql.add("auth.sessions")
+
+db.execute(q_simple)
+
+print(srt.select_by_index(0).field_values)
+
+srt.delete_all()
+
+srt.insert({'login': 'ditatoo', 'host': 'test'})
+
+print(srt.select_by_index(0).field_values)
+
+q_ins = db.new_insert().import_source_ramtable(srt)
+
+print(q_ins.get_snippet())
+
+db.execute(q_ins).commit()
+

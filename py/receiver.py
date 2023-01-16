@@ -9,10 +9,10 @@
 
 import cgi, os, sys, math, json 
 from distutils.command.config import config
-from modules import script, measurement
+from modules import restserver, measurement, ramtable
 
 
-class Receiver(script.Script):
+class Receiver(restserver.RestServer):
 
     def do_the_job(self, request):
 

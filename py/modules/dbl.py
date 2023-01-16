@@ -1,7 +1,7 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Module:  dbl.py                                   (\(\
-# Func:    Running SQL queries                      (^.^)
+# Module:  dbl.py                                     (\(\
+# Func:    Connecting a database and running queries  (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
 import psycopg2
@@ -14,13 +14,13 @@ class DbConnector(bureaucrat.Bureaucrat):
 
         super().__init__(chief)
     
-        self.db_connection = None
+        self.connection = None
         self.connected_flag = False
 
 
     def get_connection_params(self):
 
-        return cp
+        return self.get_cfg().get_db_connection_params()
 
 
     def set_connected_flag(self, state=True):
@@ -35,17 +35,17 @@ class DbConnector(bureaucrat.Bureaucrat):
         return self.connected_flag
 
 
-    def get_db_connection(self):
+    def get_connection(self):
 
-        return self.db_connection
+        return self.connection
 
 
-    def connect_db(self):
+    def connect(self):
 
         cp = self.get_connection_params()
 
         try:
-            self.db_connection = \
+            self.connection = \
                 psycopg2.connect(dbname=cp["database"], host=cp["host"], \
                                  user=cp["user"], password=cp["password"])
             self.set_connected_flag()
@@ -58,18 +58,25 @@ class DbConnector(bureaucrat.Bureaucrat):
     def execute_sql(self, sql_code):
 
         if not self.is_connected():
-            self.connect_db()
+            self.connect()
 
         if self.isOK():
 
-            db_cursor = self.get_db_connection().cursor()
-            
+            cursor = self.get_connection().cursor()
+
             try:
-                db_cursor.execute(sql_code)
+                cursor.execute(sql_code)
             except:
                 self.set_status_code(status.ERR_DB_QUERY_FAILED)
 
-        return db_cursor
+        return cursor
+
+    
+    def commit(self):
+
+        self.connection.commit()
+
+        return self
 
 
 class Dbl(bureaucrat.Bureaucrat):
@@ -91,21 +98,35 @@ class Dbl(bureaucrat.Bureaucrat):
         return buildsql.Union(self, query_name, scheme_name)
 
 
-    def new_insert(self, query_name, scheme_name=None):
+    def new_insert(self, query_name=None, scheme_name=None):
 
         return buildsql.Insert(self, query_name, scheme_name)
 
 
-    def run_script(self, script):
+    def new_script(self, script_name="noname"):
 
+        return buildsql.Script(self, script_name)
+
+
+    def is_query(self, query_or_script):
+
+        return query_or_script.is_query()
+
+
+    def execute(self, exec_me):
+        
+        script = buildsql.Script(self).add_query(exec_me) if exec_me.is_query() else exec_me
+        
         db_cursor = self.dbc.execute_sql(script.get_snippet())
-
+        
         if script.is_selective() and self.dbc.isOK():
-            script.fill_output_ramtable(db_cursor.fetchall())
+            script.get_selective_query().fill_output_ramtable(db_cursor.fetchall())
 
         return self
 
 
-    def run_query(self, query):
+    def commit(self):
 
-        return self.run_script(buildsql.QueryScript(self).add_query(query))
+        self.dbc.commit()
+
+        return self

@@ -184,6 +184,11 @@ class UuidField(Field):
         
         return utils.apos(serialized_value)
 
+    
+    def import_from_dic(self, dic_pair_value):
+        
+        return self.parse(dic_pair_value) if utils.is_str(dic_pair_value) else dic_pair_value
+
 
 class IntField(Field):
 
@@ -226,7 +231,7 @@ class TimestampField(Field):
 
     def serialize(self, native_value):
 
-        return native_value.strftime(self.get_serialize_format())
+        return native_value.strftime(self.get_serialize_format()) if native_value is not None else None
 
 
     def parse(self, serialized_value):

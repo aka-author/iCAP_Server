@@ -40,6 +40,7 @@ class Table:
         self.field_names = []
         self.arg_field_names = []
         self.mandatory_field_names = []
+        self.autoins_field_names = []
         self.rows = []
 
 
@@ -92,17 +93,32 @@ class Table:
         return field_name in self.mandatory_field_names
 
 
+    def define_autoins(self, field_name):
+
+        self.autoins_field_names.append(field_name)
+
+
+    def is_insertable(self, field_name):
+
+        return not (field_name in self.autoins_field_names)
+
+
     def add_field(self, field, options="optional"):
 
-        self.fields[field.get_varname()] = field
+        varname = field.get_varname()
 
-        if options == "arg":
-            self.define_argument(field.get_varname())
+        self.fields[varname] = field
 
-        if options == "mandatory" or options == "arg":
-            self.define_mandatory(field.get_varname())
+        if "arg" in options:
+            self.define_argument(varname)
 
-        self.field_names.append(field.get_varname())
+        if "mandatory" in options or "arg" in options:
+            self.define_mandatory(varname)
+
+        if "autoins" in options:
+            self.define_autoins(varname)
+
+        self.field_names.append(varname)
 
         return self
 
@@ -151,3 +167,8 @@ class Table:
         self.rows + table.rows
 
         return self
+
+
+    def delete_all(self):
+
+        self.rows = []

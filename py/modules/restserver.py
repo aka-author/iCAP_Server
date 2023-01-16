@@ -1,37 +1,27 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Module:  script.py                                  (\(\
-# Func:    Providing a prototype for each script      (^.^)
+# Module:  restserver.py                             (\(\
+# Func:    Providing a prototype for a REST server   (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys
-from . import cfg, bureaucrat, clientreq
+import cfg, dbl, bureaucrat, clientreq
 
 
-class Script (bureaucrat.Bureaucrat):
+class RestServer (bureaucrat.Bureaucrat):
 
     def __init__(self):
 
         super().__init__()
 
         self.app = self
-        self.cfg = self.load_cfg(self.get_cfg_file_path())
-        self.db = self.connect_db()
+        self.cfg = cfg.Cfg().load(self.get_cfg_file_path())
+        self.dbl = dbl.Dbl(self)
 
 
     def get_cfg_file_path(self): 
 
         return "../cfg/fserv.ini"
-
-
-    def load_cfg(self, cfg_file_path):
-
-        return cfg.Cfg(cfg_file_path)
-
-
-    def connect_db(self): 
-
-        return ""
 
 
     def parse_cgi_data(self):
