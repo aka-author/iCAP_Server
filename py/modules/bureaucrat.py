@@ -22,6 +22,8 @@ class Bureaucrat:
         self.dbl = None
         self.req = None
 
+        self.debug_mode_flag = None
+
 
     def set_chief(self, chief):
 
@@ -85,7 +87,9 @@ class Bureaucrat:
 
     def get_dbl(self):
 
-        return utils.safeval(self.dbl, self.get_chief().get_dbl())  
+        return self.dbl if self.dbl is not None \
+               else (self.get_chief().get_dbl() if self.get_chief() is not None \
+               else None)   
 
     
     def set_req(self, req):
@@ -97,4 +101,11 @@ class Bureaucrat:
 
     def get_req(self):
 
-        return utils.safeval(self.req, self.get_chief().get_req())
+        return self.req if self.req is not None \
+               else (self.get_chief().get_req() if self.get_chief() is not None \
+               else None)
+
+
+    def is_debug_mode(self):
+
+        return self.debug_mode_flag if self.debug_mode_flag is not None else self.get_chief().is_debug_mode()

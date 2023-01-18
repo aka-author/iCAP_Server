@@ -15,6 +15,11 @@ def safeval(primary_value, default_value):
     return primary_value if primary_value is not None else default_value
 
 
+def safestr(s):
+
+    return s if s is not None else ""
+
+
 def safedic(dic, key):
 
     return (dic[key] if key in dic else None) if dic is not None else None 
@@ -77,6 +82,12 @@ def consep(prefix, separ, postfix):
         return postfix
     else:
         return prefix
+
+
+def separate(s1, separ, s2):
+
+    return s1 + s2 if s1 == "" or s2 == "" or s1.endswith(separ) \
+           or s2.startswith(separ) else s1 + separ + s2
     
 
 def md5(str):

@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Module:  sqlqueries.py                        (\(\
+# Module:  buildsql.py                          (\(\
 # Func:    Assembling SQL queries               (^.^)
 # # ## ### ##### ######## ############# #####################
 
@@ -29,33 +29,25 @@ class Sql(bureaucrat.Bureaucrat):
         return self.snippet
 
 
-    def separate(self, s1, separ, s2):
+    def set(self, snippet=""):
 
-        return s1 + s2 if s1 == "" or s2 == "" or s1.endswith(separ) or s2.startswith(separ) else s1 + separ + s2
+        return self.set_snippet(snippet)
 
 
     def add(self, snippet, separ=" "):
 
-        self.snippet = self.separate(self.snippet, separ, snippet)
- 
-        self.get_chief().turn_on()
-
-        return self
+        return self.set_snippet(utils.separate(self.snippet, separ, snippet))
 
 
     def add_list_items(self, snippets, separ=" "):
 
-        self.snippet = self.separate(self.snippet, separ, ", ".join(snippets))
-
-        self.get_chief().turn_on()
-
-        return self
+        return self.set_snippet(utils.separate(self.snippet, separ, ", ".join(snippets)))
 
     
     def assembe_field_snippet(self, field):
 
         if field.has_sql_agg_expr():
-            return field.get_sql_agg_expr() + " AS " + field.get_varname()
+            return utils.separate(field.get_sql_agg_expr(), " AS ", field.get_varname())
         else:
             return field.get_varname()
 
@@ -102,7 +94,7 @@ class Sql(bureaucrat.Bureaucrat):
         else:
             value_snippet = "null" + dtq
 
-        return value_snippet + " AS " + field.get_varname()
+        return utils.separate(value_snippet, " AS ", field.get_varname())
 
 
     def add_ramtable_values(self, row):
@@ -117,6 +109,20 @@ class Sql(bureaucrat.Bureaucrat):
         return self
 
 
+class ClauseSql(Sql):
+
+    def set_snippet(self, snippet):
+
+        self.get_chief().turn_on()
+
+        return super().set_snippet(snippet)
+
+
+    def get_snippet(self):
+
+        return utils.separate(self.get_chief().get_clause_name(), " ", super().get_snippet())
+
+
 class Clause(bureaucrat.Bureaucrat):
 
     def __init__(self, chief, clause_name=""):
@@ -124,8 +130,8 @@ class Clause(bureaucrat.Bureaucrat):
         super().__init__(chief)
 
         self.clause_name = clause_name
-        self.useful = False
-        self.sql = Sql(self).set_snippet(self.get_clause_name())
+        self.useful_flag = False
+        self.sql = ClauseSql(self)
 
 
     def get_clause_name(self):
@@ -135,14 +141,14 @@ class Clause(bureaucrat.Bureaucrat):
 
     def turn_on(self): 
 
-        self.useful = True
+        self.useful_flag = True
 
         return self
 
 
     def is_useful(self):
 
-        return self.useful    
+        return self.useful_flag    
 
 
 class Subqueries(bureaucrat.Bureaucrat):
@@ -180,13 +186,14 @@ class Subqueries(bureaucrat.Bureaucrat):
 
     def get_def_snippet(self, query):
 
-        return query.get_query_name() + " AS " + utils.pars(query.get_snippet())
+        return utils.separate(query.get_query_name(), " AS ", utils.pars(query.get_snippet()))
 
 
     def get_snippet(self):
 
         if len(self.subqueries) > 0:
-            defs = ",\n".join([self.get_def_snippet(self.subqueries[sq_name]) for sq_name in self.subqueries])
+            defs = ",\n".join([self.get_def_snippet(self.subqueries[sq_name]) \
+                               for sq_name in self.subqueries])
             return "WITH\n" + defs + "\n"
         else:
             return ""
@@ -232,6 +239,12 @@ class Query(bureaucrat.Bureaucrat):
     def get_schema_name(self):
 
         return self.schema_name
+
+
+    def qualify_table_name(self, table_name):
+
+        return table_name if "." in utils.safestr(table_name) \
+                          else utils.consep(self.get_schema_name(), ".", table_name)
 
 
     def get_full_table_name(self, table_name):
@@ -366,6 +379,9 @@ class Select(SelectiveQuery):
 
         self.COLUMNS.sql.add_ramtable_fields(out_rt)
 
+        if out_rt.get_table_name() is not None:
+            self.FROM.sql.set(self.qualify_table_name(out_rt.get_table_name()))
+
         return self 
 
 
@@ -422,9 +438,9 @@ class Insert(Query):
 
         self.subqueries.add(u)
 
-        self.INTO.sql.add(src_rt.get_table_name())
-        self.SELECT.sql.add("*")
-        self.FROM.sql.add(u.get_query_name())
+        self.INTO.sql.set(src_rt.get_table_name())
+        self.SELECT.sql.set("*")
+        self.FROM.sql.set(u.get_query_name())
 
         return self
 
@@ -443,7 +459,7 @@ class Script(bureaucrat.Bureaucrat):
     def is_query(self):
 
         return False
-        
+
 
     def get_script_name(self):
 

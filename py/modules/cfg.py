@@ -4,7 +4,7 @@
 # Func:    Reading configuration parameters        (^.^)                                                                                                                                                                        
 # # ## ### ##### ######## ############# #####################
 
-import configparser
+import os, pathlib, configparser
 import utils
 
 
@@ -20,8 +20,10 @@ class Cfg:
     def load(self, cfg_file_path):
 
         self.cfg_file_path = cfg_file_path
-
-        self.parser.read(cfg_file_path)
+        print(os.path.abspath(str(pathlib.Path(__file__).parent.absolute())+ "/" + cfg_file_path))
+        print(os.path.abspath(cfg_file_path))
+        actual_cfg_path = os.path.abspath(str(pathlib.Path(__file__).parent.absolute())+ "/" + cfg_file_path)
+        self.parser.read(actual_cfg_path)
 
         return self
 

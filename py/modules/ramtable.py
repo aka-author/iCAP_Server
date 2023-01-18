@@ -4,15 +4,24 @@
 # Func:    Simulating database tables in memory     (^.^)
 # # ## ### ##### ######## ############# #####################
 
+import uuid
+import utils
+
 
 class Row:
 
     def __init__(self, table):
 
+        self.id = str(uuid.uuid4())
         self.table = table
         self.field_values = {}
 
     
+    def get_id(self):
+
+        return self.id
+
+
     def get_table(self):
 
         return self.table
@@ -42,6 +51,7 @@ class Table:
         self.mandatory_field_names = []
         self.autoins_field_names = []
         self.rows = []
+        self.rows_by_ids = {}
 
 
     def get_table_name(self):
@@ -153,6 +163,7 @@ class Table:
                 row.set_field_value(field_name, self.get_field(field_name).import_from_dic(src_dic[field_name]))
 
         self.rows.append(row)
+        self.rows_by_ids[row.get_id()] = row
 
         return self
         
@@ -162,9 +173,23 @@ class Table:
         return self.rows[idx]
 
 
+    def select_by_id(self, id):
+
+        return utils.safedic(self.rows_by_ids, id)
+
+
+    def select_by_field_value(self, field_name, target_value):
+
+        field = self.get_field(field_name)
+
+        return [row for row in self.rows \
+                if field.eq(row.get_field_value(field_name), target_value)]
+
+
     def union(self, table):
 
-        self.rows + table.rows
+        self.rows = self.rows + table.rows
+        self.rows_by_ids = {**self.rows_by_ids, **table.rows_by_ids}
 
         return self
 

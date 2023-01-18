@@ -5,7 +5,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import json
-from . import utils
+import utils
 
 
 class ClientRequest:

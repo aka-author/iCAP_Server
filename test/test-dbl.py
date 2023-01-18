@@ -45,21 +45,21 @@ q.subqueries.add(q_cities)
 
 #q.COLUMNS.sql.join_list_items(["country", "avg(weight)"])
 #q.COLUMNS.sql.take_ramtable_fields(rt_res)
-q.FROM.sql.add_list_items(["pets", "cities"])
+q.FROM.sql.set().add_list_items(["pets", "cities"])
 q.WHERE.sql.add("q_pets.city=cities.city and date_of_birth > '2020-01-01'")
 q.GROUP_BY.sql.add("country")
 
-#print(q.get_snippet())
+print(q.get_snippet())
 
-# qi = db.new_insert("pets").import_source_ramtable(rt)
+qi = db.new_insert("pets").import_source_ramtable(rt)
 
-# print(qi.get_snippet())
+print(qi.get_snippet())
 
-# qu = db.new_union("pets").import_source_ramtable(rt)
-# print(qu.get_snippet())
+qu = db.new_union("pets").import_source_ramtable(rt)
+print(qu.get_snippet())
 
 
-srt = ramtable.Table("auth.sessions")
+srt = ramtable.Table("sessions")
 srt.add_field(fields.UuidField("uuid"))
 srt.add_field(fields.StringField("login"))
 srt.add_field(fields.StringField("host"))
@@ -75,16 +75,20 @@ db.set_cfg(cfg)
 
 print(db.dbc.get_connection_params())
 
-q_simple = db.new_select().set_output_ramtable(srt)
-q_simple.FROM.sql.add("auth.sessions")
+q_simple = db.new_select("sample", "auth").set_output_ramtable(srt)
+
+print("===========")
+print(q_simple.get_snippet())
 
 db.execute(q_simple)
 
+print("***********")
 print(srt.select_by_index(0).field_values)
+print("***********")
 
 srt.delete_all()
 
-srt.insert({'login': 'ditatoo', 'host': 'test'})
+srt.insert({'login': 'ditatoo', 'host': 'test1'})
 
 print(srt.select_by_index(0).field_values)
 
@@ -92,5 +96,14 @@ q_ins = db.new_insert().import_source_ramtable(srt)
 
 print(q_ins.get_snippet())
 
-db.execute(q_ins).commit()
+# db.execute(q_ins).commit()
 
+srt.delete_all()
+srt.insert({'login': 'ditatoo', 'host': 'test2'})
+q_ins2 = db.new_insert().import_source_ramtable(srt)
+
+scr = db.new_script().add_query(q_ins).add_query(q_ins2)
+
+print(scr.get_snippet())
+
+# db.execute(scr).commit()

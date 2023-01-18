@@ -8,34 +8,75 @@
 # # ## ### ##### ######## ############# ##################### 
 
 import cgi, os, sys, math, json 
+
+sys.path.append("C:\privat\misha\webhelp\iCAP_Server\py\modules")
+
 from distutils.command.config import config
-from modules import restserver, measurement, ramtable
+from modules import restserver, measurement, dbl, fields, ramtable
+from debug import deb_receiver
 
 
 class Receiver(restserver.RestServer):
 
+    def __init__(self):
+
+        super().__init__()
+
+        self.debug_mode_flag = True
+
+
+    def create_measurements_ramtable(self):
+
+        rt = ramtable.Table("icap.measurements")\
+        .add_field(fields.TimestampField("accepted_at"))\
+        .add_field(fields.UuidField("sensor_uuid"))\
+        .add_field(fields.StringField("sensor_id_deb"))\
+
+        return rt
+
+
+    def create_varvalues_ramtable(self):
+
+        rt = ramtable.Table("icap.varvalues")\
+        .add_field(fields.UuidField("measurement_uuid"))\
+        .add_field(fields.UuidField("variable_uuid"))\
+        .add_field(fields.StringField("varname_deb"))\
+        .add_field(fields.StringField("serialized_value"))
+
+        return rt
+
+
     def do_the_job(self, request):
 
-        measurements_dtos = request.get_payload()
+        measurements_dtos = request.get_payload()["measurements"]
 
-        m_rt = self.create_measurements_ramtable()
-        v_rt = self.create_varvalues_ramtable()
+        # print(measurements_dtos)
 
-        for dto in measurements_dtos: 
-            m = measurement.Measurement().import_dto(dto)
-            m_rt.union(m.get_measurement_ramtable())
-            v_rt.union(m.get_varvalues_ramtable())
+        rt_measurements = self.create_measurements_ramtable()
+        rt_varvalues = self.create_varvalues_ramtable()
 
-        m_query = dbl.Query()
-        m_query.    
+        # print(str(measurements_dtos))
+
+        # for dto in measurements_dtos: 
+            # m = measurement.Measurement().import_dto(dto)
+            # rt_measurements.union(m.get_measurement_ramtable())
+            # rt_varvalues.union(m.get_varvalues_ramtable())
+
+        # q_insert_measurements = dbl.new_insert().import_source_ramtable(rt_measurements)
+        # q_insert_varvalues = dbl.new_insert().import_source_ramtable(rt_varvalues)
+
+        # scr = dbl.new_script().add_query(q_insert_measurements).add_query(q_insert_varvalues)   
+        # dbl.execute(scr).commit()
+
+        # log_file = open("log.txt", "a")
+        # log_file.write(str(self.get_req().get_payload()));
+        # log_file.write("\n");
 
 
+    def get_debug_request_body(self):
 
-        log_file = open("log.txt", "a")
-
-        log_file.write(str(self.get_req().get_payload()));
-
-        log_file.write("\n");
+        return deb_receiver.get_body()
+    
 
 Receiver().process_request()
 

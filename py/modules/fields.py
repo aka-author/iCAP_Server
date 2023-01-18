@@ -144,6 +144,34 @@ class Field:
         return dic_pair_value  
 
 
+    # Comparing field values
+
+    def compare(self, val1, val2):
+
+        return 0 if val1 == val2 else None
+
+
+    def eq(self, val1, val2):
+
+        cmp = self.compare(val1, val2)
+
+        return cmp == 0 if cmp is not None else False
+
+
+    def le(self, val1, val2):
+
+        cmp = self.compare(val1, val2)
+
+        return cmp < 0 if cmp is not None else False
+
+
+    def ge(self, val1, val2):
+
+        cmp = self.compare(val1, val2)
+
+        return cmp < 0 if cmp is not None else False
+
+
 class StringField(Field):
 
     def __init__(self, varname):
@@ -156,6 +184,21 @@ class StringField(Field):
     def quote_sql(self, serialized_value):
         
         return utils.apos(serialized_value)
+
+    
+    def eq(self, val1, val2):
+
+        return val1 == val2
+
+
+    def le(self, val1, val2):
+
+        return val1 < val2
+
+
+    def ge(self, val1, val2):
+
+        return val1 > val2
 
 
 class UuidField(Field):
@@ -190,11 +233,23 @@ class UuidField(Field):
         return self.parse(dic_pair_value) if utils.is_str(dic_pair_value) else dic_pair_value
 
 
-class IntField(Field):
+class NumericField(Field):
+
+    def __init__(self, varname, datatype_name):
+
+        super().__init__(varname, datatype_name, "numeric")
+
+
+    def compare(self, val1, val2):
+
+        return val1 - val2
+
+
+class IntField(NumericField):
 
     def __init__(self, varname):
 
-        super().__init__(varname, "int", "numeric")
+        super().__init__(varname, "int")
 
         self.zero_value = 0
 
@@ -204,11 +259,11 @@ class IntField(Field):
         return int(serialized_value)
 
 
-class FloatField(Field):
+class FloatField(NumericField):
 
     def __init__(self, varname):
 
-        super().__init__(varname, "float", "numeric")
+        super().__init__(varname, "float")
 
         self.zero_value = 0.0
 
@@ -242,3 +297,9 @@ class TimestampField(Field):
     def quote_sql(self, serialized_value):
 
         return utils.apos(serialized_value)
+
+
+    def compare(self, val1, val2):
+
+        return val1 - val2
+    

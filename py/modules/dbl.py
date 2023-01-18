@@ -57,6 +57,8 @@ class DbConnector(bureaucrat.Bureaucrat):
 
     def execute_sql(self, sql_code):
 
+        cursor = None
+
         if not self.is_connected():
             self.connect()
 
