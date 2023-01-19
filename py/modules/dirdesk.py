@@ -24,29 +24,36 @@ class DirectoryDesk(bureaucrat.Bureaucrat):
             .add_field(fields.StringField("sensor_id"))
 
         dbl = self.get_dbl()
-        q = dbl.new_select().set_output_ramtable(rt_sensors)
-        print(q.get_snippet())
-        print(self.get_cfg().get_db_connection_params())
+
         dbl.execute(dbl.new_select().set_output_ramtable(rt_sensors))
+
+        print(rt_sensors)
         
-        print(rt_sensors.select_by_index(0).field_values)
         return rt_sensors
 
 
     def get_sensor_by_id(self, sensor_id):
 
-        return sensor 
+        sn = None
+
+        rows = self.rt_sensors.select_by_field_value("sensor_id", sensor_id)
+        
+        if len(rows) > 0:
+            sn = sensor.Sensor(self).load_from_ramtable_row(rows[0])
+
+        return sn 
 
 
     def fetch_variables(self):
 
         rt_variables = ramtable.Table("icap.variables")\
             .add_field(fields.UuidField("uuid"))\
-            .add_field(fields.StringField("varname"))\
+            .add_field(variable.VarnameField("varname"))\
             .add_field(fields.StringField("datatype_name"))
 
         dbl = self.get_dbl()
-        dbl.execute(dbl.new_select().set_output_ramtable(rt_variables)) 
+        q = dbl.new_select().set_output_ramtable(rt_variables)
+        dbl.execute(q) 
 
         return rt_variables
 

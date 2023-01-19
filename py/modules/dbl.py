@@ -105,9 +105,9 @@ class Dbl(bureaucrat.Bureaucrat):
         return buildsql.Insert(self, query_name, scheme_name)
 
 
-    def new_script(self, script_name="noname"):
+    def new_script(self, script_name="noname", scheme_name=None):
 
-        return buildsql.Script(self, script_name)
+        return buildsql.Script(self, script_name, scheme_name)
 
 
     def is_query(self, query_or_script):

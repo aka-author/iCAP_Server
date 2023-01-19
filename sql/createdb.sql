@@ -77,13 +77,13 @@ create table sensors (
 create unique index sensors__sensor_id__idx on sensors (sensor_id);
 
 
-create type base_datatype_code as enum ('STRING', 'BIGINT', 'DOUBLE', 'TIMESTAMP', 'BOOLEAN', 'JSON');
+create type datatype_name as enum ('STRING', 'BIGINT', 'DOUBLE', 'TIMESTAMP', 'TIMESTAMP_TZ', 'BOOLEAN', 'JSON');
 
 create table variables (
     uuid                uuid default gen_random_uuid() not null primary key,
     varname             varchar not null,
     shop_uuid           uuid references shops,
-    base_datatype       base_datatype_code not null,
+    datatype_name       datatype_name not null,
     validate_pattern    varchar,
     parse_format        varchar,
     serialize_format    varchar,
@@ -100,7 +100,7 @@ create table measurements (
     uuid                uuid not null primary key,
     accepted_at         timestamp with time zone,
     sensor_uuid         uuid references sensors,
-    sensor_name_deb     varchar,
+    sensor_id_deb       varchar,
     created_at          timestamp not null default now(),
     updated_at          timestamp not null default now(),
     deleted_at          timestamp

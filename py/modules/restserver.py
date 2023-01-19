@@ -4,17 +4,18 @@
 # Func:    Providing a prototype for a REST server   (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import cgi, os, sys
+import cgi, os, sys, pathlib
 import  dbl, cfg, bureaucrat, clientreq, dirdesk
 
 
 class RestServer (bureaucrat.Bureaucrat):
 
-    def __init__(self):
+    def __init__(self, rel_cfg_file_path):
 
         super().__init__()
 
         self.app = self
+        self.set_cfg_file_path(rel_cfg_file_path)
         self.cfg = cfg.Cfg().load(self.get_cfg_file_path())
         self.dbl = dbl.Dbl(self)
         self.directory_desk = dirdesk.DirectoryDesk(self)
@@ -22,14 +23,23 @@ class RestServer (bureaucrat.Bureaucrat):
         self.debug_mode_flag = False
 
 
+    def set_cfg_file_path(self, rel_cfg_file_path):
+
+        script_path = str(pathlib.Path(__file__).parent.absolute())
+
+        self.cfg_file_path = os.path.abspath(script_path + "/../" + rel_cfg_file_path)
+
+        return self
+
+
     def get_cfg_file_path(self): 
         
-        return "../../cfg/fserv.ini"
+        return self.cfg_file_path
 
 
     def get_directory_desk(self):
 
-        return self.dirdesk
+        return self.directory_desk
 
 
     def parse_cgi_data(self):

@@ -71,7 +71,7 @@ def pars(s):
 
 def apos(s):
 
-    return "'" + safeval(s, "") + "'" 
+    return "'" + safeval(str(s), "") + "'" 
 
 
 def consep(prefix, separ, postfix):

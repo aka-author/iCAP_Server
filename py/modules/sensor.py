@@ -14,15 +14,13 @@ class Sensor(bureaucrat.Bureaucrat):
         super().__init__(chief)
 
         self.uuid = None
-        self.varname = None
-        self.datatype_name = None
+        self.sensor_id = None
 
 
     def load_from_ramtable_row(self, row):
 
         self.uuid = row.get_field_value("uuid")
-        self.varname = row.get_field_value("varname")
-        self.datatype_name = row.get_field_value("datatype_name")
+        self.sensor_id = row.get_field_value("sensor_id")
 
         return self
 
@@ -32,11 +30,6 @@ class Sensor(bureaucrat.Bureaucrat):
         return self.uuid
 
 
-    def get_varname(self):
+    def get_sensor_id(self):
 
-        return self.varname
-
-
-    def get_datatype_name(self):
-
-        return self.datatype_name
+        return self.sensor_id

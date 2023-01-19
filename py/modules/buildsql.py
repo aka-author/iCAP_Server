@@ -73,7 +73,7 @@ class Sql(bureaucrat.Bureaucrat):
         return datatype_qualifiers[nature]
 
 
-    def assemble_value_snippet(self, row, field_name):
+    def assemble_pure_value_snippet(self, row, field_name):
 
         field = row.get_table().get_field(field_name)
         nature = field.get_nature()
@@ -94,7 +94,14 @@ class Sql(bureaucrat.Bureaucrat):
         else:
             value_snippet = "null" + dtq
 
-        return utils.separate(value_snippet, " AS ", field.get_varname())
+        return value_snippet
+
+
+    def assemble_value_snippet(self, row, field_name):
+
+        field = row.get_table().get_field(field_name)
+
+        return utils.separate(self.assemble_pure_value_snippet(row, field_name), " AS ", field.get_varname())
 
 
     def add_ramtable_values(self, row):
@@ -343,16 +350,17 @@ class SelectiveQuery(Query):
 
 
     def fill_output_ramtable(self, query_result):
-
+        
         out_rt = self.get_output_ramtable()
         field_names = out_rt.get_field_names()
         buffer = {}
 
         for row in query_result:
+
             for field_idx in range(0, out_rt.count_fields()):
                 buffer[field_names[field_idx]] = row[field_idx]
 
-        out_rt.insert(buffer)
+            out_rt.insert(buffer)
 
         return self
         
@@ -430,6 +438,20 @@ class Insert(Query):
         self.clauses = [self.INTO, self.VALUES, self.SELECT, self.FROM, self.WHERE]
 
 
+    def import_source_ramtable_row(self, row):
+
+        t = row.get_table()
+        field_names = t.get_field_names()
+
+        column_list = utils.pars(", ".join([fn for fn in field_names]))
+        self.INTO.sql.set(self.qualify_table_name(t.get_table_name())).add(column_list)
+
+        value_list = utils.pars(", ".join([self.VALUES.sql.assemble_pure_value_snippet(row, fn) for fn in field_names]))
+        self.VALUES.sql.set(value_list)
+
+        return self
+
+
     def import_source_ramtable(self, src_rt):
 
         u = Union(self)
@@ -447,11 +469,12 @@ class Insert(Query):
 
 class Script(bureaucrat.Bureaucrat):
 
-    def __init__(self, chief, script_name="noname"):
+    def __init__(self, chief, script_name="noname", scheme_name=None):
 
         super().__init__(chief)
 
         self.script_name = script_name
+        self.scheme_name = scheme_name
         self.queries = []
         self.selective_query = None
     
@@ -464,6 +487,11 @@ class Script(bureaucrat.Bureaucrat):
     def get_script_name(self):
 
         return self.script_name
+
+
+    def get_scheme_name(self):
+
+        return self.scheme_name
 
 
     def is_selective(self):
@@ -481,6 +509,15 @@ class Script(bureaucrat.Bureaucrat):
         return self
 
 
+    def import_source_ramtable(self, src_rt):
+
+        for idx in range(0, src_rt.count_rows()):
+            self.add_query(Insert(self, None, \
+                self.get_scheme_name()).import_source_ramtable_row(src_rt.select_by_index(idx)))
+
+        return self 
+
+
     def get_selective_query(self):
 
         return self.selective_query
@@ -488,4 +525,4 @@ class Script(bureaucrat.Bureaucrat):
 
     def get_snippet(self):
 
-        return "\n".join([q.get_snippet() + ";" for q in self.queries])
+        return ";\n".join([q.get_snippet() for q in self.queries]) + ";"

@@ -39,6 +39,13 @@ class Row:
         return self.field_values[field_value]
 
 
+    def __str__(self):
+
+        t = self.get_table()
+
+        return " ".join([t.get_field(fn).serialize(self.get_field_value(fn)) for fn in t.fields])
+
+
 class Table:
 
     def __init__(self, table_name):
@@ -181,7 +188,7 @@ class Table:
     def select_by_field_value(self, field_name, target_value):
 
         field = self.get_field(field_name)
-
+        
         return [row for row in self.rows \
                 if field.eq(row.get_field_value(field_name), target_value)]
 
@@ -197,3 +204,8 @@ class Table:
     def delete_all(self):
 
         self.rows = []
+
+
+    def __str__(self):
+
+        return " ".join([fn for fn in self.fields]) + "\n" + "\n".join([row.__str__() for row in self.rows])

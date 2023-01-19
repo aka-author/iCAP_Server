@@ -1,11 +1,11 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Module:  measurement.py                                  (\(\
+# Module:  measurement.py                             (\(\
 # Func:    Mamaging data fields                       (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import uuid, datetime
-import fields, model, ramtable
+import fields, model, ramtable, dirdesk
 
 
 class VarValue(model.Model):
@@ -16,32 +16,50 @@ class VarValue(model.Model):
 
         self.varname = None
         self.parsable_value = None
-        self.is_argument = False
 
 
-    def define_fields(self):
+    def import_dto(self, dto):
+        
+        self.varname = dto["varName"]
+        self.parsable_value = dto["parsableValue"]
 
-        self.define_field(fields.StrField("varvalue"))
-        self.define_field(fields.StrField("parsable_value"))
+        return self
 
 
+    def get_variable_uuid(self):
+
+        dd = self.get_app().get_directory_desk()
+
+        v = dd.get_variable_by_name(self.get_varname())
+
+        return v.get_uuid() if v is not None else None
 
 
+    def get_varname(self):
+
+        return self.varname
+
+
+    def get_parsable_value(self):
+
+        return self.parsable_value
+ 
 
 class Measurement(model.Model):
 
-    def __init__(self):
+    def __init__(self, script):
 
-        self.uuid = uuid.uuid4()
-        self.accepted_at = datetime.now()
-        self.sensor_id = "";     
-        self.args = [];
-        self.outs = [];   
+        super().__init__(script, "measurement")
+        self.uuid = uuid.uuid4() 
+        self.accepted_at = datetime.datetime.now()
+        self.sensor_id = ""    
+        self.args = []
+        self.outs = [] 
 
 
     def get_uuid(self):
 
-        return self.get_uuid
+        return self.uuid
 
 
     def get_accepted_at(self):
@@ -54,56 +72,81 @@ class Measurement(model.Model):
         return self.sensor_id
 
 
+    def get_sensor_uuid(self):
+
+        dd = self.get_app().get_directory_desk()
+
+        s = dd.get_sensor_by_id(self.get_sensor_id())
+
+        return s.get_uuid() if s is not None else None
+
+
     def import_dto(self, dto):
 
-        self.set_
+        self.uuis = dto["id"]
+        self.accepted_at = datetime.datetime.strptime(dto["acceptedAt"].split(" UTC")[0], "%Y-%m-%d %H:%M:%S.%f")
+        self.sensor_id = dto["sensorId"]
+
+        self.args = [VarValue(self).import_dto(vv_dto) for vv_dto in dto["args"]]
+        self.outs = [VarValue(self).import_dto(vv_dto) for vv_dto in dto["outs"]]
+
+        return self
 
 
-    def insert_vvs_to_rt(self, rt, vvs):
+    def get_measurement_ramtable(self):
 
-        for varvalue in vvs:
+        m_rt = ramtable.Table("measurements")\
+            .add_field(fields.UuidField("uuid"))\
+            .add_field(fields.TimestampField("accepted_at"))\
+            .add_field(fields.UuidField("sensor_uuid"))\
+            .add_field(fields.StringField("sensor_id_deb"))
 
-            src = { \
-                   "measurement_uuid":                self.get_uuid(), \
-                   "varname":                         varvalue.get_varname(), \
-                   varvalue.get_useful_field_name():  varvalue.get_useful_value(), \
-                   "value_subset":                    self.get_subset_code()}
-            
-            rt.insert_from_dic(src)
-
-        return rt
-
-
-    def assemble_ramtables(self):
-
-        m_rt = ramtable.Ramtable("measurements")
-
-        m_rt.add_field(fields.UuidField("uuid"))
-        m_rt.add_field(fields.TimestampField("accepted_at"))
-        m_rt.add_field(fields.StringField("sensor_id"))
-
-        m_src = { \
-                 "accepted_at": self.get_accepted_at(), \
-                 "sensor_id":   self.get_sensor_id() \
+        m_src = { 
+                "uuid":          self.get_uuid(),
+                "accepted_at":   self.get_accepted_at(), 
+                "sensor_uuid":   self.get_sensor_uuid(),
+                "sensor_id_deb": self.get_sensor_id() 
                 }
 
-        m_rt.insert_from_dic(m_src)
+        m_rt.insert(m_src)
 
-        vv_rt = ramtable.Ramtable("varvals")
+        return m_rt
 
-        vv_rt.add_field(fields.UuidField("measurement_uuid"))
-        vv_rt.add_field(fields.StringField("subset"))
-        vv_rt.add_field(fields.StringField("value_str"))
-        vv_rt.add_field(fields.StringField("value_bgi"))
-        vv_rt.add_field(fields.StringField("value_dbl"))
-        vv_rt.add_field(fields.StringField("value_tms"))
-        vv_rt.add_field(fields.StringField("value_boo"))
-        vv_rt.add_field(fields.StringField("value_jsn"))
 
-        
-    
-        self.insert_vvs_to_rt(vv_rt, self.args)
-        self.insert_vvs_to_rt(vv_rt, self.outs)
+    def get_varvalues_ramtable(self):
 
-        return m_rt, vv_rt
-        
+        vv_rt = ramtable.Table("varvalues")\
+            .add_field(fields.UuidField("measurement_uuid"))\
+            .add_field(fields.UuidField("variable_uuid"))\
+            .add_field(fields.StringField("varname_deb"))\
+            .add_field(fields.StringField("serialized_value"))\
+            .add_field(fields.StringField("value_subset"))
+
+        for vv in self.args:
+
+            print(vv)
+
+            if vv is not None:
+                vv_src = {  
+                            "measurement_uuid": self.get_uuid(),
+                            "variable_uuid": vv.get_variable_uuid(),
+                            "varname_deb": vv.get_varname(),
+                            "serialized_value": str(vv.get_parsable_value()),
+                            "value_subset": "ARG"
+                        }
+
+                vv_rt.insert(vv_src)
+
+        for vv in self.outs:
+
+            vv_src = {  
+                        "measurement_uuid": self.get_uuid(),
+                        "variable_uuid": vv.get_variable_uuid(),
+                        "varname_deb": vv.get_varname(),
+                        "serialized_value": str(vv.get_parsable_value()),
+                        "value_subset": "OUT"
+                     }
+
+            vv_rt.insert(vv_src)
+
+        return vv_rt

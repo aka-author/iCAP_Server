@@ -61,7 +61,9 @@ class Bureaucrat:
 
     def get_app(self):
 
-        return utils.safeval(self.app, self.get_chief().get_app())    
+        return self.app if self.app is not None \
+               else (self.get_chief().get_app() if self.get_chief() is not None \
+               else None) 
 
 
     def set_cfg(self, cfg):

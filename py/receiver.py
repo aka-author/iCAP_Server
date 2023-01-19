@@ -7,9 +7,9 @@
 # Func:    Saving measurements to a database         (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
-import cgi, os, sys, math, json 
+import os, sys, math, json, pathlib 
 
-sys.path.append("C:\privat\misha\webhelp\iCAP_Server\py\modules")
+sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/modules"))
 
 from distutils.command.config import config
 from modules import restserver, measurement, dbl, fields, ramtable
@@ -18,9 +18,9 @@ from debug import deb_receiver
 
 class Receiver(restserver.RestServer):
 
-    def __init__(self):
+    def __init__(self, rel_cfg_file_path):
 
-        super().__init__()
+        super().__init__(rel_cfg_file_path)
 
         self.debug_mode_flag = True
 
@@ -50,23 +50,35 @@ class Receiver(restserver.RestServer):
 
         measurements_dtos = request.get_payload()["measurements"]
 
-        # print(measurements_dtos)
-
         rt_measurements = self.create_measurements_ramtable()
         rt_varvalues = self.create_varvalues_ramtable()
 
-        # print(str(measurements_dtos))
+        for dto in measurements_dtos: 
+            m = measurement.Measurement(self).import_dto(dto)
+            rt_measurements.union(m.get_measurement_ramtable())
+            rt_varvalues.union(m.get_varvalues_ramtable())
 
-        # for dto in measurements_dtos: 
-            # m = measurement.Measurement().import_dto(dto)
-            # rt_measurements.union(m.get_measurement_ramtable())
-            # rt_varvalues.union(m.get_varvalues_ramtable())
+        print("-----------------")
+        print(rt_measurements)
+        print("-----------------")
+        print(rt_varvalues)
+        print("-----------------")
 
-        # q_insert_measurements = dbl.new_insert().import_source_ramtable(rt_measurements)
-        # q_insert_varvalues = dbl.new_insert().import_source_ramtable(rt_varvalues)
+        mydbl = self.get_dbl()
 
-        # scr = dbl.new_script().add_query(q_insert_measurements).add_query(q_insert_varvalues)   
-        # dbl.execute(scr).commit()
+        # q_insert_measurements = mydbl.new_insert().import_source_ramtable(rt_measurements)
+        # q_insert_varvalues = mydbl.new_insert().import_source_ramtable(rt_varvalues)
+
+        #scr = mydbl.new_script().add_query(q_insert_measurements).add_query(q_insert_varvalues)   
+        # scr = mydbl.new_script().add_query(q_insert_measurements)   
+
+        scr = mydbl.new_script("insmeas", "icap")
+
+        scr.import_source_ramtable(rt_measurements).import_source_ramtable(rt_varvalues)
+
+        print(scr.get_snippet())
+
+        mydbl.execute(scr).commit()
 
         # log_file = open("log.txt", "a")
         # log_file.write(str(self.get_req().get_payload()));
@@ -78,7 +90,7 @@ class Receiver(restserver.RestServer):
         return deb_receiver.get_body()
     
 
-Receiver().process_request()
+Receiver("../cfg/fserv.ini").process_request()
 
 
 

@@ -4,7 +4,25 @@
 # Func:    Modeling a variable                       (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import bureaucrat
+import bureaucrat, fields
+
+
+class VarnameField(fields.StringField):
+
+    def eq(self, val1, val2):
+        
+        res = False
+
+        if val1.endswith(".*") and not val2.endswith(".*"):
+            res = val2.startswith(val1.split(".*")[0])
+        elif not val1.endswith(".*") and val2.endswith(".*"):
+            res = val1.startswith(val2.split(".*")[0])
+        elif val1.endswith(".*") and val2.endswith(".*"):
+            res = False
+        else:
+            res = super().eq(val1, val2)
+
+        return res
 
 
 class Variable(bureaucrat.Bureaucrat):
