@@ -22,6 +22,11 @@ class Row:
         return self.id
 
 
+    def move_to_table(self, table):
+
+        self.table = table
+
+
     def get_table(self):
 
         return self.table
@@ -194,6 +199,9 @@ class Table:
 
 
     def union(self, table):
+
+        for idx in range(0, table.count_rows()):
+            table.select_by_index(idx).move_to_table(self)
 
         self.rows = self.rows + table.rows
         self.rows_by_ids = {**self.rows_by_ids, **table.rows_by_ids}

@@ -34,6 +34,16 @@ class Cfg:
         return utils.safedic(utils.safedic(self.parser, sect_name), param_name)
 
 
+    def is_debug_mode(self):
+
+        return self.get_param_value("MODE", "debug") == "yes"
+
+    
+    def is_write_logs_mode(self):
+
+        return self.get_param_value("MODE", "write_logs") == "yes"
+
+
     def get_default_cms_session_duration(self):
 
         duration = self.get_param_value("CMS_SESSION", "default_duration")

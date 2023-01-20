@@ -11,7 +11,7 @@ import os, sys, pathlib
 
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/modules"))
 
-from modules import restserver, measurement, fields, ramtable
+from modules import restserver, measurement
 from debug import deb_receiver
 
 
@@ -21,51 +21,44 @@ class Receiver(restserver.RestServer):
 
         super().__init__(rel_cfg_file_path)
 
-        self.debug_mode_flag = True
-
-
-    def create_measurements_ramtable(self):
-
-        rt = ramtable.Table("icap.measurements")\
-        .add_field(fields.TimestampField("accepted_at"))\
-        .add_field(fields.UuidField("sensor_uuid"))\
-        .add_field(fields.StringField("sensor_id_deb"))\
-
-        return rt
-
-
-    def create_varvalues_ramtable(self):
-
-        rt = ramtable.Table("icap.varvalues")\
-        .add_field(fields.UuidField("measurement_uuid"))\
-        .add_field(fields.UuidField("variable_uuid"))\
-        .add_field(fields.StringField("varname_deb"))\
-        .add_field(fields.StringField("serialized_value"))
-
-        return rt
+        self.log_file_name = "receiver.log"
 
 
     def do_the_job(self, request):
 
-        measurements_dtos = request.get_payload()["measurements"]
+        payload = request.get_payload()
 
-        rt_measurements = self.create_measurements_ramtable()
-        rt_varvalues = self.create_varvalues_ramtable()
+        if "measurements" in payload:
+        
+            measurements_dtos = payload["measurements"]
 
-        for dto in measurements_dtos: 
-            m = measurement.Measurement(self).import_dto(dto)
-            rt_measurements.union(m.get_measurement_ramtable())
-            rt_varvalues.union(m.get_varvalues_ramtable())
+            rt_measurements = rt_varvalues = None 
 
-        mydbl = self.get_dbl() 
-        scr = mydbl.new_script("insmeas", "icap")
-        scr.import_source_ramtable(rt_measurements).import_source_ramtable(rt_varvalues)
-        print(scr.get_snippet())
-        # mydbl.execute(scr).commit()
+            for dto in measurements_dtos: 
 
-        # log_file = open("log.txt", "a")
-        # log_file.write(str(self.get_req().get_payload()));
-        # log_file.write("\n");
+                m = measurement.Measurement(self).import_dto(dto)
+
+                rt_m = m.get_measurement_ramtable()
+                rt_measurements = rt_m if rt_measurements is None else rt_measurements.union(rt_m) 
+
+                rt_v = m.get_varvalues_ramtable()
+                rt_varvalues = rt_v if rt_varvalues is None else rt_varvalues.union(rt_v)
+
+            mydbl = self.get_dbl() 
+
+            scr = mydbl.new_script("insert_measurements", "icap")
+            scr.import_source_ramtable(rt_measurements).import_source_ramtable(rt_varvalues)
+            
+            if self.is_debug_mode():
+                print(rt_measurements)
+                print(scr.get_snippet())
+            
+            mydbl.execute(scr).commit()
+
+            if self.is_write_logs_mode():
+                log_file = open(self.get_log_file_path(), "a")
+                log_file.write(str(self.get_req().get_payload()));
+                log_file.write("\n");
 
 
     def get_debug_request_body(self):

@@ -5,7 +5,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys, pathlib
-import  dbl, cfg, bureaucrat, clientreq, dirdesk
+import  dblayer, cfg, bureaucrat, clientreq, dirdesk
 
 
 class RestServer (bureaucrat.Bureaucrat):
@@ -17,10 +17,8 @@ class RestServer (bureaucrat.Bureaucrat):
         self.app = self
         self.set_cfg_file_path(rel_cfg_file_path)
         self.cfg = cfg.Cfg().load(self.get_cfg_file_path())
-        self.dbl = dbl.Dbl(self)
+        self.dbl = dblayer.Dbl(self)
         self.directory_desk = dirdesk.DirectoryDesk(self)
-
-        self.debug_mode_flag = False
 
 
     def set_cfg_file_path(self, rel_cfg_file_path):
@@ -45,7 +43,8 @@ class RestServer (bureaucrat.Bureaucrat):
     def parse_cgi_data(self):
 
         content_len = os.environ.get("CONTENT_LENGTH", "0")
-        body = self.get_debug_request_body() if self.is_debug_mode() else sys.stdin.read(int(content_len))
+        body = self.get_debug_request_body() if self.is_debug_mode() \
+               else sys.stdin.read(int(content_len))
         
         return clientreq.ClientRequest(os.environ, cgi.FieldStorage(), body)
 

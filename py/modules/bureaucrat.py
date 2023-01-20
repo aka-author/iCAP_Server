@@ -5,7 +5,7 @@
 # # ## ### ##### ######## ############# ##################### 
 
 import uuid
-import status, utils
+import status
 
 
 class Bureaucrat:
@@ -22,7 +22,7 @@ class Bureaucrat:
         self.dbl = None
         self.req = None
 
-        self.debug_mode_flag = None
+        self.log_file_name = None
 
 
     def set_chief(self, chief):
@@ -110,4 +110,19 @@ class Bureaucrat:
 
     def is_debug_mode(self):
 
-        return self.debug_mode_flag if self.debug_mode_flag is not None else self.get_chief().is_debug_mode()
+        return self.get_cfg().is_debug_mode()
+
+
+    def is_write_logs_mode(self):
+
+        return self.get_cfg().is_write_logs_mode()
+
+
+    def get_log_file_name(self):
+
+        return self.log_file_name
+
+
+    def get_log_file_path(self):
+
+        return self.get_log_file_name()
