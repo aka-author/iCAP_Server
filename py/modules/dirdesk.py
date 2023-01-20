@@ -17,6 +17,8 @@ class DirectoryDesk(bureaucrat.Bureaucrat):
         self.rt_variables = self.fetch_variables()
 
 
+    # Sensors
+
     def fetch_sensors(self):
 
         rt_sensors = ramtable.Table("icap.sensors")\
@@ -26,8 +28,6 @@ class DirectoryDesk(bureaucrat.Bureaucrat):
         dbl = self.get_dbl()
 
         dbl.execute(dbl.new_select().set_output_ramtable(rt_sensors))
-
-        print(rt_sensors)
         
         return rt_sensors
 
@@ -43,6 +43,8 @@ class DirectoryDesk(bureaucrat.Bureaucrat):
 
         return sn 
 
+
+    # Variables
 
     def fetch_variables(self):
 
@@ -68,4 +70,3 @@ class DirectoryDesk(bureaucrat.Bureaucrat):
             var = variable.Variable(self).load_from_ramtable_row(rows[0])
 
         return var 
-

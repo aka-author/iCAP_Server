@@ -501,7 +501,7 @@ class Script(bureaucrat.Bureaucrat):
 
     def add_query(self, query):
 
-        self.queries.append(query);
+        self.queries.append(query)
 
         if query.is_selective():
             self.selective_query = query

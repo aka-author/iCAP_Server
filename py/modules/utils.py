@@ -4,7 +4,7 @@
 # Func:    Service functions                      (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import hashlib, uuid
+import hashlib, uuid, re
 from datetime import datetime
 
 
@@ -123,18 +123,85 @@ def timestamp2str(timestamp, custom_format=None):
     return datetime.strftime(timestamp, format) if timestamp is not None else None
 
 
-def detect_timestamp_fromat(str):
+class TimestampFormat():
 
-    fmt = ""
+    def __init__(self, fname=None, fstring=None):
 
-    l = len(str)
+        self.fname = fname
+        self.fstring = fstring
 
-    if l > len("2000-01-01"):
-        fmt = "%Y-%m-%d %H:%M:%S.%f"
+
+    def is_defined(self):
+
+        return self.get_fname() is not None
+
+
+    def get_formats(self):
+
+        return {
+            "i12_date": 
+                {"fstring": "%Y-%m-%d", 
+                 "regexp": "^\d{4}\-\d\d\-\d\d$"},
+            "i12_datetime": 
+                {"fstring": "%Y-%m-%d %H:%M:%S", 
+                 "regexp": "^\d{4}\-\d\d\-\d\d \d\d:\d\d:\d\d$"},
+            "i12_datetime_with_ms": 
+                {"fstring": "%Y-%m-%d %H:%M:%S.%f", 
+                 "regexp": "^\d{4}\-\d\d\-\d\d \d\d:\d\d:\d\d\.\d*$"},
+            "i12_datetime_with_utc": 
+                {"fstring": None, 
+                 "regexp": "^(\d{4}\-\d\d\-\d\d \d\d:\d\d:\d\d)(\.\d*)? UTC[\+|\-]\d\d$"}
+        }
+
+
+    def get_fstring_by_fname(self, fname):
+
+        return safedic(safedic(self.get_formats(), fname), "fstring")
+
+
+    def detect(self, s):
+
+        formats = self.get_formats()
+
+        for fname in formats:
+            if re.search(formats[fname]["regexp"], s) is not None:
+                self.fname, self.fstring = fname, formats[fname]["fstring"]
+                break
+
+        return self
+
+
+    def get_fname(self):
+
+        return self.fname
+
+
+    def get_fstring(self):
+
+        return self.fstring
+
+
+def str2timestamp(src_s, custom_fstring=None):
+
+    ts = None
+
+    if custom_fstring is not None:
+        ts = datetime.strptime(s, custom_fstring)
     else:
-        fmt = "%Y-%m-%d"
+        format = TimestampFormat().detect(src_s)
 
-    return fmt
+        if format.is_defined():
+
+            if format.get_fname() == "i12_datetime_with_utc":
+                s = src_s.split(" UTC")[0]
+                f = format.get_fstring_by_fname("i12_datetime_with_ms")
+            else:
+                s = src_s
+                f = format.get_fstring()
+            print(f)
+            ts = datetime.strptime(s, f)
+
+    return ts
 
 
 def strnow():

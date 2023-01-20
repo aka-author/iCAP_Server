@@ -5,7 +5,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import uuid, datetime
-import fields, model, ramtable, dirdesk
+import utils, fields, model, ramtable
 
 
 class VarValue(model.Model):
@@ -26,15 +26,6 @@ class VarValue(model.Model):
         return self
 
 
-    def get_variable_uuid(self):
-
-        dd = self.get_app().get_directory_desk()
-
-        v = dd.get_variable_by_name(self.get_varname())
-
-        return v.get_uuid() if v is not None else None
-
-
     def get_varname(self):
 
         return self.varname
@@ -44,6 +35,15 @@ class VarValue(model.Model):
 
         return self.parsable_value
  
+
+    def get_variable_uuid(self):
+
+        dd = self.get_app().get_directory_desk()
+
+        v = dd.get_variable_by_name(self.get_varname())
+
+        return v.get_uuid() if v is not None else None
+
 
 class Measurement(model.Model):
 
@@ -84,7 +84,7 @@ class Measurement(model.Model):
     def import_dto(self, dto):
 
         self.uuis = dto["id"]
-        self.accepted_at = datetime.datetime.strptime(dto["acceptedAt"].split(" UTC")[0], "%Y-%m-%d %H:%M:%S.%f")
+        self.accepted_at = utils.str2timestamp(dto["acceptedAt"])
         self.sensor_id = dto["sensorId"]
 
         self.args = [VarValue(self).import_dto(vv_dto) for vv_dto in dto["args"]]
