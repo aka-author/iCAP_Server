@@ -50,7 +50,7 @@ class RestServer (bureaucrat.Bureaucrat):
 
 
     def auth_client(self, request):
-
+  
         return True
 
 
