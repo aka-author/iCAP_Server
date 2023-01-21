@@ -38,7 +38,7 @@ class Receiver(restserver.RestServer):
 
                 m = measurement.Measurement(self).import_dto(dto)
 
-                if m.is_valid() and not self.get_dbicap().check_measurement(m.get_signature()):
+                if m.is_valid() and not self.get_source_desk().check_measurement(m.get_signature()):
 
                     rt_m = m.get_measurement_ramtable()
                     rt_measurements = rt_m if rt_measurements is None else rt_measurements.union(rt_m) 
