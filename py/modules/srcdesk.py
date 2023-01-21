@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Module:  dirdesk.py                        (\(\
+# Module:  srcdesk.py                        (\(\
 # Func:    Managing source data              (^.^)
 # # ## ### ##### ######## ############# #####################
 
@@ -14,7 +14,7 @@ class SourceDesk(bureaucrat.Bureaucrat):
         super().__init__(chief)
 
 
-    def check_measurement(self, signature):
+    def check_measurement(self, hashkey):
 
         measurement_exists = False
 
@@ -24,13 +24,11 @@ class SourceDesk(bureaucrat.Bureaucrat):
         dbl = self.get_dbl()
 
         q_cc = dbl.new_select("count_competitors", "icap").set_output_ramtable(rt_cc)\
-            .WHERE.sql.set("signature='" + signature + "'").q
+            .WHERE.sql.set("hashkey='" + hashkey + "'").q
 
-        dbl = self.get_dbl()
+        dbl = self.get_dbl().execute(q_cc)
 
-        dbl.execute(q_cc)
-
-        if rt_cc.count_rows == 1: 
+        if rt_cc.count_rows() == 1: 
             measurement_exists = rt_cc.select_by_index(0).get_field_value("count_competitors") > 0
 
         return measurement_exists

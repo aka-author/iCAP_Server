@@ -82,6 +82,7 @@ create type datatype_name as enum ('STRING', 'BIGINT', 'DOUBLE', 'TIMESTAMP', 'T
 create table variables (
     uuid                uuid default gen_random_uuid() not null primary key,
     varname             varchar not null,
+    shortcut            varchar,
     shop_uuid           uuid references shops,
     datatype_name       datatype_name not null,
     validate_pattern    varchar,
@@ -101,12 +102,14 @@ create table measurements (
     accepted_at         timestamp with time zone,
     sensor_uuid         uuid references sensors,
     sensor_id_deb       varchar,
+    hashkey             varchar,
     created_at          timestamp not null default now(),
     updated_at          timestamp not null default now(),
     deleted_at          timestamp
 );
 
 create unique index measurements__accepted_at__idx on measurements (accepted_at);
+create unique index measurements__hashkey__idx on measurements (hashkey);
 
 
 create type value_subset_code as enum ('ARG', 'OUT');
@@ -117,12 +120,7 @@ create table varvalues (
     variable_uuid       uuid references variables,
     varname_deb         varchar,
     value_subset        value_subset_code not null,       
-    parsable_value_str  varchar,
-    parsable_value_bgi  bigint,
-    parsable_value_dbl  double precision,
-    parsable_value_tms  timestamp,
-    parsable_value_boo  boolean,
-    parsable_value_jsn  json,
+    serialized_value    varchar,
     created_at          timestamp not null default now(),
     updated_at          timestamp not null default now(),
     deleted_at          timestamp

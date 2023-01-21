@@ -132,7 +132,7 @@ class Measurement(model.Model):
         return valid_flag           
 
 
-    def get_signature(self):
+    def get_hashkey(self):
 
         dd = self.get_app().get_directory_desk()
 
@@ -142,33 +142,34 @@ class Measurement(model.Model):
         out_names = [out.get_varname() for out in self.outs]
         out_names.sort()
 
-        signature = "#".join([utils.safeval(dd.get_variable_by_name(arg_name).get_shortcut(), arg_name)\
+        args_hashkey = "#".join([utils.safeval(dd.get_variable_by_name(arg_name).get_shortcut(), arg_name)\
                      + ":"\
-                     + str(self.get_parsable_value(arg_name)) for arg_name in arg_names])\
-                     + "$"\
-                     + "#".join([utils.safeval(dd.get_variable_by_name(out_name).get_shortcut(), out_name) \
-                        for out_name in out_names])
+                     + str(self.get_parsable_value(arg_name)) \
+                                 for arg_name in arg_names])
 
-        print(signature)
+        outs_hashkey = "#".join([utils.safeval(dd.get_variable_by_name(out_name).get_shortcut(), out_name) \
+                                 for out_name in out_names])
 
-        return signature
+        hashkey = args_hashkey + "$" + outs_hashkey
+
+        return hashkey
  
 
     def get_measurement_ramtable(self):
 
         rt_m = ramtable.Table("measurements")\
             .add_field(fields.UuidField("uuid"))\
-            .add_field(fields.StringField("signature"))\
             .add_field(fields.TimestampField("accepted_at"))\
             .add_field(fields.UuidField("sensor_uuid"))\
-            .add_field(fields.StringField("sensor_id_deb"))
+            .add_field(fields.StringField("sensor_id_deb"))\
+            .add_field(fields.StringField("hashkey"))
 
         src_m = { 
                     "uuid":          self.get_uuid(),
-                    "signature":     self.get_signature(),
                     "accepted_at":   self.get_accepted_at(), 
                     "sensor_uuid":   self.get_sensor_uuid(),
-                    "sensor_id_deb": self.get_sensor_id() 
+                    "sensor_id_deb": self.get_sensor_id(), 
+                    "hashkey":       self.get_hashkey()
                 }
 
         rt_m.insert(src_m)
