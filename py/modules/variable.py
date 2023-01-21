@@ -34,6 +34,7 @@ class Variable(bureaucrat.Bureaucrat):
         self.uuid = None
         self.varname = None
         self.datatype_name = None
+        self.shortcut = None
 
 
     def load_from_ramtable_row(self, row):
@@ -41,6 +42,7 @@ class Variable(bureaucrat.Bureaucrat):
         self.uuid = row.get_field_value("uuid")
         self.varname = row.get_field_value("varname")
         self.datatype_name = row.get_field_value("datatype_name")
+        self.shortcut = row.get_field_value("shortcut")
 
         return self
 
@@ -58,3 +60,8 @@ class Variable(bureaucrat.Bureaucrat):
     def get_datatype_name(self):
 
         return self.datatype_name
+
+    
+    def get_shortcut(self):
+
+        return self.shortcut

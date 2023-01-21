@@ -51,7 +51,8 @@ class DirectoryDesk(bureaucrat.Bureaucrat):
         rt_variables = ramtable.Table("icap.variables")\
             .add_field(fields.UuidField("uuid"))\
             .add_field(variable.VarnameField("varname"))\
-            .add_field(fields.StringField("datatype_name"))
+            .add_field(fields.StringField("datatype_name"))\
+            .add_field(fields.StringField("shortcut"))
 
         dbl = self.get_dbl()
         q = dbl.new_select().set_output_ramtable(rt_variables)

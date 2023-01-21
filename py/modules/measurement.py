@@ -5,7 +5,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import uuid, datetime
-import utils, fields, model, ramtable
+import utils, fields, model, ramtable, dirdesk
 
 
 class VarValue(model.Model):
@@ -45,6 +45,11 @@ class VarValue(model.Model):
         return v.get_uuid() if v is not None else None
 
 
+    def is_valid(self): 
+
+        return self.get_variable_uuid() is not None
+
+
 class Measurement(model.Model):
 
     def __init__(self, script):
@@ -54,8 +59,9 @@ class Measurement(model.Model):
         self.accepted_at = datetime.datetime.now()
         self.sensor_id = ""    
         self.args = []
-        self.outs = [] 
-
+        self.outs = []
+        self.varvals_by_names = {} 
+        
 
     def get_uuid(self):
 
@@ -80,6 +86,21 @@ class Measurement(model.Model):
 
         return s.get_uuid() if s is not None else None
 
+    
+    def get_parsable_value(self, varname):
+
+        return self.varvals_by_names[varname].get_parsable_value()
+
+
+    def count_args(self):
+
+        return len(self.args)
+
+
+    def count_outs(self):
+
+        return len(self.outs)
+
 
     def import_dto(self, dto):
 
@@ -89,33 +110,75 @@ class Measurement(model.Model):
 
         self.args = [VarValue(self).import_dto(vv_dto) for vv_dto in dto["args"]]
         self.outs = [VarValue(self).import_dto(vv_dto) for vv_dto in dto["outs"]]
+        
+        for varval in self.args + self.outs: 
+            self.varvals_by_names[varval.get_varname()] = varval
 
         return self
 
 
+    def is_valid(self): 
+
+        valid_flag = self.get_accepted_at() is not None \
+                 and self.get_sensor_id() is not None \
+                 and self.count_args() > 0 
+
+        if valid_flag:
+
+            for v in self.args + self.outs:
+                valid_flag = v.is_valid()
+                if not valid_flag: break
+
+        return valid_flag           
+
+
+    def get_signature(self):
+
+        dd = self.get_app().get_directory_desk()
+
+        arg_names = [arg.get_varname() for arg in self.args]
+        arg_names.sort()
+
+        out_names = [out.get_varname() for out in self.outs]
+        out_names.sort()
+
+        signature = "#".join([utils.safeval(dd.get_variable_by_name(arg_name).get_shortcut(), arg_name)\
+                     + ":"\
+                     + str(self.get_parsable_value(arg_name)) for arg_name in arg_names])\
+                     + "$"\
+                     + "#".join([utils.safeval(dd.get_variable_by_name(out_name).get_shortcut(), out_name) \
+                        for out_name in out_names])
+
+        print(signature)
+
+        return signature
+ 
+
     def get_measurement_ramtable(self):
 
-        m_rt = ramtable.Table("measurements")\
+        rt_m = ramtable.Table("measurements")\
             .add_field(fields.UuidField("uuid"))\
+            .add_field(fields.StringField("signature"))\
             .add_field(fields.TimestampField("accepted_at"))\
             .add_field(fields.UuidField("sensor_uuid"))\
             .add_field(fields.StringField("sensor_id_deb"))
 
-        m_src = { 
-                "uuid":          self.get_uuid(),
-                "accepted_at":   self.get_accepted_at(), 
-                "sensor_uuid":   self.get_sensor_uuid(),
-                "sensor_id_deb": self.get_sensor_id() 
+        src_m = { 
+                    "uuid":          self.get_uuid(),
+                    "signature":     self.get_signature(),
+                    "accepted_at":   self.get_accepted_at(), 
+                    "sensor_uuid":   self.get_sensor_uuid(),
+                    "sensor_id_deb": self.get_sensor_id() 
                 }
 
-        m_rt.insert(m_src)
+        rt_m.insert(src_m)
 
-        return m_rt
+        return rt_m
 
 
     def get_varvalues_ramtable(self):
 
-        vv_rt = ramtable.Table("varvalues")\
+        rt_vv = ramtable.Table("varvalues")\
             .add_field(fields.UuidField("measurement_uuid"))\
             .add_field(fields.UuidField("variable_uuid"))\
             .add_field(fields.StringField("varname_deb"))\
@@ -124,22 +187,19 @@ class Measurement(model.Model):
 
         for vv in self.args:
 
-            print(vv)
+            src_vv = {  
+                        "measurement_uuid": self.get_uuid(),
+                        "variable_uuid": vv.get_variable_uuid(),
+                        "varname_deb": vv.get_varname(),
+                        "serialized_value": str(vv.get_parsable_value()),
+                        "value_subset": "ARG"
+                    }
 
-            if vv is not None:
-                vv_src = {  
-                            "measurement_uuid": self.get_uuid(),
-                            "variable_uuid": vv.get_variable_uuid(),
-                            "varname_deb": vv.get_varname(),
-                            "serialized_value": str(vv.get_parsable_value()),
-                            "value_subset": "ARG"
-                        }
-
-                vv_rt.insert(vv_src)
+            rt_vv.insert(src_vv)
 
         for vv in self.outs:
 
-            vv_src = {  
+            src_vv = {  
                         "measurement_uuid": self.get_uuid(),
                         "variable_uuid": vv.get_variable_uuid(),
                         "varname_deb": vv.get_varname(),
@@ -147,6 +207,6 @@ class Measurement(model.Model):
                         "value_subset": "OUT"
                      }
 
-            vv_rt.insert(vv_src)
+            rt_vv.insert(src_vv)
 
-        return vv_rt
+        return rt_vv

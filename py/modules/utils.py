@@ -74,6 +74,11 @@ def apos(s):
     return "'" + safeval(str(s), "") + "'" 
 
 
+def escsql(s):
+
+    return s.replace("'", "''")
+
+
 def consep(prefix, separ, postfix):
 
     if prefix is not None and postfix is not None:
@@ -198,7 +203,7 @@ def str2timestamp(src_s, custom_fstring=None):
             else:
                 s = src_s
                 f = format.get_fstring()
-            print(f)
+            
             ts = datetime.strptime(s, f)
 
     return ts

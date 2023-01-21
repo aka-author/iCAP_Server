@@ -38,22 +38,26 @@ class Receiver(restserver.RestServer):
 
                 m = measurement.Measurement(self).import_dto(dto)
 
-                rt_m = m.get_measurement_ramtable()
-                rt_measurements = rt_m if rt_measurements is None else rt_measurements.union(rt_m) 
+                if m.is_valid() and not self.get_dbicap().check_measurement(m.get_signature()):
 
-                rt_v = m.get_varvalues_ramtable()
-                rt_varvalues = rt_v if rt_varvalues is None else rt_varvalues.union(rt_v)
+                    rt_m = m.get_measurement_ramtable()
+                    rt_measurements = rt_m if rt_measurements is None else rt_measurements.union(rt_m) 
 
-            mydbl = self.get_dbl() 
+                    rt_v = m.get_varvalues_ramtable()
+                    rt_varvalues = rt_v if rt_varvalues is None else rt_varvalues.union(rt_v)
 
-            scr = mydbl.new_script("insert_measurements", "icap")
-            scr.import_source_ramtable(rt_measurements).import_source_ramtable(rt_varvalues)
+            if rt_measurements is not None and rt_varvalues is not None:
+
+                dbl = self.get_dbl() 
+
+                scr = dbl.new_script("insert_measurements", "icap")
+                scr.import_source_ramtable(rt_measurements).import_source_ramtable(rt_varvalues)
             
-            if self.is_debug_mode():
-                print(rt_measurements)
-                print(scr.get_snippet())
-            
-            mydbl.execute(scr).commit()
+                dbl.execute(scr).commit()
+
+                if self.is_debug_mode():
+                    print(rt_measurements)
+                    print(scr.get_snippet())
 
             if self.is_write_logs_mode():
                 log_file = open(self.get_log_file_path(), "a")
@@ -67,8 +71,3 @@ class Receiver(restserver.RestServer):
     
 
 Receiver("../cfg/fserv.ini").process_request()
-
-
-
-
-

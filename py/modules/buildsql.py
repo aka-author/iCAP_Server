@@ -82,7 +82,7 @@ class Sql(bureaucrat.Bureaucrat):
 
         if field_value is not None:
             if nature == "string":
-                value_snippet = utils.apos(field_value)
+                value_snippet = utils.apos(utils.escsql(field_value))
             elif nature == "numeric" or nature == "boolean":
                 value_snippet = field.serialize(field_value)
             elif nature == "uuid":
@@ -128,6 +128,12 @@ class ClauseSql(Sql):
     def get_snippet(self):
 
         return utils.separate(self.get_chief().get_clause_name(), " ", super().get_snippet())
+
+
+    @property
+    def q(self):
+
+        return self.get_chief().get_chief()
 
 
 class Clause(bureaucrat.Bureaucrat):
@@ -509,11 +515,17 @@ class Script(bureaucrat.Bureaucrat):
         return self
 
 
+    def count_queries(self):
+
+        return len(self.queries)
+
+
     def import_source_ramtable(self, src_rt):
 
-        for idx in range(0, src_rt.count_rows()):
-            self.add_query(Insert(self, None, \
-                self.get_scheme_name()).import_source_ramtable_row(src_rt.select_by_index(idx)))
+        if src_rt is not None: 
+            for idx in range(0, src_rt.count_rows()):
+                self.add_query(Insert(self, None, \
+                    self.get_scheme_name()).import_source_ramtable_row(src_rt.select_by_index(idx)))
 
         return self 
 
@@ -525,4 +537,4 @@ class Script(bureaucrat.Bureaucrat):
 
     def get_snippet(self):
 
-        return ";\n".join([q.get_snippet() for q in self.queries]) + ";"
+        return ";\n".join([q.get_snippet() for q in self.queries]) + (";" if self.count_queries() > 0 else "")

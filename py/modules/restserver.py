@@ -5,7 +5,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys, pathlib
-import  dblayer, cfg, bureaucrat, clientreq, dirdesk
+import  dblayer, cfg, bureaucrat, clientreq, dirdesk, dbicap
 
 
 class RestServer (bureaucrat.Bureaucrat):
@@ -18,6 +18,7 @@ class RestServer (bureaucrat.Bureaucrat):
         self.set_cfg_file_path(rel_cfg_file_path)
         self.cfg = cfg.Cfg().load(self.get_cfg_file_path())
         self.dbl = dblayer.Dbl(self)
+        self.dbicap = dbicap.DbIcap(self)
         self.directory_desk = dirdesk.DirectoryDesk(self)
 
 
@@ -34,6 +35,11 @@ class RestServer (bureaucrat.Bureaucrat):
         
         return self.cfg_file_path
 
+
+    def get_dbicap(self):
+
+        return self.dbicap
+        
 
     def get_directory_desk(self):
 
