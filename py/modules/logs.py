@@ -51,13 +51,15 @@ class Logger(bureaucrat.Bureaucrat):
 
     def log(self, record_type, details=""):
 
-        if self.get_cfg().is_log_to_file_mode():
-            self.log_file.write(self.assemble_log_record(record_type, details) + "\n")
+        if record_type != LOG_DEBUG or self.get_cfg().is_debug_mode():
 
-        if self.get_cfg().is_log_to_db_mode():
-            rt_rec = self.assemble_log_ramtable(record_type, details)
-            dbl = self.get_dbl()
-            dbl.execute(dbl.new_script().import_source_ramtable(rt_rec)).commit()
+            if self.get_cfg().is_log_to_file_mode():
+                self.log_file.write(self.assemble_log_record(record_type, details) + "\n")
+
+            if self.get_cfg().is_log_to_db_mode():
+                rt_rec = self.assemble_log_ramtable(record_type, details)
+                dbl = self.get_dbl()
+                dbl.execute(dbl.new_script("logs", "icap").import_source_ramtable(rt_rec)).commit()
 
         return self
 

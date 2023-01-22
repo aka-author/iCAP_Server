@@ -63,13 +63,10 @@ class Receiver(restserver.RestServer):
             
                 dbl.execute(scr).commit()
 
-                if self.is_debug_mode():
-                    print(rt_measurements)
-                    print(scr.get_snippet())
+                self.deb(rt_measurements)
+                self.deb(scr.get_snippet())
 
-            if self.is_write_logs_mode():
-
-                self.get_logger().log(logs.LOG_DEBUG,  str(self.get_req().get_payload()));
+            self.get_logger().log(logs.LOG_DEBUG, str(self.get_req().get_payload()));
 
 
     def get_debug_request_body(self):
