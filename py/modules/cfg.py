@@ -44,6 +44,21 @@ class Cfg:
         return self.get_param_value("MODE", "write_logs") == "yes"
 
 
+    def is_log_to_file_mode(self):
+
+        return self.get_param_value("LOGGING", "log_to_files") == "yes"
+
+
+    def get_log_folder_path(self):
+
+        return self.get_param_value("LOGGING", "log_folder_path")
+
+
+    def is_log_to_db_mode(self):
+
+        return self.get_param_value("LOGGING", "log_to_db") == "yes"
+
+
     def get_default_cms_session_duration(self):
 
         duration = self.get_param_value("CMS_SESSION", "default_duration")

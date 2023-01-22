@@ -1,6 +1,8 @@
 create table log_records (
     uuid                uuid default gen_random_uuid() not null primary key,
+    session_id          varchar,
     writer_name         varchar not null,
+    record_type         varchar,
     details             varchar,
     created_at          timestamp not null default now(),
     updated_at          timestamp not null default now(),

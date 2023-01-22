@@ -32,3 +32,8 @@ class SourceDesk(bureaucrat.Bureaucrat):
             measurement_exists = rt_cc.select_by_index(0).get_field_value("count_competitors") > 0
 
         return measurement_exists
+
+
+    def get_measurements_query(self, mandatory_fields_names=None):
+
+        pass

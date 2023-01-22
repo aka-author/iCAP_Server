@@ -4,8 +4,8 @@
 # Func:    Providing a prototype for a REST server   (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import cgi, os, sys, pathlib
-import  dblayer, cfg, bureaucrat, clientreq, dirdesk, srcdesk
+import cgi, os, sys, pathlib, uuid
+import dblayer, cfg, bureaucrat, logs, clientreq, dirdesk, srcdesk
 
 
 class RestServer (bureaucrat.Bureaucrat):
@@ -15,18 +15,39 @@ class RestServer (bureaucrat.Bureaucrat):
         super().__init__()
 
         self.app = self
+        self.session_id = str(uuid.uuid4())
+        
         self.set_cfg_file_path(rel_cfg_file_path)
         self.cfg = cfg.Cfg().load(self.get_cfg_file_path())
+        
         self.dbl = dblayer.Dbl(self)
+        
+        self.logger = logs.Logger(self)
+
         self.source_desk = srcdesk.SourceDesk(self)
         self.directory_desk = dirdesk.DirectoryDesk(self)
 
 
-    def set_cfg_file_path(self, rel_cfg_file_path):
+    def get_app_name(self):
+
+        return "icap"
+
+
+    def get_session_id(self):
+
+        return self.session_id
+
+
+    def assemble_component_path(self, rel_path):
 
         script_path = str(pathlib.Path(__file__).parent.absolute())
 
-        self.cfg_file_path = os.path.abspath(script_path + "/../" + rel_cfg_file_path)
+        return os.path.abspath(script_path + "/../" + rel_path)
+
+
+    def set_cfg_file_path(self, rel_cfg_file_path):
+
+        self.cfg_file_path = self.assemble_component_path(rel_cfg_file_path)
 
         return self
 
@@ -34,6 +55,23 @@ class RestServer (bureaucrat.Bureaucrat):
     def get_cfg_file_path(self): 
         
         return self.cfg_file_path
+
+
+    def get_log_file_name(self):
+        
+        return "icap.log"
+
+
+    def get_log_file_path(self):
+
+        log_file_rel_path = self.get_cfg().get_log_folder_path() + "/" + self.get_log_file_name()
+
+        return self.assemble_component_path(log_file_rel_path)
+
+
+    def get_logger(self):
+
+        return self.logger
 
 
     def get_source_desk(self):

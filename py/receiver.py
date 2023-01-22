@@ -11,7 +11,7 @@ import os, sys, pathlib
 
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/modules"))
 
-from modules import restserver, measurement
+from modules import restserver, logs, measurement
 from debug import deb_receiver
 
 
@@ -21,7 +21,15 @@ class Receiver(restserver.RestServer):
 
         super().__init__(rel_cfg_file_path)
 
-        self.log_file_name = "receiver.log"
+
+    def get_app_name(self):
+
+        return "Receiver"
+
+
+    def get_log_file_name(self):
+
+        return "receiver.log"
 
 
     def do_the_job(self, request):
@@ -33,7 +41,7 @@ class Receiver(restserver.RestServer):
             measurements_dtos = payload["measurements"]
 
             rt_measurements = rt_varvalues = None 
-
+            
             for dto in measurements_dtos: 
 
                 m = measurement.Measurement(self).import_dto(dto)
@@ -60,9 +68,8 @@ class Receiver(restserver.RestServer):
                     print(scr.get_snippet())
 
             if self.is_write_logs_mode():
-                log_file = open(self.get_log_file_path(), "a")
-                log_file.write(str(self.get_req().get_payload()));
-                log_file.write("\n");
+
+                self.get_logger().log(logs.LOG_DEBUG,  str(self.get_req().get_payload()));
 
 
     def get_debug_request_body(self):
