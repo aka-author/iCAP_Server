@@ -36,12 +36,17 @@ class Cfg:
 
     def is_debug_mode(self):
 
-        return self.get_param_value("MODE", "debug") == "yes"
+        return self.get_param_value("MODE", "debug") == "on"
 
     
-    def is_write_logs_mode(self):
+    def is_console_mode(self):
 
-        return self.get_param_value("MODE", "write_logs") == "yes"
+        return self.get_param_value("MODE", "console") == "on"
+
+
+    def is_cgi_mode(self):
+
+        return self.get_param_value("MODE", "cgi") == "on"
 
 
     def is_log_to_file_mode(self):

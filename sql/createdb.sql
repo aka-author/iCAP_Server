@@ -3,6 +3,7 @@ create table log_records (
     session_id          varchar,
     writer_name         varchar not null,
     record_type         varchar,
+    wording             varchar,
     details             varchar,
     created_at          timestamp not null default now(),
     updated_at          timestamp not null default now(),

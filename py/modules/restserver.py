@@ -5,8 +5,10 @@
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys, pathlib, uuid
-import dblayer, cfg, bureaucrat, logs, clientreq, dirdesk, srcdesk
+import status, dblayer, cfg, bureaucrat, logs, clientreq, dirdesk, srcdesk
 
+
+GLOBAL_APP = None
 
 class RestServer (bureaucrat.Bureaucrat):
 
@@ -19,6 +21,8 @@ class RestServer (bureaucrat.Bureaucrat):
         
         self.set_cfg_file_path(rel_cfg_file_path)
         self.cfg = cfg.Cfg().load(self.get_cfg_file_path())
+
+        GLOBAL_APP = self
         
         self.dbl = dblayer.Dbl(self)
         
@@ -74,6 +78,14 @@ class RestServer (bureaucrat.Bureaucrat):
         return self.logger
 
 
+
+    def log(self, record_type, wording="", details=""):
+
+        self.get_logger().log(record_type, wording, details)
+
+        return self
+
+
     def get_source_desk(self):
 
         return self.source_desk
@@ -98,14 +110,19 @@ class RestServer (bureaucrat.Bureaucrat):
         return True
 
 
+    def validate_request(self):
+
+        return True
+
+
     def type_positive_response(self, response):
 
-        pass 
+        print("\n") 
 
 
     def type_negative_response(self):
 
-        pass
+        print("\n")
 
 
     def do_the_job(self, request):
@@ -116,8 +133,15 @@ class RestServer (bureaucrat.Bureaucrat):
     def process_request(self):
 
         self.set_req(self.parse_cgi_data())
+        req = self.get_req()
 
-        if self.auth_client(self.get_req()):
-            self.type_positive_response(self.do_the_job(self.get_req()))
+        if self.auth_client(req):
+
+            if self.auth_client(req) and self.validate_request(req):
+                self.type_positive_response(self.do_the_job(req))
+            else:
+                self.set_status_code(status.ERR_INCORRECT_REQUEST)
+                self.log(logs.LOG_ERROR, status.MSG_INCORRECT_REQUEST, self.req.get_serialized_payload())
+
         else:
             self.type_negative_response()

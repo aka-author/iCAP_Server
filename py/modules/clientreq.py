@@ -5,16 +5,28 @@
 # # ## ### ##### ######## ############# #####################
 
 import json
-import utils
+import status,utils
 
 
 class ClientRequest:
 
     def __init__(self, environ, field_storage, body):
 
+        self.status_code = status.OK
+
         self.environ = environ
         self.field_storage = field_storage
         self.body = body
+
+
+    def set_status_code(self, status_code):
+
+        self.status_code = status_code
+
+
+    def get_status_code(self):
+
+        return self.status_code
 
 
     # Working with HTTP headers
@@ -84,15 +96,32 @@ class ClientRequest:
         return param_value
 
 
+    # Working with a body and payload
+
+    def get_body(self):
+
+        return self.body
+
+
+    def get_serialized_payload(self):
+
+        ct = self.get_content_type()
+
+        if ct == "application/json":
+            sp = self.get_body() 
+        elif ct == "multipart/form-data":
+            sp = self.get_single_field()
+
+        return sp 
+
+
     def get_payload(self):
 
-        payload = None
+        payload = {}        
 
-        content_type = self.get_content_type()
-                            
-        if content_type == "application/json":
-            payload = json.loads(self.body) 
-        elif content_type == "multipart/form-data":
-            payload = json.loads(self.get_single_field())
+        try:
+            payload = json.loads(self.get_serialized_payload())
+        except:
+            self.set_status_code(status.ERR_INCORRECT_REQUEST)
             
         return payload

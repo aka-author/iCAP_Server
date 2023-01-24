@@ -28,40 +28,48 @@ class Logger(bureaucrat.Bureaucrat):
         return self.get_log_file_name()
 
 
-    def assemble_log_record(self, logrec_type, details=""):
+    def assemble_log_record(self, logrec_type, wording, details=""):
 
         return " ".join([self.get_app().get_session_id(), 
                          utils.strnow(), 
                          self.get_app().get_app_name(), 
-                         logrec_type, details])
+                         logrec_type, wording, details])
 
 
-    def assemble_log_ramtable(self, record_type, details=""):
+    def assemble_log_ramtable(self, record_type, wording, details=""):
 
         return ramtable.Table("log_records")\
                 .add_field(fields.StringField("session_id"))\
                 .add_field(fields.StringField("writer_name"))\
                 .add_field(fields.StringField("record_type"))\
+                .add_field(fields.StringField("wording"))\
                 .add_field(fields.StringField("details"))\
                     .insert({"session_id": self.get_app().get_session_id(),
                              "writer_name": self.get_app().get_app_name(), 
                              "record_type": record_type, 
+                             "wording": wording,
                              "details": details})
 
 
-    def log(self, record_type, details=""):
+    def log(self, record_type, wording, details=""):
 
         if record_type != LOG_DEBUG or self.get_cfg().is_debug_mode():
 
             if self.get_cfg().is_log_to_file_mode():
-                self.log_file.write(self.assemble_log_record(record_type, details) + "\n")
+                self.log_file.write(self.assemble_log_record(record_type, wording, details) + "\n")
 
             if self.get_cfg().is_log_to_db_mode():
-                rt_rec = self.assemble_log_ramtable(record_type, details)
+                rt_rec = self.assemble_log_ramtable(record_type, wording, details)
                 dbl = self.get_dbl()
                 dbl.execute(dbl.new_script("logs", "icap").import_source_ramtable(rt_rec)).commit()
 
         return self
+
+
+    def console(self, message):
+
+        if self.get_cfg().is_console_mode():
+            print(message)
 
 
     def __del__(self):

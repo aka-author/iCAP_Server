@@ -111,9 +111,9 @@ class Bureaucrat:
         return self.get_cfg().is_debug_mode()
 
 
-    def is_write_logs_mode(self):
+    def is_console_mode(self):
 
-        return self.get_cfg().is_write_logs_mode()
+        return self.get_cfg().is_console_mode()
 
 
     def deb(self, debinfo):

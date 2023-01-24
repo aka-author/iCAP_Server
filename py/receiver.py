@@ -32,41 +32,44 @@ class Receiver(restserver.RestServer):
         return "receiver.log"
 
 
-    def do_the_job(self, request):
-
-        payload = request.get_payload()
-
-        if "measurements" in payload:
+    def validate_request(self, request):
         
-            measurements_dtos = payload["measurements"]
+        return "measurements" in request.get_payload()
 
-            rt_measurements = rt_varvalues = None 
-            
-            for dto in measurements_dtos: 
 
-                m = measurement.Measurement(self).import_dto(dto)
+    def do_the_job(self, request):
+        
+        payload = request.get_payload()
+        
+        measurements_dtos = payload["measurements"]
 
-                if m.is_valid() and not self.get_source_desk().check_measurement(m.get_hashkey()):
+        rt_measurements = rt_varvalues = None 
+        
+        for dto in measurements_dtos: 
 
-                    rt_m = m.get_measurement_ramtable()
-                    rt_measurements = rt_m if rt_measurements is None else rt_measurements.union(rt_m) 
+            m = measurement.Measurement(self).import_dto(dto)
 
-                    rt_v = m.get_varvalues_ramtable()
-                    rt_varvalues = rt_v if rt_varvalues is None else rt_varvalues.union(rt_v)
+            if m.is_valid() and not self.get_source_desk().check_measurement(m.get_hashkey()):
 
-            if rt_measurements is not None and rt_varvalues is not None:
+                rt_m = m.get_measurement_ramtable()
+                rt_measurements = rt_m if rt_measurements is None else rt_measurements.union(rt_m) 
 
-                dbl = self.get_dbl() 
+                rt_v = m.get_varvalues_ramtable()
+                rt_varvalues = rt_v if rt_varvalues is None else rt_varvalues.union(rt_v)
 
-                scr = dbl.new_script("insert_measurements", "icap")
-                scr.import_source_ramtable(rt_measurements).import_source_ramtable(rt_varvalues)
-            
-                dbl.execute(scr).commit()
+        if rt_measurements is not None and rt_varvalues is not None:
 
-                self.deb(rt_measurements)
-                self.deb(scr.get_snippet())
+            dbl = self.get_dbl() 
 
-            self.get_logger().log(logs.LOG_DEBUG, str(self.get_req().get_payload()));
+            scr = dbl.new_script("insert_measurements", "icap")
+            scr.import_source_ramtable(rt_measurements).import_source_ramtable(rt_varvalues)
+        
+            dbl.execute(scr).commit()
+
+            self.deb(rt_measurements)
+            self.deb(scr.get_snippet())
+
+        self.log(logs.LOG_DEBUG, "Payload", str(self.get_req().get_payload()));
 
 
     def get_debug_request_body(self):
