@@ -5,7 +5,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys, pathlib, uuid
-import status, dblayer, cfg, bureaucrat, logs, clientreq, dirdesk, srcdesk
+import status, dblayer, cfg, bureaucrat, logs, clientreq, dirdesk, srcdesk, httpresp
 
 
 GLOBAL_APP = None
@@ -121,19 +121,14 @@ class RestServer (bureaucrat.Bureaucrat):
         return True
 
 
-    def type_positive_response(self, response):
+    def type_response(self, response):
 
-        print("\n") 
-
-
-    def type_negative_response(self):
-
-        print("\n")
+        print(response.serialize()) 
 
 
     def do_the_job(self, request):
 
-        pass
+        return httpresp.HttpResponse()
 
 
     def process_request(self):
@@ -146,13 +141,16 @@ class RestServer (bureaucrat.Bureaucrat):
 
         if self.auth_client(req):
 
-            if self.auth_client(req) and self.validate_request(req):
-                self.type_positive_response(self.do_the_job(req))
+            if self.validate_request(req):
+                self.type_response(self.do_the_job(req))
             else:
                 self.set_status_code(status.ERR_INCORRECT_REQUEST)
                 self.log(logs.LOG_ERROR, status.MSG_INCORRECT_REQUEST, self.req.get_serialized_payload())
+                self.type_response(httpresp.HttpResponse().set_result_403())
 
         else:
-            self.type_negative_response()
+            self.set_status_code(status.ERR_NOT_AUTHORIZED)
+            self.log(logs.LOG_ERROR, status.MSG_NOT_AUTHORIZED, self.req.get_serialized_payload())
+            self.type_response(httpresp.HttpResponse().set_result_401())
 
         return self

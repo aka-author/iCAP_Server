@@ -8,11 +8,9 @@
 # # ## ### ##### ######## ############# ##################### 
 
 import os, sys, pathlib
-from io import StringIO 
 
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/modules"))
-
-from modules import restserver, logs, measurement
+from modules import restserver, logs, measurement, httpresp
 from debug import deb_receiver
 
 
@@ -80,6 +78,8 @@ class Receiver(restserver.RestServer):
             self.deb(scr.get_snippet())
 
         self.log(logs.LOG_DEBUG, "Payload", str(self.get_req().get_payload()));
+
+        return httpresp.HttpResponse()
 
 
     def get_debug_request_body(self):
