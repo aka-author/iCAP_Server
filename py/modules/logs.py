@@ -54,7 +54,7 @@ class Logger(bureaucrat.Bureaucrat):
     def log(self, record_type, wording, details=""):
 
         if record_type != LOG_DEBUG or self.get_cfg().is_debug_mode():
-
+            
             if self.get_cfg().is_log_to_file_mode():
                 self.log_file.write(self.assemble_log_record(record_type, wording, details) + "\n")
 

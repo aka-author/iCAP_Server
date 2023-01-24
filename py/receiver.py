@@ -7,7 +7,8 @@
 # Func:    Saving measurements to a database         (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
-import os, sys, pathlib 
+import os, sys, pathlib
+from io import StringIO 
 
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/modules"))
 
@@ -30,6 +31,15 @@ class Receiver(restserver.RestServer):
     def get_log_file_name(self):
 
         return "receiver.log"
+
+
+    def mock_cgi_input(self):
+
+        super().mock_cgi_input()
+     
+        deb_receiver.mock_cgi_input()
+
+        return self
 
 
     def validate_request(self, request):

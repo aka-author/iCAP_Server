@@ -78,7 +78,6 @@ class RestServer (bureaucrat.Bureaucrat):
         return self.logger
 
 
-
     def log(self, record_type, wording="", details=""):
 
         self.get_logger().log(record_type, wording, details)
@@ -96,12 +95,19 @@ class RestServer (bureaucrat.Bureaucrat):
         return self.directory_desk
 
 
+    def mock_cgi_input(self):
+
+       return self
+
+
     def parse_cgi_data(self):
+        
+        if self.get_cfg().is_console_mode():
+            self.mock_cgi_input()
 
         content_len = os.environ.get("CONTENT_LENGTH", "0")
-        body = self.get_debug_request_body() if self.is_debug_mode() \
-               else sys.stdin.read(int(content_len))
-        
+        body = sys.stdin.read(int(content_len))
+
         return clientreq.ClientRequest(os.environ, cgi.FieldStorage(), body)
 
 
@@ -132,6 +138,9 @@ class RestServer (bureaucrat.Bureaucrat):
 
     def process_request(self):
 
+        if self.get_cfg().is_console_mode():
+            os.environ["CONTENT_TYPE"] = "application/json"
+
         self.set_req(self.parse_cgi_data())
         req = self.get_req()
 
@@ -145,3 +154,5 @@ class RestServer (bureaucrat.Bureaucrat):
 
         else:
             self.type_negative_response()
+
+        return self

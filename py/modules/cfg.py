@@ -51,7 +51,7 @@ class Cfg:
 
     def is_log_to_file_mode(self):
 
-        return self.get_param_value("LOGGING", "log_to_files") == "yes"
+        return self.get_param_value("LOGGING", "log_to_files") == "on"
 
 
     def get_log_folder_path(self):
