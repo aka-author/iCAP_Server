@@ -108,7 +108,11 @@ class RestServer (bureaucrat.Bureaucrat):
         content_len = os.environ.get("CONTENT_LENGTH", "0")
         body = sys.stdin.read(int(content_len))
 
-        return clientreq.ClientRequest(os.environ, cgi.FieldStorage(), body)
+        req = clientreq.ClientRequest(os.environ, cgi.FieldStorage(), body)
+
+        self.set_req(req)
+
+        return req
 
 
     def auth_client(self, request):
@@ -133,16 +137,15 @@ class RestServer (bureaucrat.Bureaucrat):
 
     def process_request(self):
 
-        if self.get_cfg().is_console_mode():
-            os.environ["CONTENT_TYPE"] = "application/json"
-
-        self.set_req(self.parse_cgi_data())
-        req = self.get_req()
+        req = self.parse_cgi_data()
+        self.log(logs.LOG_INFO, "Payload", str(req.get_payload()));
 
         if self.auth_client(req):
 
             if self.validate_request(req):
-                self.type_response(self.do_the_job(req))
+                resp = self.do_the_job(req)
+                self.type_response(resp)
+                self.log(logs.LOG_INFO, status.MSG_RESPONSE, resp.serialize())
             else:
                 self.set_status_code(status.ERR_INCORRECT_REQUEST)
                 self.log(logs.LOG_ERROR, status.MSG_INCORRECT_REQUEST, self.req.get_serialized_payload())

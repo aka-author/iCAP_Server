@@ -19,7 +19,9 @@ ERR_INCORRECT_REQUEST       = 7
 
 # Messages
 
+MSG_SUCCESS           = "Beseder"
 MSG_LOGIN_OK          = "Logged into the system"
 MSG_LOGIN_FAILED      = "Failed to login into the system"
 MSG_INCORRECT_REQUEST = "The request is incorrect"
 MSG_NOT_AUTHORIZED    = "Not authorized"
+MSG_RESPONSE          = "Response"

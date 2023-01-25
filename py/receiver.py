@@ -77,8 +77,6 @@ class Receiver(restserver.RestServer):
             self.deb(rt_measurements)
             self.deb(scr.get_snippet())
 
-        self.log(logs.LOG_DEBUG, "Payload", str(self.get_req().get_payload()));
-
         return httpresp.HttpResponse()
 
 

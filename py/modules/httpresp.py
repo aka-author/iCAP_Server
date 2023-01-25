@@ -16,6 +16,7 @@ class HttpResponse:
         self.result_wording = "OK"
         self.headers = {}
         self.body = None 
+        self.serialized_text = None
 
 
     # Result 
@@ -54,7 +55,7 @@ class HttpResponse:
 
     def serialize_result(self):
 
-        return "Status: " + str(self.get_result_code()) + " " + self.get_result_wording() + "\r\n"
+        return "Status: " + str(self.get_result_code()) + " " + self.get_result_wording() + "\n"
 
 
     # HTTP headers
@@ -128,14 +129,16 @@ class HttpResponse:
 
     def serialize(self):
 
-        response_text = self.serialize_result() 
+        if self.serialized_text is None:
 
-        if self.is_empty():
-            self.set_header("Content-length", "0")
+            self.serialized_text = self.serialize_result() 
 
-        response_text += "\n".join([self.serialize_header(header_name) for header_name in self.headers])
+            if self.is_empty():
+                self.set_header("Content-length", "0")
+
+            self.serialized_text += "\n".join([self.serialize_header(header_name) for header_name in self.headers])
         
-        if not self.is_empty() and self.get_result_code() == 200:
-            response_text += "\n" + self.serialize_body()    
+            if not self.is_empty() and self.get_result_code() == 200:
+                self.serialized_text += "\n" + self.serialize_body()  
 
-        return response_text
+        return self.serialized_text

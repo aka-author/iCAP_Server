@@ -7,10 +7,10 @@
 import utils, bureaucrat, ramtable, fields
 
 
-LOG_INFO    = "INFO   "
+LOG_INFO    = "INFO"
 LOG_WARNING = "WARNING"
-LOG_ERROR   = "ERROR  "
-LOG_DEBUG   = "DEBUG  "
+LOG_ERROR   = "ERROR"
+LOG_DEBUG   = "DEBUG"
 
 class Logger(bureaucrat.Bureaucrat):
 
@@ -30,7 +30,7 @@ class Logger(bureaucrat.Bureaucrat):
 
     def assemble_log_record(self, logrec_type, wording, details=""):
 
-        return " ".join([self.get_app().get_session_id(), 
+        return "\t".join([self.get_app().get_session_id(), 
                          utils.strnow(), 
                          self.get_app().get_app_name(), 
                          logrec_type, wording, details])
@@ -56,7 +56,7 @@ class Logger(bureaucrat.Bureaucrat):
         if record_type != LOG_DEBUG or self.get_cfg().is_debug_mode():
             
             if self.get_cfg().is_log_to_file_mode():
-                self.log_file.write(self.assemble_log_record(record_type, wording, details) + "\n")
+                self.log_file.write(self.assemble_log_record(record_type, wording, details).replace("\n", '\\n') + "\n")
 
             if self.get_cfg().is_log_to_db_mode():
                 rt_rec = self.assemble_log_ramtable(record_type, wording, details)
