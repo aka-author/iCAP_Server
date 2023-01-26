@@ -54,9 +54,9 @@ class Receiver(restserver.RestServer):
         rt_measurements = rt_varvalues = None 
         
         for dto in measurements_dtos: 
-
+            
             m = measurement.Measurement(self).import_dto(dto)
-
+            self.deb(m.is_valid())
             if m.is_valid() and not self.get_source_desk().check_measurement(m.get_hashkey()):
 
                 rt_m = m.get_measurement_ramtable()
@@ -64,7 +64,7 @@ class Receiver(restserver.RestServer):
 
                 rt_v = m.get_varvalues_ramtable()
                 rt_varvalues = rt_v if rt_varvalues is None else rt_varvalues.union(rt_v)
-
+        self.deb(rt_measurements)
         if rt_measurements is not None and rt_varvalues is not None:
 
             dbl = self.get_dbl() 

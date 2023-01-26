@@ -61,7 +61,7 @@ class Cfg:
 
     def is_log_to_db_mode(self):
 
-        return self.get_param_value("LOGGING", "log_to_db") == "yes"
+        return self.get_param_value("LOGGING", "log_to_db") == "on"
 
 
     def get_default_cms_session_duration(self):

@@ -64,7 +64,9 @@ class ClientRequest:
 
     def get_single_field(self):
 
-        return self.field_storage[self.field_storage.keys()[0]].value
+        field_names = self.field_storage.keys()
+
+        return self.field_storage[field_names[0]].value if len(field_names) > 0 else ""
 
 
     def get_credentials(self):
@@ -125,3 +127,8 @@ class ClientRequest:
             self.set_status_code(status.ERR_INCORRECT_REQUEST)
             
         return payload
+
+
+    def serialize(self):
+
+        return "Content-type:" + self.get_content_type() + "\\n" + self.get_body().replace("\n", "\\n")

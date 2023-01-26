@@ -138,6 +138,8 @@ class HttpResponse:
 
             self.serialized_text += "\n".join([self.serialize_header(header_name) for header_name in self.headers])
         
+            self.serialized_text += "\n"
+
             if not self.is_empty() and self.get_result_code() == 200:
                 self.serialized_text += "\n" + self.serialize_body()  
 
