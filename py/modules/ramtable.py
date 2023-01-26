@@ -209,6 +209,11 @@ class Table:
         return self
 
 
+    def get_field_values(self, field_name):
+
+        return [self.select_by_index(r).get_field_value(field_name) for r in range(0, self.count_rows())]
+
+
     def delete_all(self):
 
         self.rows = []

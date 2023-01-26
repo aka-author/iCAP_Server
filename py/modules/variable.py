@@ -61,7 +61,17 @@ class Variable(bureaucrat.Bureaucrat):
 
         return self.datatype_name
 
-    
+
+    def get_sql_datatype_name(self):
+
+        return self.get_dbl().get_dbms().get_sql_datatype_name(self.get_datatype_name())
+
+
+    def get_sql_varname(self):
+
+        return self.get_dbl().get_dbms().varname2sql(self.get_varname())
+
+
     def get_shortcut(self):
 
         return self.shortcut
