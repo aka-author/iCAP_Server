@@ -76,7 +76,8 @@ class DbConnector(bureaucrat.Bureaucrat):
     
     def commit(self):
 
-        self.connection.commit()
+        if self.is_connected():
+            self.connection.commit()
 
         return self
 

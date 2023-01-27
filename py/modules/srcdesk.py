@@ -34,74 +34,7 @@ class SourceDesk(bureaucrat.Bureaucrat):
         return measurement_exists
 
 
-    def get_measurements_query_obsolete(self, varnames):
-
-        q = self.get_dbl().new_select(self)
-        q.COLUMNS.sql.add_list_items(["m.uuid", "m.accepted_at"])
-        q.FROM.sql.set("icap.measurements m")
-
-        varcol = "v{0}.serialized_value::{2} as {1}"
-        varsel = "(SELECT * FROM icap.varvalues WHERE variable_uuid = '{1}') v{0}"
-        varcnd = " (m.uuid = v{0}.measurement_uuid)"
-
-        dd = self.get_app().get_directory_desk()
-        count = 0
-
-        for varname in varnames:
-
-            var = dd.get_variable_by_name(varname)
-
-            if var is not None:
-
-                var_uuid = var.get_uuid()
-                sql_varname = var.get_sql_varname()
-                sql_dt = var.get_sql_datatype_name() 
-
-                q.COLUMNS.sql.add_list_items([varcol.format(count, sql_varname, sql_dt)], ", ")
-                q.FROM.sql.add_list_items([varsel.format(count, var_uuid)], ", ")
-                q.WHERE.sql.add((" and" if count > 0 else "") + varcnd.format(count))
-
-            count += 1
-
-        return q
-
-
-    def fetch_matching_varnames(self, varname_pattern):
-
-        dbl = self.get_dbl()
-
-        sql_pattern = varname_pattern.split("*")[0] + "%" 
-
-        rt_varnames = ramtable.Table("icap.varvalues")\
-            .add_field(fields.StringField("varname_deb"))
-
-        q = dbl.new_select(self).set_output_ramtable(rt_varnames)
-        q.DISTINCT.turn_on()
-        q.WHERE.sql.set("varname_deb LIKE '{0}'".format(sql_pattern))
-
-        dbl.execute(q)
-
-        return rt_varnames.get_field_values("varname_deb")
-
-
-    def expand_varname_list(self, varnames):
-
-        patterns = [varname for varname in varnames if "*" in varname]
-
-        matching_varnames = []
-        for pattern in patterns:
-            matching_varnames += self.fetch_matching_varnames(pattern)
-
-        full_names = [varname for varname in varnames if not "*" in varname]
-
-        return full_names + matching_varnames
-
-
-    def get_measurements_query(self, mandatory_varnames, _optional_varnames=[]):
-
-        optional_varnames = self.expand_varname_list(_optional_varnames)
-
-        self.deb(optional_varnames)
+    def get_measurements_query(self, mandatory_varnames, optional_varnames=[]):
 
         q = self.get_dbl().new_select(self)
         q.COLUMNS.sql.add_list_items(["m.uuid", "m.accepted_at"])

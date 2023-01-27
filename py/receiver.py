@@ -48,7 +48,12 @@ class Receiver(restserver.RestServer):
     def do_the_job(self, request):
 
         sd = self.get_source_desk()
-        q = sd.get_measurements_query(["icap.action.code", "icap.action.timeOffset"], ["icap.cms.taxonomy.*"])
+        q = sd.get_measurements_query(["icap.action.code", "icap.action.timeOffset"], \
+            ["icap.cms.taxonomy.Customer types", "icap.cms.taxonomy.Product scales"])
+        self.deb(q.get_snippet())
+
+        q = sd.get_measurements_query(["icap.cms.topic.uid"], \
+            ["icap.cms.taxonomy.Customer types", "icap.cms.taxonomy.Product scales"])
         self.deb(q.get_snippet())
         
         payload = request.get_payload()
