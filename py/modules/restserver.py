@@ -10,9 +10,9 @@ import status, logs, clientreq, httpresp, app
 
 class RestServer (app.Application):
 
-    def __init__(self, rel_cfg_file_path):
+    def __init__(self, app_name, rel_cfg_file_path):
 
-        super().__init__(rel_cfg_file_path)
+        super().__init__(app_name, rel_cfg_file_path)
 
     
     def mock_cgi_input(self):

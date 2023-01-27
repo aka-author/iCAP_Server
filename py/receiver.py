@@ -18,17 +18,7 @@ class Receiver(restserver.RestServer):
 
     def __init__(self, rel_cfg_file_path):
 
-        super().__init__(rel_cfg_file_path)
-
-
-    def get_app_name(self):
-
-        return "Receiver"
-
-
-    def get_log_file_name(self):
-
-        return "receiver.log"
+        super().__init__("Receiver", rel_cfg_file_path)
 
 
     def mock_cgi_input(self):

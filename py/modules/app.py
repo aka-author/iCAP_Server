@@ -12,15 +12,16 @@ GLOBAL_APP = None
 
 class Application (bureaucrat.Bureaucrat):
 
-    def __init__(self, rel_cfg_file_path):
+    def __init__(self, app_name, rel_cfg_file_path):
 
         super().__init__()
 
         self.app = self
+        self.app_name = app_name
         self.session_id = str(uuid.uuid4())
         
         self.set_cfg_file_path(rel_cfg_file_path)
-        self.cfg = cfg.Cfg().load(self.get_cfg_file_path())
+        self.cfg = cfg.Cfg(self.get_app_name()).load(self.get_cfg_file_path())
 
         GLOBAL_APP = self
         
@@ -34,7 +35,7 @@ class Application (bureaucrat.Bureaucrat):
 
     def get_app_name(self):
 
-        return "icap"
+        return self.app_name
 
 
     def get_session_id(self):
@@ -63,7 +64,7 @@ class Application (bureaucrat.Bureaucrat):
 
     def get_log_file_name(self):
         
-        return "icap.log"
+        return self.get_app_name().lower() + ".log"
 
 
     def get_log_file_path(self):

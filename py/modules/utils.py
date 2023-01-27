@@ -20,9 +20,9 @@ def safestr(s):
     return s if s is not None else ""
 
 
-def safedic(dic, key):
+def safedic(dic, key, default_value=None):
 
-    return (dic[key] if key in dic else None) if dic is not None else None 
+    return safeval((dic[key] if key in dic else None) if dic is not None else None, default_value) 
 
 
 def sefunc(func, val):
