@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  dirdesk.py                                (\(\
 # Func:    Managing system directories               (^.^)
 # # ## ### ##### ######## ############# #####################

@@ -3,14 +3,15 @@
 
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Application
 # Module:  reporter.py                              (\(\
 # Func:    Requesting and delivering reports        (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
 import os, sys, pathlib
 
-sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/modules"))
-from modules import restserver, logs, measurement, httpresp
+sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
+from kernel import restserver, logs, measurement, httpresp
 from debug import deb_reporter
 
 

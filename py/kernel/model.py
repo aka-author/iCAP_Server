@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  model.py                                  (\(\
 # Func:    Processing subject area data              (^.^)
 # # ## ### ##### ######## ############# #####################

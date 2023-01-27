@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  utils.py                               (\(\
 # Func:    Service functions                      (^.^)
 # # ## ### ##### ######## ############# #####################

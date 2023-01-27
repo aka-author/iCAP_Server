@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  cfg.py                                  (\(\
 # Func:    Reading configuration parameters        (^.^)                                                                                                                                                                        
 # # ## ### ##### ######## ############# #####################

@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  ramtable.py                              (\(\
 # Func:    Simulating database tables in memory     (^.^)
 # # ## ### ##### ######## ############# #####################

@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  srcdesk.py                        (\(\
 # Func:    Managing source data              (^.^)
 # # ## ### ##### ######## ############# #####################

@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  httpresp.py                                (\(\
 # Func:    Assembling text for an HTTP responce       (^.^)                                                                                                                                            
 # # ## ### ##### ######## ############# #####################

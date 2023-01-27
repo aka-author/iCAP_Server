@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  fields.py                                  (\(\
 # Func:    Mamaging data fields                       (^.^)
 # # ## ### ##### ######## ############# #####################

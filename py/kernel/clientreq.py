@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  clientreq.py                             (\(\
 # Func:    Accessing client request data            (^.^) 
 # # ## ### ##### ######## ############# #####################

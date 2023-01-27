@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  restserver.py                             (\(\
 # Func:    Providing a prototype for a REST server   (^.^)
 # # ## ### ##### ######## ############# #####################

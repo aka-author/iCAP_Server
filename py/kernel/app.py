@@ -1,5 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
+# Level:   Kernel
 # Module:  app.py                                      (\(\
 # Func:    Providing a prototype for each iCAP script  (^.^)
 # # ## ### ##### ######## ############# #####################
