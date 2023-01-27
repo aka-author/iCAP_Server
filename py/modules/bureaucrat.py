@@ -108,12 +108,22 @@ class Bureaucrat:
 
     def is_debug_mode(self):
 
-        return self.get_cfg().is_debug_mode()
+        return self.get_app().is_debug_mode()
 
 
     def is_console_mode(self):
 
-        return self.get_cfg().is_console_mode()
+        return self.get_app().is_console_mode()
+
+
+    def is_cgi_mode(self):
+
+        return self.get_app().is_cgi_mode()
+
+
+    def is_batch_mode(self):
+
+        return self.get_app().is_batch_mode()
 
 
     def deb(self, debinfo):

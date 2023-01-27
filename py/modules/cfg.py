@@ -121,14 +121,14 @@ class Cfg:
         return self.get_app_param_value(app_name, "logs").lower()
 
 
-    def is_log_to_file_mode(self):
+    def is_log_to_file_mode(self, app_name=None):
 
-        return "file" in self.get_logs(app_name=None)
+        return "file" in self.get_logs(app_name)
 
 
-    def is_log_to_db_mode(self):
+    def is_log_to_db_mode(self, app_name=None):
 
-        return "db" in self.get_logs(app_name=None)
+        return "db" in self.get_logs(app_name)
 
 
     

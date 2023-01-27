@@ -1,5 +1,11 @@
+# # ## ### ##### ######## ############# #####################
+# Product: iCAP platform
+# Module:  dbms.py                                 (\(\
+# Func:    Providing support for certain CBMSs     (^.^)
+# # ## ### ##### ######## ############# #####################
 
 import utils, bureaucrat
+
 
 class Dbms(bureaucrat.Bureaucrat):
 

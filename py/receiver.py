@@ -79,9 +79,4 @@ class Receiver(restserver.RestServer):
         return httpresp.HttpResponse()
 
 
-    def get_debug_request_body(self):
-
-        return deb_receiver.get_body()
-    
-
 Receiver("../cfg/fserv.ini").process_request()

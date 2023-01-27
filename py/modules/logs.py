@@ -19,7 +19,7 @@ class Logger(bureaucrat.Bureaucrat):
         super().__init__(chief)
 
         self.log_file_path = self.get_app().get_log_file_path()
-        self.log_file = open(self.log_file_path, "a") if self.get_cfg().is_log_to_file_mode() else None
+        self.log_file = open(self.log_file_path, "a") if self.get_app().is_log_to_file_mode() else None
         self.log(LOG_INFO, "Start")
 
 
@@ -52,13 +52,13 @@ class Logger(bureaucrat.Bureaucrat):
 
 
     def log(self, record_type, wording, details=""):
-
-        if record_type != LOG_DEBUG or self.get_cfg().is_debug_mode():
+        
+        if record_type != LOG_DEBUG or self.is_debug_mode():
             
-            if self.get_cfg().is_log_to_file_mode():
+            if self.get_app().is_log_to_file_mode():
                 self.log_file.write(self.assemble_log_record(record_type, wording, details).replace("\n", '\\n') + "\n")
 
-            if self.get_cfg().is_log_to_db_mode():
+            if self.get_app().is_log_to_db_mode():
                 rt_rec = self.assemble_log_ramtable(record_type, wording, details)
                 dbl = self.get_dbl()
                 dbl.execute(dbl.new_script("logs", "icap").import_source_ramtable(rt_rec)).commit()
@@ -68,13 +68,13 @@ class Logger(bureaucrat.Bureaucrat):
 
     def console(self, message):
 
-        if self.get_cfg().is_console_mode():
+        if self.is_console_mode():
             print(message)
 
 
-    def __del__(self):
-
+    def close_all(self):
+        
         self.log(LOG_INFO, "Finish")
-
-        if self.get_cfg().is_log_to_file_mode():
+        
+        if self.get_app().is_log_to_file_mode():
             self.log_file.close()

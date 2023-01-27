@@ -22,7 +22,7 @@ class RestServer (app.Application):
 
     def parse_cgi_data(self):
         
-        if self.get_cfg().is_console_mode():
+        if self.is_console_mode():
             self.mock_cgi_input()
 
         body = ""
@@ -82,4 +82,4 @@ class RestServer (app.Application):
             self.log(logs.LOG_ERROR, status.MSG_NOT_AUTHORIZED, self.req.get_serialized_payload())
             self.type_response(httpresp.HttpResponse().set_result_401())
 
-        return self
+        return  self.quit()

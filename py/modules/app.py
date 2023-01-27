@@ -1,7 +1,7 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Module:  app.py                                     (\(\
-# Func:    Providing a prototype for each iCAP script (^.^)
+# Module:  app.py                                      (\(\
+# Func:    Providing a prototype for each iCAP script  (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import os, sys, pathlib, uuid
@@ -62,6 +62,26 @@ class Application (bureaucrat.Bureaucrat):
         return self.cfg_file_path
 
 
+    def is_debug_mode(self):
+
+        return self.get_cfg().is_debug_mode()
+
+
+    def is_console_mode(self):
+        
+        return self.get_cfg().is_console_mode()
+
+
+    def is_cgi_mode(self):
+        
+        return self.get_cfg().is_cgi_mode()
+
+
+    def is_batch_mode(self):
+        
+        return self.get_cfg().is_batch_mode()
+
+
     def get_log_file_name(self):
         
         return self.get_app_name().lower() + ".log"
@@ -86,6 +106,16 @@ class Application (bureaucrat.Bureaucrat):
         return self
 
 
+    def is_log_to_file_mode(self):
+
+        return self.get_cfg().is_log_to_file_mode()
+
+
+    def is_log_to_db_mode(self):
+
+        return self.get_cfg().is_log_to_db_mode()
+
+
     def get_source_desk(self):
 
         return self.source_desk
@@ -94,3 +124,10 @@ class Application (bureaucrat.Bureaucrat):
     def get_directory_desk(self):
 
         return self.directory_desk
+
+
+    def quit(self):
+
+        self.get_logger().close_all()
+
+        return self
