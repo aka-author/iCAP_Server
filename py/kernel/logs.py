@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  logs.py                                (\(\
 # Func:    Writing to logs                        (^.^)
 # # ## ### ##### ######## ############# #####################

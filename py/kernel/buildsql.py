@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  buildsql.py                          (\(\
 # Func:    Assembling SQL queries               (^.^)
 # # ## ### ##### ######## ############# #####################

@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  measurement.py                             (\(\
 # Func:    Mamaging data fields                       (^.^)
 # # ## ### ##### ######## ############# #####################

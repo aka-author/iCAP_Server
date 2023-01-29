@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  clientreq.py                             (\(\
 # Func:    Accessing client request data            (^.^) 
 # # ## ### ##### ######## ############# #####################
@@ -11,12 +11,12 @@ import status,utils
 
 class ClientRequest:
 
-    def __init__(self, environ, field_storage, body):
+    def __init__(self, environ, params, body):
 
         self.status_code = status.OK
 
         self.environ = environ
-        self.field_storage = field_storage
+        self.form_fields = params
         self.body = body
 
 
@@ -60,20 +60,20 @@ class ClientRequest:
 
     def get_form_field(self, field_name):
 
-        return self.field_storage[field_name].value if field_name in self.field_storage else None
+        return self.form_fields[field_name] if field_name in self.form_fields else None
 
 
     def get_single_field(self):
 
-        field_names = self.field_storage.keys()
+        field_names = self.form_fields.keys()
 
-        return self.field_storage[field_names[0]].value if len(field_names) > 0 else ""
+        return self.params[field_names[0]] if len(field_names) > 0 else ""
 
 
     def get_credentials(self):
 
-        username = self.get_field("user") 
-        password = self.get_field("password")
+        username = utils.safeval(self.get_form_field("username"), "") 
+        password = utils.safeval(self.get_form_field("password"), "")
 
         return username, password
 
@@ -108,11 +108,13 @@ class ClientRequest:
 
     def get_serialized_payload(self):
 
+        sp = ""
+        
         ct = self.get_content_type()
 
         if ct == "application/json":
             sp = self.get_body() 
-        elif ct == "multipart/form-data":
+        elif ct == "multipart/form-data" and "unloadMeasurement" in self.form_fields:
             sp = self.get_single_field()
 
         return sp 

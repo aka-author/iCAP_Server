@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  srcdesk.py                        (\(\
 # Func:    Managing source data              (^.^)
 # # ## ### ##### ######## ############# #####################
@@ -20,7 +20,7 @@ class SourceDesk(bureaucrat.Bureaucrat):
         measurement_exists = False
 
         rt_cc = ramtable.Table("measurements")\
-            .add_field(fields.IntField("count_competitors").set_sql_agg_expr("count(uuid)"))
+            .add_field(fields.BigintField("count_competitors").set_sql_agg_expr("count(uuid)"))
 
         dbl = self.get_dbl()
 

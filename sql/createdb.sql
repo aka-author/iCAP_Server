@@ -19,9 +19,9 @@ create table users (
     username            varchar not null,
     password_hash       varchar,
     auth_required       boolean not null default true, 
-    configuring_system  boolean,
-    saving_measurements boolean,
-    fetching_reports    boolean,
+    configuring_system  boolean not null default false,
+    saving_measurements boolean not null default false,
+    fetching_reports    boolean not null default false,
     details             varchar,
     created_at          timestamp not null default now(),
     updated_at          timestamp not null default now(),
@@ -35,8 +35,8 @@ create table user_sessions
     user_uuid           uuid references users,
     username_deb        varchar,
     host                varchar,
-    opened_at           timestamp,
-    expire_at           timestamp,
+    opened_at           timestamp not null default now(),
+    expire_at           timestamp not null default now(),
     closed_at           timestamp
 )
 

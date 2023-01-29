@@ -1,17 +1,17 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  app.py                                      (\(\
 # Func:    Providing a prototype for each iCAP script  (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import os, sys, pathlib, uuid
-import status, dblayer, cfg, bureaucrat, logs, dirdesk, srcdesk
+import status, dblayer, cfg, controller, logs, dirdesk, srcdesk
 
 
 GLOBAL_APP = None
 
-class Application (bureaucrat.Bureaucrat):
+class Application (controller.Controller):
 
     def __init__(self, app_name, rel_cfg_file_path):
 

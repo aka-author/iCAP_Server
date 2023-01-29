@@ -1,12 +1,12 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  restserver.py                             (\(\
 # Func:    Providing a prototype for a REST server   (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys
-import status, logs, clientreq, httpresp, app
+import utils, status, logs, clientreq, httpresp, userdesk, app
 
 
 class RestServer (app.Application):
@@ -15,7 +15,14 @@ class RestServer (app.Application):
 
         super().__init__(app_name, rel_cfg_file_path)
 
-    
+        self.userdesk = userdesk.UserDesk(self)
+
+
+    def get_userdesk(self): 
+
+        return self.userdesk
+
+
     def mock_cgi_input(self):
 
        return self
@@ -26,16 +33,17 @@ class RestServer (app.Application):
         if self.is_console_mode():
             self.mock_cgi_input()
 
-        body = ""
-        fs = None
+        cgi_body = ""
+        cgi_form_fields = {}
 
         if os.environ["CONTENT_TYPE"] == "application/json":
-            content_len = os.environ.get("CONTENT_LENGTH", "0")
-            body = sys.stdin.read(int(content_len))
-        else:
-            fs = cgi.FieldStorage()
-            
-        req = clientreq.ClientRequest(os.environ, fs, body)
+            cgi_body = sys.stdin.read(int(os.environ.get("CONTENT_LENGTH", "0")))
+        elif os.environ["CONTENT_TYPE"] == "application/x-www-form-urlencoded":
+            cgi_form_fields = utils.extract_fields_from_url_encoded_form(input())
+        elif os.environ["CONTENT_TYPE"] == "multipart/form-data":
+            cgi_form_fields = utils.extract_fields_from_storage(cgi.FieldStorage())            
+        
+        req = clientreq.ClientRequest(os.environ, cgi_form_fields, cgi_body)
         
         self.set_req(req)
         
@@ -47,7 +55,7 @@ class RestServer (app.Application):
         return True
 
 
-    def validate_request(self):
+    def validate_request(self, request):
 
         return True
 

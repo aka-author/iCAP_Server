@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  bureaucrat.py                               (\(\
 # Func:    Giving a pattern for all the objects here   (^.^)
 # # ## ### ##### ######## ############# ##################### 

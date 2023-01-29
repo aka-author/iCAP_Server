@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  dbms.py                                 (\(\
 # Func:    Providing support for certain CBMSs     (^.^)
 # # ## ### ##### ######## ############# #####################
@@ -24,6 +24,7 @@ class Dbms(bureaucrat.Bureaucrat):
 
         dt_map = {
             "STRING":       "varchar",
+            "STRLIST":      "varchar",
             "BIGINT":       "bigint",
             "DOUBLE":       "numeric",
             "TIMESTAMP":    "timestamp",

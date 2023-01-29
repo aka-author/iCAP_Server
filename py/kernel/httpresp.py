@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  httpresp.py                                (\(\
 # Func:    Assembling text for an HTTP responce       (^.^)                                                                                                                                            
 # # ## ### ##### ######## ############# #####################
@@ -117,11 +117,11 @@ class HttpResponse:
 
         if content_type == 'application/json':
             try:
-                body_text += json.dumps(self.get_body())
+                body_text = json.dumps(self.get_body())
             except:
-                body_text += json.dumps({"error:": "Failed to serialize body"})
+                body_text = json.dumps({"error:": "Failed to serialize body"})
         else:
-            body_text += self.get_body()
+            body_text = self.get_body()
         
         return body_text
 

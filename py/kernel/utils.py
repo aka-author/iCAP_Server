@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  utils.py                               (\(\
 # Func:    Service functions                      (^.^)
 # # ## ### ##### ######## ############# #####################
@@ -26,7 +26,7 @@ def safedic(dic, key, default_value=None):
     return safeval((dic[key] if key in dic else None) if dic is not None else None, default_value) 
 
 
-def sefunc(func, val):
+def safearg(func, val):
 
     return func(val) if val is not None else None
 
@@ -213,3 +213,27 @@ def str2timestamp(src_s, custom_fstring=None):
 def strnow():
 
     return timestamp2str(datetime.now())
+
+
+# CGI 
+
+def extract_fields_from_url_encoded_form(form_urlencoded):
+
+    params = {}
+
+    param_pairs = form_urlencoded.split("&")
+    for param_pair in param_pairs:
+        param_pair_arr = param_pair.split("=")
+        params[param_pair_arr[0]] = param_pair_arr[1]
+
+    return params
+
+
+def extract_fields_from_storage(fs):
+
+    params = {}
+
+    for param_name in fs:
+        params[param_name] = fs[param_name].value
+
+    return params

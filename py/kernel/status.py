@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  status.py                                  (\(\
 # Func:    Defining status and error codes            (^.^)
 # # ## ### ##### ######## ############# #####################

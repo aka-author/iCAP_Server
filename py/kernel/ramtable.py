@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  ramtable.py                              (\(\
 # Func:    Simulating database tables in memory     (^.^)
 # # ## ### ##### ######## ############# #####################
@@ -167,7 +167,7 @@ class Table:
         return blank_row
     
 
-    def insert(self, src_dic):
+    def insert(self, src_dic={}):
 
         row = self.create_blank_row()
 

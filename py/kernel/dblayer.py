@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  dbl.py                                     (\(\
 # Func:    Connecting a database and running queries  (^.^)
 # # ## ### ##### ######## ############# ##################### 

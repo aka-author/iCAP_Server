@@ -38,9 +38,13 @@ class Reporter(restserver.RestServer):
 
     def do_the_job(self, request):
 
-        
+        # shop = self.get_shop_desk(report_name)
 
-        return httpresp.HttpResponse()
+        # report = shop.build_report(request)
+        
+        # response =  httpresp.HttpResponse().set_body(report)
+
+        return httpresp.HttpResponse().set_body({})
     
 
 Reporter("../cfg/fserv.ini").process_request()

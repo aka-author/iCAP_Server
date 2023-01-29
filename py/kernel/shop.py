@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   kernel
+# Layer:   Kernel
 # Module:  shop.py                                      (\(\
 # Func:    Giving a portotype for each analytical shop  (^.^)
 # # ## ### ##### ######## ############# #####################
@@ -19,6 +19,13 @@ class Shop(bureaucrat.Bureaucrat):
     def get_shop_name(self):
 
         return self.shop_name
+
+
+    def build_report(self, request):
+
+
+
+
 
 
     

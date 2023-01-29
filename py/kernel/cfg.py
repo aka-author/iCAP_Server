@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  cfg.py                                  (\(\
 # Func:    Reading configuration parameters        (^.^)                                                                                                                                                                        
 # # ## ### ##### ######## ############# #####################
@@ -89,7 +89,7 @@ class Cfg:
 
     def is_debug_mode(self, app_name=None):
         
-        return self.get_app_param_value(app_name, "debug").lower() == "on"
+        return self.get_app_param_value(app_name, "debug_mode").lower() == "on"
 
 
     def get_run_mode(self, app_name=None):

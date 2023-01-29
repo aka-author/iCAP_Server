@@ -1,13 +1,13 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  fields.py                                  (\(\
 # Func:    Mamaging data fields                       (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import uuid
 from datetime import datetime
-import utils
+import utils, datatypes
 
 
 class Field: 
@@ -42,6 +42,11 @@ class Field:
 
         return self.nature
 
+
+    def is_atomic(self):
+
+        return datatypes.is_atomic(self.get_datatype_name())
+            
 
     # Dealing with empty, zero, and default values 
 
@@ -173,40 +178,11 @@ class Field:
         return cmp < 0 if cmp is not None else False
 
 
-class StringField(Field):
-
-    def __init__(self, varname):
-
-        super().__init__(varname, "string")
-
-        self.zero_value = ""
-
-
-    def quote_sql(self, serialized_value):
-        
-        return utils.apos(serialized_value)
-
-    
-    def eq(self, val1, val2):
-
-        return val1 == val2
-
-
-    def le(self, val1, val2):
-
-        return val1 < val2
-
-
-    def ge(self, val1, val2):
-
-        return val1 > val2
-
-
 class UuidField(Field):
 
     def __init__(self, varname):
 
-        super().__init__(varname, "uuid")
+        super().__init__(varname, datatypes.DTN_UUID)
 
 
     def get_default_value(self):
@@ -234,6 +210,18 @@ class UuidField(Field):
         return self.parse(dic_pair_value) if utils.is_str(dic_pair_value) else dic_pair_value
 
 
+class BooleanField(Field):
+
+    def __init__(self, varname):
+
+        super().__init__(varname, datatypes.DTN_BOOLEAN, "boolean")
+
+
+    def compare(self, val1, val2):
+
+        return val1 == val2
+
+
 class NumericField(Field):
 
     def __init__(self, varname, datatype_name):
@@ -246,11 +234,11 @@ class NumericField(Field):
         return val1 - val2
 
 
-class IntField(NumericField):
+class BigintField(NumericField):
 
     def __init__(self, varname):
 
-        super().__init__(varname, "int")
+        super().__init__(varname, datatypes.DTN_BIGINT)
 
         self.zero_value = 0
 
@@ -260,11 +248,11 @@ class IntField(NumericField):
         return int(serialized_value)
 
 
-class FloatField(NumericField):
+class DoubleField(NumericField):
 
     def __init__(self, varname):
 
-        super().__init__(varname, "float")
+        super().__init__(varname, datatypes.DTN_DOUBLE)
 
         self.zero_value = 0.0
 
@@ -274,11 +262,47 @@ class FloatField(NumericField):
         return float(serialized_value)
 
 
+class StringField(Field):
+
+    def __init__(self, varname):
+
+        super().__init__(varname, datatypes.DTN_STRING)
+
+        self.zero_value = ""
+
+
+    def quote_sql(self, serialized_value):
+        
+        return utils.apos(serialized_value)
+
+    
+    def eq(self, val1, val2):
+
+        return val1 == val2
+
+
+    def le(self, val1, val2):
+
+        return val1 < val2
+
+
+    def ge(self, val1, val2):
+
+        return val1 > val2
+
+
+class StrListField(StringField):
+
+    def __init__(self, varname):
+
+        super().__init__(varname, datatypes.DTN_STRLIST)
+        
+
 class TimestampField(Field):
 
     def __init__(self, varname):
 
-        super().__init__(varname, "timestamp")
+        super().__init__(varname, datatypes.DTN_TIMESTAMP)
 
         self.zero_value = datetime.now()
         self.serialize_format = utils.get_default_timestamp_format()
@@ -304,3 +328,9 @@ class TimestampField(Field):
 
         return val1 - val2
     
+
+class TimestampTzField(Field):
+
+    def __init__(self, varname):
+
+        super().__init__(varname, datatypes.DTN_TIMESTAMP_TZ)

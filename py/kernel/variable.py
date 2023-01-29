@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Level:   Kernel
+# Layer:   Kernel
 # Module:  variable.py                               (\(\
 # Func:    Modeling a variable                       (^.^)
 # # ## ### ##### ######## ############# #####################
