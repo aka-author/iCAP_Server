@@ -1,11 +1,11 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  user.py                                  (\(\
-# Func:    Modeling a system user                   (^.^)
+# Module:  users.py                                  (\(\
+# Func:    Modeling a user of a system              (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import utils, fields, model
+import fields, model
 
 
 class User(model.Model):
@@ -28,9 +28,24 @@ class User(model.Model):
         return self
 
 
-    def check_password(self, password):
+    def get_uuid(self):
 
-        return self.get_field_value("password_hash") == utils.md5(password)
+        return self.get_field_value("uuid")
+
+
+    def get_username(self):
+
+        return self.get_field_value("username")
+
+
+    def get_password_hash(self):
+
+        return self.get_field_value("password_hash")
+
+
+    def is_auth_required(self):
+
+        return self.get_field_value("auth_required")
 
 
     def may_configure_system(self):

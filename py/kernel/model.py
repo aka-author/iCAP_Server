@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import json
-import utils, ramtable, bureaucrat
+import utils, fields, ramtable, bureaucrat
 
 
 class Model(bureaucrat.Bureaucrat):
@@ -18,9 +18,7 @@ class Model(bureaucrat.Bureaucrat):
         self.model_name = model_name
         self.set_plural()
 
-        self.fields = {}
-        self.field_names = []
-        self.key_names = []
+        self.fman = self.create_fields_manager()
         self.define_fields()
 
         self.field_values = {}
@@ -48,60 +46,12 @@ class Model(bureaucrat.Bureaucrat):
         return self.plural
 
 
-    def get_key_names(self):
+    def create_fields_manager(self):
 
-        return self.key_names
-
-
-    def is_key(self, field_name):
-
-        return field_name in self.key_names
+        return fields.Fields()
 
 
-    def get_field_names(self):
-
-        return self.field_names
-
-
-    def get_field(self, field_name):
-
-        return self.fields[field_name]
-
-
-    # Defining fields
-
-    def add_field(self, field, options=""):
-
-        field_name = field.get_varname() 
-        self.fields[field_name] = field
-        self.field_names.append(field_name)
-
-        if "key" in options:
-            self.key_names.append(field_name)
-
-        return self
-
-
-    def has_field(self, field_name):
-
-        return field_name in self.field_names
-
-
-    def define_fields(self):
-
-        pass
-
-
-    # Setting, getting, checking field values
-
-    def set_field_value(self, field_name, native_value):
-
-        self.field_values[field_name] = native_value
-            
-
-    def get_field_value(self, field_name):
-
-        return self.field_values[field_name]
+    
 
     
     def is_valid(self):
@@ -109,32 +59,10 @@ class Model(bureaucrat.Bureaucrat):
         return True
 
 
-    def serialize_field_value(self, field_name, custom_format=None):
-
-        native_value = self.get_field_value(field_name)
-
-        return self.fields[field_name].serialize(native_value, custom_format)
+    
 
 
-    def parse_field_value(self, field_name, serialized_value, custom_format=None):
-
-        native_value = self.fields[field_name].parse(serialized_value, custom_format)
-
-        return self.set_field_value(field_name, native_value)
-
-
-    def publish_field_value(self, field_name, custom_format=None):
-
-        native_value = self.get_field_value(field_name)
-
-        return self.fields[field_name].publish(native_value, custom_format)
-
-
-    def clear_field_values(self):
-
-        for field_name in self.field_names:
-            null_value = self.fields[field_name].get_null_value()
-            self.set_field_value(field_name, null_value) 
+   
 
 
     # Working with DTOs
@@ -160,7 +88,7 @@ class Model(bureaucrat.Bureaucrat):
 
         native_value = self.field_values[field_name]
         
-        return utils.govnone(self.fields[field_name].prepare_for_dto, native_value)
+        return utils.safearg(self.fields[field_name].prepare_value_for_dto, native_value)
 
 
     def export_dto(self):
@@ -203,7 +131,7 @@ class Model(bureaucrat.Bureaucrat):
         return self.serialize(custom_format)
 
 
-    # Working with SQL and ramtables
+    # Working with a database and ramtables
 
     def import_master_ramtable_row(self, row):
 
@@ -214,7 +142,7 @@ class Model(bureaucrat.Bureaucrat):
         return self
 
 
-    def get_master_ramtable(self):
+    def get_empty_master_ramtable(self):
 
         rt = ramtable.Table(self.get_plural().lower())
 
@@ -226,35 +154,34 @@ class Model(bureaucrat.Bureaucrat):
 
     def export_master_ramtable(self):
 
-        rt = self.get_master_ramtable()
+        rt = self.get_empty_master_ramtable()
 
-        src_dic = {}
-        for field in self.fields:
-            if field.is_atomic():
-                field_name = self.get_field_name()
-                src_dic[field_name] = self.get_field_value(field_name)
+        field_values_dic = {}
+        for field_name in self.fields:
+            if self.fields[field_name].is_atomic():
+                field_values_dic[field_name] = self.get_field_value(field_name)
 
-        rt.insert(src_dic)
+        rt.insert(field_values_dic)
 
         return rt    
 
 
-    def get_quick_load_query(self, field_name, field_value):
+    def get_direct_load_query(self, field_name, field_value):
 
-        q = self.get_dbl().new_select("selusers", "icap").set_output_ramtable(self.get_master_ramtable())
+        dlq = self.get_dbl().new_select("selusers", "icap").set_output_ramtable(self.get_empty_master_ramtable())
         
-        q.WHERE.sql.add("{0} = '{1}'".format(field_name, str(field_value)))
+        dlq.WHERE.sql.add("{0} = '{1}'".format(field_name, str(field_value)))
 
-        return q
+        return dlq
 
 
-    def quick_load(self, field_name, field_value):
+    def direct_load(self, field_name, field_value):
 
-        q = self.get_quick_load_query(field_name, field_value)
+        dlq = self.get_direct_load_query(field_name, field_value)
 
-        self.get_dbl().execute(q)
+        self.get_dbl().execute(dlq)
 
-        rt = q.get_output_ramtable()
+        rt = dlq.get_output_ramtable()
 
         if rt.count_rows() == 1:
             self.import_master_ramtable_row(rt.select_by_index(0))
@@ -262,6 +189,31 @@ class Model(bureaucrat.Bureaucrat):
         return self
 
 
+    def get_direct_save_query(self):
+
+        row_m = self.export_master_ramtable().select_by_index(0)
+
+        return self.get_dbl().new_insert("ins", "icap").import_source_ramtable_row(row_m) 
+
+
+    def direct_save(self):
+        
+        self.get_dbl().execute(self.get_direct_save_query()).commit()
+
+        return self
+
+
     def get_sql_conditions(self, field_name, col_name):
 
         return self.fields[field_name].get_sql_conditions(self.get_field_value(field_name), col_name)
+
+
+    # Debugging
+
+    def __str__(self):
+
+        #return "\n".join([field_name + ": " + self.serialize_field_value(field_name) for field_name in self.fields])
+
+        return "\n".join([field_name + ": " + str(self.serialize_field_value(field_name)) for field_name in self.fields])
+            
+            

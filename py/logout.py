@@ -2,37 +2,48 @@
 #encoding: utf-8
 
 # # ## ### ##### ######## ############# #####################
-# Product: Online Docs Feedback Server
-# Stage:   Prototype
-# Module:  logout.py                            (\(\
-# Func:    Closing a user session               (^.^)
+# Product: iCAP platform
+# Layer:   Application
+# Module:  logout.py                                (\(\
+# Func:    Terminating a user session               (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import sys
+import os, sys, pathlib
+sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
+from kernel import utils, restresp, auth, restserver
+from debug import deb_logout
 
-sys.path.append("modules")
-from modules import status, httpreq, httpresp, auth, app
+
+class Logout(restserver.RestServer):
+
+    def __init__(self, rel_cfg_file_path):
+
+        super().__init__("Logout", rel_cfg_file_path)
+
+        self.auth_agent = auth.Auth(self)
 
 
-class LogoutApp(app.App):
+    def mock_cgi_input(self):
 
-    def process_request(self, http_req):
+        super().mock_cgi_input()
+     
+        deb_logout.mock_cgi_input()
 
-        resp = httpresp.HttpResponse()
+        return self
 
-        auth_agent = auth.Auth(self, http_req)
 
-        result_dto = auth_agent.close_session()
-        resp.set_body(result_dto)
+    def auth_client(self, req):
+        print(req.get_cookie())
+        self.session_uuid = utils.str2uuid(req.get_cookie())
         
-        if result_dto["statusCode"] != status.OK:
-            resp.set_result_404()
+        return self.auth_agent.check_session(self.session_uuid)
+
+
+    def do_the_job(self, req):
+
+        self.auth_agent.close_session(self.session_uuid)
         
-        print(resp.serialize())
+        return restresp.RestResponse()
 
 
-#
-# Main
-#
-
-LogoutApp().process_request(httpreq.HttpRequest())        
+Logout("../cfg/fserv.ini").process_request()

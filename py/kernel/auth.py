@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 from datetime import datetime
-import status, utils, controller #, session
+import status, utils, controller, sessions
 
 
 class Auth(controller.Controller):
@@ -16,72 +16,41 @@ class Auth(controller.Controller):
         super().__init__(chief)
 
 
-    def passw_hash(self, passw):
+    def check_user_credentials(self, user, password):
 
-        return utils.safearg(utils.md5, passw)
-
-
-    def get_cms_session_duration(self):
-
-        return self.get_cfg().get_cms_session_duration() 
+        return user.get_password_hash() == utils.md5(password)
 
 
-    def check_credentials(self, username, password):
+    def open_session(self, user, host, duration):
 
-        # cms_login, cms_passw_hash = self.get_cfg().get_default_admin_credentials()
-        
-        # req_passw_hash = self.passw_hash(req_passw)
-
-        # return req_login == cms_login and req_passw_hash == cms_passw_hash
-
-        u = self.get_app().get_userdesk().get_user_by_username(username)
-
-        return False if u is None else u.check_password(password) 
-
-
-    def open_session(self, username, password):
-
-        status_code = status.ERR_LOGIN_FAILED
-        user_session = {} #session.Session(self) 
-
-        # http_req = self.get_req()
-        # req_login, req_passw = http_req.get_credentials()
-        
-        if self.check_credentials(username, password):
-
-            self.deb("Welcome!")
-
-            # user_session.set_uuid()
-            # user_session.set_field_value("login", req_login)
-            # user_session.set_field_value("host", http_req.get_host())
-            # user_session.set_field_value("openedAt", datetime.now())
-            # duration = self.get_cms_session_duration()
-            # user_session.set_field_value("duration", duration)
-            # user_session.set_expire_at(duration)
-        
-            # status_code = self.get_db().open_session(user_session)
-
-            # if status_code != status.OK:
-            #    user_session.clear_field_values()
-
-            pass
+        session = sessions.UserSession(self)\
+            .set_uuid()\
+            .set_field_value("user_uuid", user.get_uuid())\
+            .set_field_value("username_deb", user.get_username())\
+            .set_field_value("host", host)\
+            .set_field_value("opened_at", datetime.now())\
+            .set_field_value("duration", duration)\
+            .set_expire_at(duration)
+    
+        session.direct_save()
             
-
-        return {"uuid": "e7dd26cb-e609-4f4a-93f0-e696b26b17a4"}  # self.export_result_dto(status_code, "session", user_session.export_dto())
-
-
-    def check_session(self, session_uuid_str):
-
-        status_code, is_session_active = \
-            self.get_db().check_session(utils.str2uuid(session_uuid_str))
-
-        return status_code == status.OK and is_session_active
+        return session
 
 
-    def close_session(self):
+    def check_session(self, session_uuid):
 
-        session_uuid_str = self.get_req().get_cookie()
+        return sessions.UserSession(self).direct_load("uuid", session_uuid).is_valid()
 
-        status_code = self.get_db().close_session(utils.str2uuid(session_uuid_str))
 
-        return self.export_result_dto(status_code)
+    def close_session(self, session_uuid):
+
+        dbl = self.get_dbl()
+
+        upd_q = dbl.new_update()\
+            .TABLE.sql.set("icap.user_sessions").q\
+            .SET.sql.set("closed_at = '{0}'".format(utils.timestamp2str(datetime.now()))).q\
+            .WHERE.sql.set("uuid = '{0}'".format(str(session_uuid))).q
+        
+        dbl.execute(upd_q).commit()
+
+        return self

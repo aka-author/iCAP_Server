@@ -23,33 +23,43 @@ class Row:
         return self.id
 
 
-    def move_to_table(self, table):
-
-        self.table = table
-
-
     def get_table(self):
 
         return self.table
 
+    # FieldOwner interface
+    def get_field_names(self):
 
+        return self.get_table().get_field_names()
+
+    # FieldOwner interface
+    def get_field(self, field_name):
+
+        return self.get_table().get_field(field_name)
+
+    # FieldOwner interface
     def set_field_value(self, field_name, native_value):
 
         self.field_values[field_name] = native_value
 
         return self
 
-
+    # FieldOwner interface
     def get_field_value(self, field_value):
 
         return self.field_values[field_value]
+
+
+    def move_to_table(self, table):
+
+        self.table = table
 
 
     def __str__(self):
 
         t = self.get_table()
 
-        return " ".join([t.get_field(fn).serialize(self.get_field_value(fn)) for fn in t.fields])
+        return " ".join([t.get_field(fn).serialize_value(self.get_field_value(fn)) for fn in t.fields])
 
 
 class Table:

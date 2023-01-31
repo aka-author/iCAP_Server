@@ -5,7 +5,7 @@
 # Func:    Modeling data about users and sessions     (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import ramtable, bureaucrat, user 
+import ramtable, bureaucrat, users 
 
 
 class UserDesk(bureaucrat.Bureaucrat):
@@ -15,16 +15,16 @@ class UserDesk(bureaucrat.Bureaucrat):
         super().__init__(chief)
 
 
-    def insert_user(self, usr):
+    def insert_user(self, user):
 
         return self
 
 
     def get_user_by_uuid(self, uuid):
 
-        return user.User(self).quick_load("uuid", uuid)
+        return users.User(self).direct_load("uuid", uuid)
 
 
     def get_user_by_username(self, username):
 
-        return user.User(self).quick_load("username", username)
+        return users.User(self).direct_load("username", username)

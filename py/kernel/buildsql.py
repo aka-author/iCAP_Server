@@ -18,6 +18,11 @@ class Sql(bureaucrat.Bureaucrat):
         self.snippet = ""
 
 
+    def get_dbms(self):
+
+        self.get_app().get_dbms()
+
+
     def set_snippet(self, snippet):
 
         self.snippet = snippet 
@@ -59,22 +64,13 @@ class Sql(bureaucrat.Bureaucrat):
                                   for field_name in rt.get_field_names()])
 
         return self
+        
 
+    def sql_field_value(self, row, field_name):
 
-    def assemble_datatype_qualifier(self, nature):
+        self.get_dbms().sql_value(se)
 
-        datatype_qualifiers = {
-            "string":    "::varchar",
-            "numeric":   "::numeric",
-            "boolean":   "::boolean",
-            "uuid":      "::uuid",
-            "timestamp": "::timestamp"
-        }
-
-        return datatype_qualifiers[nature]
-
-
-    def assemble_pure_value_snippet(self, row, field_name):
+        # assemble_pure_value_snippet
 
         field = row.get_table().get_field(field_name)
         nature = field.get_nature()
@@ -85,11 +81,11 @@ class Sql(bureaucrat.Bureaucrat):
             if nature == "string":
                 value_snippet = utils.apos(utils.escsql(field_value))
             elif nature == "numeric" or nature == "boolean":
-                value_snippet = field.serialize(field_value)
+                value_snippet = field.serialize_value(field_value)
             elif nature == "uuid":
-                value_snippet = utils.apos(field.serialize(field_value)) + dtq
+                value_snippet = utils.apos(field.serialize_value(field_value)) + dtq
             elif nature == "timestamp":
-                value_snippet = utils.apos(field.serialize(field_value)) + dtq
+                value_snippet = utils.apos(field.serialize_value(field_value)) + dtq
             else:
                 value_snippet = utils.apos(field_value)
         else:
@@ -98,11 +94,13 @@ class Sql(bureaucrat.Bureaucrat):
         return value_snippet
 
 
-    def assemble_value_snippet(self, row, field_name):
+    def typed_value(self, row, field_name):
+
+        # assemble_value_snippet
 
         field = row.get_table().get_field(field_name)
 
-        return utils.separate(self.assemble_pure_value_snippet(row, field_name), " AS ", field.get_varname())
+        return utils.separate(self.value(row, field_name), " AS ", field.get_varname())
 
 
     def add_ramtable_values(self, row):
@@ -474,6 +472,35 @@ class Insert(Query):
         return self
 
 
+class Update(Query):
+
+    def __init__(self, chief, query_name=None, scheme_name=None):
+
+        super().__init__(chief, "UPDATE", query_name, scheme_name)
+
+        self.TABLE = Clause(self, "")
+        self.SET = Clause(self, "SET")
+        self.WHERE = Clause(self, "WHERE")
+
+        self.clauses = [self.TABLE, self.SET, self.WHERE]
+
+
+    def import_source_ramtable_row(self, row):
+
+        rt = row.get_table()
+
+        field_names = rt.get_field_names()
+
+        self.TABLE.sql.set(rt.get_table_name())
+
+        updates = ", ".join([fn + " = " + self.VALUES.sql.assemble_value_snippet(row, fn) \
+                            for fn in field_names])
+
+        self.SET.sql.set(updates)
+
+        return self
+
+
 class Script(bureaucrat.Bureaucrat):
 
     def __init__(self, chief, script_name="noname", scheme_name=None):
@@ -539,3 +566,5 @@ class Script(bureaucrat.Bureaucrat):
     def get_snippet(self):
 
         return ";\n".join([q.get_snippet() for q in self.queries]) + (";" if self.count_queries() > 0 else "")
+
+

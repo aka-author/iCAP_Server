@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys
-import utils, status, logs, clientreq, httpresp, userdesk, app
+import utils, status, logs, restreq, restresp, userdesk, app
 
 
 class RestServer (app.Application):
@@ -36,38 +36,40 @@ class RestServer (app.Application):
         cgi_body = ""
         cgi_form_fields = {}
 
-        if os.environ["CONTENT_TYPE"] == "application/json":
+        c_type = utils.safedic(os.environ, "CONTENT_TYPE", "Not provided")
+
+        if c_type == "application/json":
             cgi_body = sys.stdin.read(int(os.environ.get("CONTENT_LENGTH", "0")))
-        elif os.environ["CONTENT_TYPE"] == "application/x-www-form-urlencoded":
+        elif c_type == "application/x-www-form-urlencoded":
             cgi_form_fields = utils.extract_fields_from_url_encoded_form(input())
-        elif os.environ["CONTENT_TYPE"] == "multipart/form-data":
+        elif c_type == "multipart/form-data":
             cgi_form_fields = utils.extract_fields_from_storage(cgi.FieldStorage())            
         
-        req = clientreq.ClientRequest(os.environ, cgi_form_fields, cgi_body)
+        req = restreq.RestRequest(os.environ, cgi_form_fields, cgi_body)
         
         self.set_req(req)
         
         return req
 
 
-    def auth_client(self, request):
+    def auth_client(self, req):
   
         return True
 
 
-    def validate_request(self, request):
+    def validate_request(self, req):
 
         return True
 
 
-    def type_response(self, response):
+    def type_response(self, resp):
 
-        print(response.serialize()) 
+        print(resp.serialize()) 
 
 
-    def do_the_job(self, request):
+    def do_the_job(self, req):
 
-        return httpresp.HttpResponse()
+        return restresp.RestResponse()
 
 
     def process_request(self):
@@ -84,11 +86,11 @@ class RestServer (app.Application):
             else:
                 self.set_status_code(status.ERR_INCORRECT_REQUEST)
                 self.log(logs.LOG_ERROR, status.MSG_INCORRECT_REQUEST, self.req.get_serialized_payload())
-                self.type_response(httpresp.HttpResponse().set_result_404())
+                self.type_response(restresp.RestResponse().set_result_404())
 
         else:
             self.set_status_code(status.ERR_NOT_AUTHORIZED)
             self.log(logs.LOG_ERROR, status.MSG_NOT_AUTHORIZED, self.req.get_serialized_payload())
-            self.type_response(httpresp.HttpResponse().set_result_401())
+            self.type_response(restresp.RestResponse().set_result_401())
 
         return  self.quit()

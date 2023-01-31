@@ -1,16 +1,16 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Layer:   Prototype
+# Layer:   Kernel
 # Module:  session.py                                  (\(\
-# Func:    Impersonating user sessions                 (^.^)                                                                                                                                            
+# Func:    Modeling user sessions                 (^.^)                                                                                                                                            
 # # ## ### ##### ######## ############# #####################
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import uuid
-import fields, model
+import utils, fields, model
 
 
-class Session(model.Model): 
+class UserSession(model.Model): 
 
     def __init__(self, chief, uuid=None):
 
@@ -38,14 +38,31 @@ class Session(model.Model):
 
         self.set_field_value("uuid", uuid.uuid4())
 
+        return self
+
 
     def set_expire_at(self, duration):
 
-        expire_at = self.get_field_value("openedAt") + timedelta(seconds=duration)
+        expire_at = self.get_field_value("opened_at") + timedelta(seconds=duration)
 
-        self.set_field_value("expireAt", expire_at)
+        self.set_field_value("expire_at", expire_at)
+
+        return self
 
 
     def is_valid(self):
         
         return self.get_field_value("uuid") is not None
+
+
+    def get_direct_load_query(self, field_name, field_value):
+
+        dlq = self.get_dbl().new_select("selusers", "icap").set_output_ramtable(self.get_empty_master_ramtable())
+        
+        conds = "({0} = '{1}') and (closed_at is null) and (expire_at > '{2}'::timestamp)"
+
+        dlq.WHERE.sql.add(conds.format(field_name, str(field_value), utils.timestamp2str(datetime.now())))
+
+        print(dlq.get_snippet())
+
+        return dlq

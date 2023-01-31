@@ -9,7 +9,7 @@ import json
 import utils
 
 
-class HttpResponse: 
+class RestResponse: 
 
     def __init__(self):
 

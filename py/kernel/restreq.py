@@ -1,15 +1,15 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  clientreq.py                             (\(\
-# Func:    Accessing client request data            (^.^) 
+# Module:  restreq.py                              (\(\
+# Func:    Reading data from REST requests         (^.^) 
 # # ## ### ##### ######## ############# #####################
 
 import json
-import status,utils
+import status, utils
 
 
-class ClientRequest:
+class RestRequest:
 
     def __init__(self, environ, params, body):
 
@@ -63,7 +63,7 @@ class ClientRequest:
         return self.form_fields[field_name] if field_name in self.form_fields else None
 
 
-    def get_single_field(self):
+    def get_pseudofield(self):
 
         field_names = self.form_fields.keys()
 
@@ -106,18 +106,24 @@ class ClientRequest:
         return self.body
 
 
+    def has_pseudofield(self):
+
+        return "unloadMeasurement" in self.form_fields or "pseudofield" in self.form_fields
+
+
     def get_serialized_payload(self):
 
-        sp = ""
+        s_payload = ""
         
-        ct = self.get_content_type()
+        c_type = self.get_content_type()
 
-        if ct == "application/json":
-            sp = self.get_body() 
-        elif ct == "multipart/form-data" and "unloadMeasurement" in self.form_fields:
-            sp = self.get_single_field()
+        if c_type == "application/json":
+            s_payload = self.get_body() 
+        elif c_type == "multipart/form-data": 
+            if self.has_pseudofield():
+                s_payload = self.get_pseudofield()
 
-        return sp 
+        return s_payload
 
 
     def get_payload(self):
@@ -134,4 +140,4 @@ class ClientRequest:
 
     def serialize(self):
 
-        return "Content-type:" + self.get_content_type() + "\\n" + self.get_body().replace("\n", "\\n")
+        return "Content-type:" + str(self.get_content_type()) + "\\n" + self.get_body().replace("\n", "\\n")
