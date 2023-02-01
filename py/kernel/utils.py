@@ -72,7 +72,12 @@ def pars(s):
 
 def apos(s):
 
-    return "'" + safeval(str(s), "") + "'" 
+    return "'" + safeval(str(s), '') + "'" 
+
+
+def quot(s):
+
+    return '"' + safeval(str(s), "") + '"' 
 
 
 def escsql(s):

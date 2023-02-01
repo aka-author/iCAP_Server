@@ -1,8 +1,8 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  dbms.py                                     (\(\
-# Func:    Achieving compatibility for a certain DBMS  (^.^)
+# Module:  dbms.py                                      (\(\
+# Func:    Achieving compatibility with a certain DBMS  (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import utils, datatypes, bureaucrat
@@ -31,6 +31,17 @@ class Dbms(bureaucrat.Bureaucrat):
         }
 
         return utils.safeval(utils.safedic(dt_map, icap_datatype_name), "varchar")
+
+
+    def get_format_for_datatype(self, datatype_name):
+
+        fmt_map = {
+            datatypes.DTN_TIMESTAMP:    "%Y-%m-%d %H:%M:%S.%f",
+            datatypes.DTN_TIMESTAMP_TZ: "%Y-%m-%d %H:%M:%S.%f %z"
+        }
+
+        return utils.safedic(fmt_map, datatype_name)
+
 
 
     def sql_typed_phrase(self, phrse, icap_datatype_name):
