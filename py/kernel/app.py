@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import os, sys, pathlib, uuid
-import status, dblayer, cfg, controller, logs, dirdesk, srcdesk
+import status, dblayer, dtoms, cfg, controller, logs, dirdesk, srcdesk
 
 
 GLOBAL_APP = None
@@ -27,6 +27,7 @@ class Application (controller.Controller):
         GLOBAL_APP = self
         
         self.dbl = dblayer.Dbl(self)
+        self.dtoms = dtoms.DtoMs(self)
         
         self.logger = logs.Logger(self)
 
@@ -81,6 +82,11 @@ class Application (controller.Controller):
     def is_batch_mode(self):
         
         return self.get_cfg().is_batch_mode()
+
+
+    def get_dtoms(self):
+
+        return self.dtoms
 
 
     def get_log_file_name(self):

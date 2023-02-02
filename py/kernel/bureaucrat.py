@@ -79,6 +79,11 @@ class Bureaucrat:
                else None)     
 
 
+    def get_dtoms(self):
+
+        return self.get_app().get_dtoms()
+
+
     def set_dbl(self, dbl):
 
         self.dbl = dbl

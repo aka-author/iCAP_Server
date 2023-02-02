@@ -141,16 +141,22 @@ class Field:
 
     def import_value_from_dto(self, dto_value, dtoms):
 
-        return dto_value
+        native_value = None
+
+        if dto_value is not None:
+            datatype_name = self.get_datatype_name()
+            format = dtoms.get_format_for_datatype(datatype_name)
+            native_value = self.parse(dto_value, format) if format is not None else dto_value
+
+        return native_value
 
 
     def export_value_for_dto(self, native_value, dtoms):
 
         raw_dto_value = None
 
-        datatype_name = self.get_datatype_name()
-
         if native_value is not None:
+            datatype_name = self.get_datatype_name()
             format = dtoms.get_format_for_datatype(datatype_name)
             raw_dto_value = \
                 self.get_serialized_value(native_value, format) if format is not None \
@@ -282,11 +288,6 @@ class BooleanField(Field):
         return serialized_value.lower() == "true"
 
 
-    def export_value_for_dto(self, native_value):
-
-        return native_value
-
-
     def compare(self, val1, val2):
 
         return val1 == val2
@@ -309,11 +310,6 @@ class NumericField(Field):
         a_f_v = abs(f_v)
 
         return f_v if math.floor(a_f_v) < a_f_v else int(f_v) 
-
-
-    def export_value_for_dto(self, native_value):
-
-        return native_value
 
 
     def compare(self, val1, val2):
@@ -428,22 +424,28 @@ class TimestampTzField(TimestampField):
         self.base_datatype_name = datatypes.DTN_TIMESTAMP_TZ
 
 
-class FieldsManager:
+class FieldKeeper:
 
-    def __init__(self, owner=None, field_values=None):
-
-        self.owner = owner
+    def __init__(self):
 
         self.fields = []
         self.fields_by_varnames = {}
 
         self.subkey_varnames = []
         self.mandatory_varnames = []
+        self.autoins_varnames = []
 
-        if field_values is not None:
-            self.reset_field_values()
-        else:
-            self.field_values = field_values
+
+class FieldManager:
+
+    def __init__(self, owner, field_keeper=None):
+
+        self.owner = owner
+
+        self.fk = field_keeper if field_keeper is not None else FieldKeeper()
+        
+        self.field_values = {}
+        self.reset_field_values()
 
 
     def set_owner(self, owner):
@@ -458,19 +460,56 @@ class FieldsManager:
         return self.owner
 
 
-    def set_field_values_storage(self, field_values):
+    def set_field_keeper(self, field_keeper):
 
-        self.field_values = field_values
+        self.fk = field_keeper
+
+
+    def get_field_keeper(self):
+
+        return self.fk
+
+    @property
+    def fields(self):
+
+        return self.fk.fields
+
+    @property 
+    def fields_by_names(self):
+
+        return self.fk.fields_by_names
+
+    @property 
+    def subkey_varnames(self):
+
+        return self.fk.subkey_varnames
+
+    @property 
+    def mandatory_varnames(self):
+
+        return self.fk.mandatory_varnames
+
+
+    def define_subkey(self, varname):
+
+        self.subkey_varnames.append(varname)
 
         return self
 
 
-    def get_field_values_storage(self):
+    def define_mandatory(self, varname):
 
-        return self.field_values
+        self.mandatory_varnames.append(varname)
+
+        return self
 
 
-    def add_field(self, field, options=""):
+    def define_autoins(self, varname):
+
+        self.autoins_field_names.append(varname)
+
+
+    def add_field(self, field, options="optional"):
 
         varname = field.get_varname()
                  
@@ -478,10 +517,13 @@ class FieldsManager:
         self.fields_by_varnames[varname] = field
 
         if "subkey" in options:
-            self.subkey_varnames.append(varname)
+            self.define_subkey(varname)
 
         if "subkey" in options or "mandatory" in options:
-            self.mandatory_varnames.append(varname)
+            self.define_mandatory(varname)
+
+        if "autoins" in options:
+            self.define_autoins(varname)
 
         return self
 
@@ -496,19 +538,24 @@ class FieldsManager:
         return varname in self.get_varnames()
 
 
+    def get_field(self, varname):
+
+        return self.fields[varname]
+
+
     def is_subkey(self, varname):
 
-        return varname in self.subkey_varnames
+        return varname in self.subkey_names
 
 
     def is_mandatory(self, varname):
 
-        return varname in self.mandatory_varnames
+        return varname in self.mandatory_field_names
 
-    
-    def get_field(self, varname):
 
-        return self.fields_by_varnames[varname]
+    def is_insertable(self, varname):
+
+        return not (varname in self.autoins_field_names)
 
 
     def set_field_value(self, varname, native_value):
@@ -518,13 +565,20 @@ class FieldsManager:
         return self
             
 
+    def set_field_values(self, set_values_dic):
+
+        for _, (varname, set_native_value) in enumerate(set_values_dic.items()):
+            if self.has_field(varname):
+                self.set_field_value(varname, set_native_value)
+
+        return self
+        
+
     def reset_field_values(self):
 
         for field in self.fields:
-            self.set_field_value(\
-                field.get_varname(), \
-                self.get_default_value() if field.has_default_value() else self.get_null_value()) 
-
+            self.set_field_value(field.get_varname(), field.get_default_value())
+                
         return self
 
 
@@ -547,18 +601,18 @@ class FieldsManager:
         return self.get_field(varname).get_serialized_value(native_value, custom_format)
 
 
-    def import_field_value_from_dto(self, varname, dto_value):
+    def import_field_value_from_dto(self, varname, dto_value, dtoms):
 
-        native_value = self.get_field(varname).import_value_from_dto(dto_value)
+        native_value = self.get_field(varname).import_value_from_dto(dto_value, dtoms)
 
         return self.set_field_value(varname, native_value)
 
 
-    def export_field_value_for_dto(self, varname):
+    def export_field_value_for_dto(self, varname, dtoms):
 
         native_value = self.get_field_value(varname)
 
-        return self.get_field(varname).export_value_for_dto(native_value)
+        return self.get_field(varname).export_value_for_dto(native_value, dtoms)
 
 
     def code_field_value_for_sql(self, varname, dbms):
@@ -582,8 +636,8 @@ class FieldsManager:
         return self.set_field_value(varname, native_value)
 
 
+    def eq_field_value(self, field_name, compare_value):
 
+        field = self.get_field(field_name)
 
-    
-
-    
+        return field.eq(self.get_field_value(field_name), compare_value)

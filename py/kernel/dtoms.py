@@ -50,11 +50,4 @@ class DtoMs(bureaucrat.Bureaucrat):
 
     def dto_value(self, raw_dto_value, icap_datatype_name):
 
-        d_v = "undefined"
-
-        if raw_dto_value is not None:
-            dto_datatype_name = self.get_dto_datatype_name(icap_datatype_name)
-            need_quotes = ["string"]
-            d_v = utils.quot(raw_dto_value) if dto_datatype_name in need_quotes else raw_dto_value
-
-        return d_v
+        return utils.safeval(raw_dto_value, "undefined")

@@ -18,7 +18,7 @@ class Model(bureaucrat.Bureaucrat):
         self.model_name = model_name
         self.set_plural()
 
-        self.fman = self.create_fields_manager()
+        self.fm = self.create_field_manager()
         self.define_fields()
 
         self.field_values = {}
@@ -46,58 +46,22 @@ class Model(bureaucrat.Bureaucrat):
         return self.plural
 
 
-    def create_fields_manager(self):
+    def create_field_manager(self):
 
-        return fields.Fields()
+        return fields.FieldManager(self)
 
 
-    
-
-    
     def is_valid(self):
 
         return True
-
-
-    
-
-
-   
-
-
-    # Working with DTOs
-
-    def field_name_native2dto(self, native_name):
-
-        return native_name
-
-
-    def field_name_dto2native(self, dto_name):
-
-        return dto_name
-
-
-    def set_field_value_from_dto(self, field_name, dto_value):
-
-        native_value = self.fields[field_name].repair_from_dto(dto_value)
-
-        self.set_field_value(field_name, native_value)
-
-
-    def get_dto_ready_field_value(self, field_name):
-
-        native_value = self.field_values[field_name]
-        
-        return utils.safearg(self.fields[field_name].prepare_value_for_dto, native_value)
 
 
     def export_dto(self):
 
         dto = {}
 
-        for field_name in self.fields:
-            dto_field_name = self.field_name_native2dto(field_name)
-            dto[dto_field_name] = self.get_dto_ready_field_value(field_name)
+        for varname in self.fm.get_varnames():
+            dto[varname] = self.fm.export_field_value_for_dto(varname, self.get_dtoms())
 
         return dto
 
@@ -105,9 +69,8 @@ class Model(bureaucrat.Bureaucrat):
     def import_dto(self, dto):
 
         for dto_field_name in dto:
-            field_name = self.field_name_dto2native(dto_field_name)
-            if self.has_field(field_name):                
-                self.set_field_value_from_dto(field_name, dto[dto_field_name])
+            if self.has_field(dto_field_name):
+                self.fm.import_field_value_from_dto(dto_field_name, dto[dto_field_name], self.get_dtoms())
 
         return self
 
@@ -212,8 +175,7 @@ class Model(bureaucrat.Bureaucrat):
 
     def __str__(self):
 
-        #return "\n".join([field_name + ": " + self.serialize_field_value(field_name) for field_name in self.fields])
-
         return "\n".join([field_name + ": " + str(self.serialize_field_value(field_name)) for field_name in self.fields])
+
             
             
