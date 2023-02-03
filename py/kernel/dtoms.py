@@ -33,14 +33,14 @@ class DtoMs(bureaucrat.Bureaucrat):
         return utils.safeval(utils.safedic(dt_map, icap_datatype_name), "string")
 
 
-    def get_format_for_datatype(self, dbms_datatype_name):
+    def get_format_for_datatype(self, icap_datatype_name):
 
-        fmt_map = {
+        format_map = {
             datatypes.DTN_TIMESTAMP:    "%Y-%m-%d %H:%M:%S.%f",
             datatypes.DTN_TIMESTAMP_TZ: "%Y-%m-%d %H:%M:%S.%f %z"
         }
 
-        return utils.safedic(fmt_map, dbms_datatype_name)
+        return utils.safedic(format_map, icap_datatype_name)
 
 
     def dto_varname(self, icap_varname):

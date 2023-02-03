@@ -16,15 +16,16 @@ class Field:
 
         self.varname = varname
         self.datatype_name = datatype_name
-        self.base_datatype_name = base_datatype_name
+        self.base_datatype_name = utils.safeval(base_datatype_name, datatype_name)
 
         self.null_value = None
         self.zero_value = None
-        self.explicit_default_value_flag = False
+        self.default_value_flag = False
         self.default_value = None
 
-        self.serialize_format = ""
-        self.parse_format = "" 
+        self.serialize_format = None
+        self.parse_format = None 
+
         self.sql_agg_expr = None
 
 
@@ -54,6 +55,8 @@ class Field:
 
         self.null_value = null_value
 
+        return self
+
 
     def get_null_value(self):
 
@@ -63,6 +66,8 @@ class Field:
     def set_zero_value(self, zero_value):
 
         self.zero_value = zero_value
+
+        return self
 
 
     def get_zero_value(self):
@@ -91,9 +96,9 @@ class Field:
     
     # Parsing strings into native values 
 
-    def set_parse_format(self, pf):
+    def set_parse_format(self, parse_format):
 
-        self.parse_format = pf
+        self.parse_format = parse_format
 
         return self
 
@@ -110,9 +115,9 @@ class Field:
 
     # Serializing native values into strings
 
-    def set_serialize_format(self, sf):
+    def set_serialize_format(self, serialize_format):
 
-        self.serialize_format = sf
+        self.serialize_format = serialize_format
 
         return self
 
@@ -124,17 +129,15 @@ class Field:
 
     def get_serialized_value(self, native_value, format=None):
 
-        s = ""
+        serialized_value = "null"
 
         if native_value is not None:
             try:    
-                s = str(native_value) 
+                serialized_value = str(native_value) 
             except: 
-                s = "N/S"
-        else:
-            s = "null"
+                serialized_value = "Serializaton failed"
 
-        return s
+        return serialized_value
 
 
     # Exchanging values with DTOs
@@ -144,8 +147,7 @@ class Field:
         native_value = None
 
         if dto_value is not None:
-            datatype_name = self.get_datatype_name()
-            format = dtoms.get_format_for_datatype(datatype_name)
+            format = dtoms.get_format_for_datatype(self.get_base_datatype_name())
             native_value = self.parse(dto_value, format) if format is not None else dto_value
 
         return native_value
@@ -155,14 +157,15 @@ class Field:
 
         raw_dto_value = None
 
-        if native_value is not None:
-            datatype_name = self.get_datatype_name()
-            format = dtoms.get_format_for_datatype(datatype_name)
-            raw_dto_value = \
-                self.get_serialized_value(native_value, format) if format is not None \
-                else native_value
+        base_datatype_name = self.get_base_datatype_name()
 
-        return dtoms.dto_value(self, raw_dto_value, datatype_name)
+        if native_value is not None:
+            
+            format = dtoms.get_format_for_datatype(base_datatype_name)
+            raw_dto_value = \
+                self.get_serialized_value(native_value, format) if format is not None else native_value
+
+        return dtoms.dto_value(self, raw_dto_value, base_datatype_name)
 
 
     # Exchanging values with a DB 
@@ -174,27 +177,26 @@ class Field:
 
     def code_typed_varname_sql(self, dbms):
 
-        varname = self.get_varname()
-
-        return dbms.sql_typed_varname(self.code_varname_for_sql(varname, dbms))
+        return dbms.sql_typed_varname(self.get_varname(), self.get_base_datatype_name())
 
 
     def code_value_for_sql(self, native_value, dbms):
 
         raw_value_for_sql = None
 
+        base_datatype_name = self.get_base_datatype_name()
+
         if native_value is not None:
-            datatype_name = self.get_datatype_name()
-            format = dbms.get_format_for_datatype(datatype_name)
+            format = dbms.get_format_for_datatype(base_datatype_name)
             raw_value_for_sql = self.get_serialized_value(native_value, format)
 
-        return dbms.sql_value(raw_value_for_sql, datatype_name)
+        return dbms.sql_value(raw_value_for_sql, base_datatype_name)
 
 
     def code_typed_value_for_sql(self, native_value, dbms):
 
         base_datatype_name = self.get_base_datatype_name()
-        sql_value = self.code_value_for_sql(native_value, base_datatype_name)
+        sql_value = self.code_value_for_sql(native_value, dbms)
         
         return dbms.sql_typed_phrase(sql_value, base_datatype_name)
 
@@ -229,7 +231,7 @@ class Field:
 
     def compare(self, val1, val2):
 
-        return 0 if val1 == val2 else None
+        return 0 if val1 == val2 or (val1 is None and val2 is None) else None
 
 
     def eq(self, val1, val2):
@@ -237,6 +239,16 @@ class Field:
         cmp = self.compare(val1, val2)
 
         return cmp == 0 if cmp is not None else False
+
+
+    def is_null(self, val):
+
+        return (val is None) if self.get_null_value() is None else self.eq(val, self.get_null_value())
+
+
+    def is_zero(self, val):
+
+        return self.eq(val, self.get_zero_value())
 
 
     def le(self, val1, val2):
@@ -250,7 +262,7 @@ class Field:
 
         cmp = self.compare(val1, val2)
 
-        return cmp < 0 if cmp is not None else False
+        return cmp > 0 if cmp is not None else False
 
 
 class UuidField(Field):
@@ -258,8 +270,6 @@ class UuidField(Field):
     def __init__(self, varname):
 
         super().__init__(varname, datatypes.DTN_UUID)
-
-        self.base_datatype_name = datatypes.DTN_UUID
 
         self.zero_value = utils.str2uuid('00000000-0000-0000-0000-000000000000')
 
@@ -278,9 +288,7 @@ class BooleanField(Field):
 
     def __init__(self, varname):
 
-        super().__init__(varname, datatypes.DTN_BOOLEAN, "boolean")
-
-        self.base_datatype_name = datatypes.DTN_BOOLEAN
+        super().__init__(varname, datatypes.DTN_BOOLEAN)
 
 
     def parse_to_value(self, serialized_value, format=None):
@@ -288,18 +296,11 @@ class BooleanField(Field):
         return serialized_value.lower() == "true"
 
 
-    def compare(self, val1, val2):
-
-        return val1 == val2
-
-
 class NumericField(Field):
 
     def __init__(self, varname, datatype_name):
 
-        super().__init__(varname, datatype_name, "numeric")
-
-        self.base_datatype_name = datatypes.DTN_NUMERIC
+        super().__init__(varname, datatype_name, datatypes.DTN_NUMERIC)
 
         self.zero_value = 0
 
@@ -337,8 +338,6 @@ class DoubleField(NumericField):
 
         super().__init__(varname, datatypes.DTN_DOUBLE)
 
-        self.base_datatype_name = datatypes.DTN_DOUBLE
-
 
     def parse_to_value(self, serialized_value, format=None):
 
@@ -350,8 +349,6 @@ class StringField(Field):
     def __init__(self, varname):
 
         super().__init__(varname, datatypes.DTN_STRING)
-
-        self.base_datatype_name = datatypes.DTN_STRING
 
         self.zero_value = ""
 
@@ -375,9 +372,7 @@ class StrListField(StringField):
 
     def __init__(self, varname):
 
-        super().__init__(varname, datatypes.DTN_STRLIST)
-
-        self.base_datatype_name = datatypes.DTN_STRING
+        super().__init__(varname, datatypes.DTN_STRLIST, datatypes.DTN_STRING)
 
         self.zero_value = ""
         
@@ -388,11 +383,9 @@ class TimestampField(Field):
 
         super().__init__(varname, datatypes.DTN_TIMESTAMP)
 
-        self.base_datatype_name = datatypes.DTN_TIMESTAMP
-
         self.zero_value = datetime.now()
-        self.serialize_format = utils.get_default_timestamp_format()
-        self.parse_format = utils.get_default_timestamp_format()
+        self.serialize_format = datatypes.get_default_timestamp_format()
+        self.parse_format = datatypes.get_default_timestamp_format()
 
 
     def get_default_value(self):
@@ -400,14 +393,18 @@ class TimestampField(Field):
         return datetime.now()
 
 
-    def serialize_value(self, native_value, custom_format=None):
+    def serialize_value(self, native_value, format=None):
 
-        return native_value.strftime(self.get_serialize_format()) if native_value is not None else None
+        fmt = utils.safeval(format, self.get_serialize_format())
+
+        return native_value.strftime(fmt) if native_value is not None else None
 
 
-    def parse_to_value(self, serialized_value):
+    def parse_to_value(self, serialized_value, format=None):
 
-        return datetime.strptime(serialized_value, self.get_parse_format())        
+        fmt = utils.safeval(format, self.get_parse_format())
+
+        return datetime.strptime(serialized_value, fmt)        
 
 
     def compare(self, val1, val2):
@@ -420,8 +417,6 @@ class TimestampTzField(TimestampField):
     def __init__(self, varname):
 
         super().__init__(varname, datatypes.DTN_TIMESTAMP_TZ)
-
-        self.base_datatype_name = datatypes.DTN_TIMESTAMP_TZ
 
 
 class FieldKeeper:
@@ -464,6 +459,8 @@ class FieldManager:
 
         self.fk = field_keeper
 
+        return self
+
 
     def get_field_keeper(self):
 
@@ -489,6 +486,11 @@ class FieldManager:
 
         return self.fk.mandatory_varnames
 
+    @property 
+    def autoins_varnames(self):
+
+        return self.fk.autoins_varnames
+
 
     def define_subkey(self, varname):
 
@@ -506,7 +508,7 @@ class FieldManager:
 
     def define_autoins(self, varname):
 
-        self.autoins_field_names.append(varname)
+        self.autoins_varnames.append(varname)
 
 
     def add_field(self, field, options="optional"):
@@ -565,14 +567,14 @@ class FieldManager:
         return self
             
 
-    def set_field_values(self, set_values_dic):
+    def set_field_values(self, native_values):
 
-        for _, (varname, set_native_value) in enumerate(set_values_dic.items()):
+        for _, (varname, native_value) in enumerate(native_values.items()):
             if self.has_field(varname):
-                self.set_field_value(varname, set_native_value)
+                self.set_field_value(varname, native_value)
 
         return self
-        
+
 
     def reset_field_values(self):
 
@@ -587,18 +589,18 @@ class FieldManager:
         return self.field_values[varname]
 
 
-    def parse_to_field_value(self, varname, serialized_value, custom_format=None):
+    def parse_to_field_value(self, varname, serialized_value, format=None):
 
-        native_value = self.get_field(varname).parse_to_value(serialized_value, custom_format)
+        native_value = self.get_field(varname).parse_to_value(serialized_value, format)
 
         return self.set_field_value(varname, native_value)
 
 
-    def get_serialized_field_value(self, varname, custom_format=None):
+    def get_serialized_field_value(self, varname, format=None):
 
         native_value = self.get_field_value(varname)
 
-        return self.get_field(varname).get_serialized_value(native_value, custom_format)
+        return self.get_field(varname).get_serialized_value(native_value, format)
 
 
     def import_field_value_from_dto(self, varname, dto_value, dtoms):

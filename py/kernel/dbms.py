@@ -36,8 +36,8 @@ class Dbms(bureaucrat.Bureaucrat):
     def get_format_for_datatype(self, datatype_name):
 
         fmt_map = {
-            datatypes.DTN_TIMESTAMP:    "%Y-%m-%d %H:%M:%S.%f",
-            datatypes.DTN_TIMESTAMP_TZ: "%Y-%m-%d %H:%M:%S.%f %z"
+            datatypes.DTN_TIMESTAMP:    datatypes.get_default_timestamp_format(),
+            datatypes.DTN_TIMESTAMP_TZ: datatypes.get_default_timestamp_tz_format()
         }
 
         return utils.safedic(fmt_map, datatype_name)
@@ -59,14 +59,14 @@ class Dbms(bureaucrat.Bureaucrat):
         return self.sql_typed_phrase(self.sql_varname(icap_varname), icap_datatype_name)
 
 
-    def sql_value(self, serialized_value, icap_datatype_name):
+    def sql_value(self, raw_value_for_sql, icap_datatype_name):
 
         s_v = "null"
 
-        if serialized_value is not None:
-            sql_dtn = self.get_sql_datatype_name(icap_datatype_name)
+        if raw_value_for_sql is not None:
+            sql_datatype_name = self.get_sql_datatype_name(icap_datatype_name)
             need_apos = ["uuid", "varchar", "timestamp", "timestamptz", "json"]
-            s_v = utils.apos(serialized_value) if sql_dtn in need_apos else serialized_value
+            s_v = utils.apos(raw_value_for_sql) if sql_datatype_name in need_apos else raw_value_for_sql
 
         return s_v
             

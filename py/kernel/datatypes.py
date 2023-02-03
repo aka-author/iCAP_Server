@@ -30,3 +30,15 @@ def get_atomic_datatype_names():
 def is_atomic(datatype_name):
 
     return datatype_name.lower() in get_atomic_datatype_names()
+
+
+# Timestamps
+
+def get_default_timestamp_format():
+
+    return "%Y-%m-%d %H:%M:%S.%f"
+
+
+def get_default_timestamp_tz_format():
+
+    return "%Y-%m-%d %H:%M:%S.%f %z" 
