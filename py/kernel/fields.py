@@ -147,25 +147,23 @@ class Field:
         native_value = None
 
         if dto_value is not None:
-            format = dtoms.get_format_for_datatype(self.get_base_datatype_name())
-            native_value = self.parse(dto_value, format) if format is not None else dto_value
+            format = dtoms.get_format_for_datatype(self.get_datatype_name())
+            native_value = self.parse_to_value(dto_value, format) if format is not None else dto_value
 
         return native_value
 
 
     def export_value_for_dto(self, native_value, dtoms):
 
-        raw_dto_value = None
+        datatype_name = self.get_datatype_name()
 
-        base_datatype_name = self.get_base_datatype_name()
+        if native_value is not None and dtoms.is_serialization_required(datatype_name):                  
+            format = dtoms.get_format_for_datatype(datatype_name)
+            raw_dto_value = self.get_serialized_value(native_value, format) 
+        else:
+            raw_dto_value = native_value
 
-        if native_value is not None:
-            
-            format = dtoms.get_format_for_datatype(base_datatype_name)
-            raw_dto_value = \
-                self.get_serialized_value(native_value, format) if format is not None else native_value
-
-        return dtoms.dto_value(self, raw_dto_value, base_datatype_name)
+        return dtoms.dto_value(raw_dto_value, datatype_name)
 
 
     # Exchanging values with a DB 
@@ -267,9 +265,9 @@ class Field:
 
 class UuidField(Field):
 
-    def __init__(self, varname):
+    def __init__(self, varname, datatype_name=datatypes.DTN_UUID):
 
-        super().__init__(varname, datatypes.DTN_UUID)
+        super().__init__(varname, datatype_name, datatypes.DTN_UUID)
 
         self.zero_value = utils.str2uuid('00000000-0000-0000-0000-000000000000')
 
@@ -286,9 +284,9 @@ class UuidField(Field):
 
 class BooleanField(Field):
 
-    def __init__(self, varname):
+    def __init__(self, varname, datatype_name=datatypes.DTN_BOOLEAN):
 
-        super().__init__(varname, datatypes.DTN_BOOLEAN)
+        super().__init__(varname, datatype_name, datatypes.DTN_BOOLEAN)
 
 
     def parse_to_value(self, serialized_value, format=None):
@@ -298,9 +296,9 @@ class BooleanField(Field):
 
 class NumericField(Field):
 
-    def __init__(self, varname, datatype_name):
+    def __init__(self, varname, datatype_name=datatypes.DTN_NUMERIC, base_datatype_name=datatypes.DTN_NUMERIC):
 
-        super().__init__(varname, datatype_name, datatypes.DTN_NUMERIC)
+        super().__init__(varname, datatype_name, base_datatype_name)
 
         self.zero_value = 0
 
@@ -320,11 +318,9 @@ class NumericField(Field):
 
 class BigintField(NumericField):
 
-    def __init__(self, varname):
+    def __init__(self, varname, datatype_name=datatypes.DTN_BIGINT):
 
-        super().__init__(varname, datatypes.DTN_BIGINT)
-
-        self.base_datatype_name = datatypes.DTN_BIGINT
+        super().__init__(varname, datatype_name, datatypes.DTN_BIGINT)
 
 
     def parse_to_value(self, serialized_value, format=None):
@@ -334,9 +330,9 @@ class BigintField(NumericField):
 
 class DoubleField(NumericField):
 
-    def __init__(self, varname):
+    def __init__(self, varname, datatype_name=datatypes.DTN_DOUBLE):
 
-        super().__init__(varname, datatypes.DTN_DOUBLE)
+        super().__init__(varname, datatype_name, datatypes.DTN_DOUBLE)
 
 
     def parse_to_value(self, serialized_value, format=None):
@@ -346,9 +342,9 @@ class DoubleField(NumericField):
 
 class StringField(Field):
 
-    def __init__(self, varname):
+    def __init__(self, varname, datatype_name=datatypes.DTN_STRING):
 
-        super().__init__(varname, datatypes.DTN_STRING)
+        super().__init__(varname, datatype_name, datatypes.DTN_STRING)
 
         self.zero_value = ""
 
@@ -370,18 +366,18 @@ class StringField(Field):
 
 class StrListField(StringField):
 
-    def __init__(self, varname):
+    def __init__(self, varname, datatype_name=datatypes.DTN_STRLIST):
 
-        super().__init__(varname, datatypes.DTN_STRLIST, datatypes.DTN_STRING)
+        super().__init__(varname, datatype_name)
 
         self.zero_value = ""
         
 
 class TimestampField(Field):
 
-    def __init__(self, varname):
+    def __init__(self, varname, datatype_name=datatypes.DTN_TIMESTAMP):
 
-        super().__init__(varname, datatypes.DTN_TIMESTAMP)
+        super().__init__(varname, datatype_name, datatypes.DTN_TIMESTAMP)
 
         self.zero_value = datetime.now()
         self.serialize_format = datatypes.get_default_timestamp_format()
@@ -393,17 +389,17 @@ class TimestampField(Field):
         return datetime.now()
 
 
-    def serialize_value(self, native_value, format=None):
+    def get_serialized_value(self, native_value, format=None):
 
         fmt = utils.safeval(format, self.get_serialize_format())
-
+        
         return native_value.strftime(fmt) if native_value is not None else None
 
 
     def parse_to_value(self, serialized_value, format=None):
-
+    
         fmt = utils.safeval(format, self.get_parse_format())
-
+        
         return datetime.strptime(serialized_value, fmt)        
 
 
@@ -414,9 +410,19 @@ class TimestampField(Field):
 
 class TimestampTzField(TimestampField):
 
-    def __init__(self, varname):
+    def __init__(self, varname, datatype_name=datatypes.DTN_TIMESTAMP_TZ):
 
-        super().__init__(varname, datatypes.DTN_TIMESTAMP_TZ)
+        super().__init__(varname, datatype_name)
+
+
+class DateField(TimestampField):
+
+    def __init__(self, varname, datatype_name=datatypes.DTN_DATE):
+
+        super().__init__(varname, datatype_name)
+
+        self.serialize_format = datatypes.get_default_date_format()
+        self.parse_format = datatypes.get_default_date_format()
 
 
 class FieldKeeper:
@@ -472,9 +478,9 @@ class FieldManager:
         return self.fk.fields
 
     @property 
-    def fields_by_names(self):
+    def fields_by_varnames(self):
 
-        return self.fk.fields_by_names
+        return self.fk.fields_by_varnames
 
     @property 
     def subkey_varnames(self):
@@ -530,6 +536,11 @@ class FieldManager:
         return self
 
 
+    def count_fields(self):
+
+        return len(self.fields)
+
+
     def get_varnames(self):
 
         return self.fields_by_varnames.keys()
@@ -542,7 +553,7 @@ class FieldManager:
 
     def get_field(self, varname):
 
-        return self.fields[varname]
+        return self.fields_by_varnames[varname]
 
 
     def is_subkey(self, varname):
@@ -586,7 +597,7 @@ class FieldManager:
 
     def get_field_value(self, varname):
 
-        return self.field_values[varname]
+        return utils.safedic(self.field_values, varname)
 
 
     def parse_to_field_value(self, varname, serialized_value, format=None):
@@ -599,7 +610,7 @@ class FieldManager:
     def get_serialized_field_value(self, varname, format=None):
 
         native_value = self.get_field_value(varname)
-
+        
         return self.get_field(varname).get_serialized_value(native_value, format)
 
 

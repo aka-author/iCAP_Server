@@ -16,6 +16,7 @@ DTN_STRING       = "string"
 DTN_STRLIST      = "strlist"
 DTN_TIMESTAMP    = "timestamp"
 DTN_TIMESTAMP_TZ = "timestamp_tz"
+DTN_DATE         = "date"
 DTN_JSON         = "json"
 
 
@@ -24,7 +25,7 @@ DTN_JSON         = "json"
 def get_atomic_datatype_names():
 
     return [DTN_UUID, DTN_BOOLEAN, DTN_BIGINT, DTN_DOUBLE, DTN_STRING, \
-            DTN_STRLIST, DTN_TIMESTAMP, DTN_TIMESTAMP_TZ, DTN_JSON]
+            DTN_STRLIST, DTN_TIMESTAMP, DTN_TIMESTAMP_TZ, DTN_DATATYPE, DTN_JSON]
 
 
 def is_atomic(datatype_name):
@@ -42,3 +43,8 @@ def get_default_timestamp_format():
 def get_default_timestamp_tz_format():
 
     return "%Y-%m-%d %H:%M:%S.%f %z" 
+
+
+def get_default_date_format():
+
+    return "%Y-%m-%d" 

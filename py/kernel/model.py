@@ -21,8 +21,7 @@ class Model(bureaucrat.Bureaucrat):
         self.fm = self.create_field_manager()
         self.define_fields()
 
-        self.field_values = {}
-        self.clear_field_values()
+        self.fm.reset_field_values()
 
 
     def get_model_name(self):
@@ -56,42 +55,42 @@ class Model(bureaucrat.Bureaucrat):
         return True
 
 
+    def import_dto(self, dto):
+
+        for dto_field_name in dto.keys():
+            if self.fm.has_field(dto_field_name):
+                self.fm.import_field_value_from_dto(dto_field_name, dto[dto_field_name], self.get_app().get_dtoms())
+
+        return self
+
+        
     def export_dto(self):
 
         dto = {}
 
         for varname in self.fm.get_varnames():
-            dto[varname] = self.fm.export_field_value_for_dto(varname, self.get_dtoms())
+            dto[varname] = self.fm.export_field_value_for_dto(varname, self.get_app().get_dtoms())
 
         return dto
 
 
-    def import_dto(self, dto):
-
-        for dto_field_name in dto:
-            if self.has_field(dto_field_name):
-                self.fm.import_field_value_from_dto(dto_field_name, dto[dto_field_name], self.get_dtoms())
-
-        return self
-
-
     # Serializing and parsing
 
-    def serialize(self, custom_format=None):
+    def serialize(self, format=None):
 
         return json.dumps(self.export_dto())
 
 
-    def parse(self, serialized_model, custom_format=None):
+    def parse(self, serialized_model, format=None):
 
         return self.import_dto(json.load(serialized_model)) 
 
 
     # Publishing models
 
-    def publish(self, custom_format=None):
+    def publish(self, format=None):
 
-        return self.serialize(custom_format)
+        return self.serialize(format)
 
 
     # Working with a database and ramtables
@@ -175,7 +174,8 @@ class Model(bureaucrat.Bureaucrat):
 
     def __str__(self):
 
-        return "\n".join([field_name + ": " + str(self.serialize_field_value(field_name)) for field_name in self.fields])
+        return "\n".join([varname + ": " + str(self.fm.get_serialized_field_value(varname)) \
+                            for varname in self.fm.get_varnames()])
 
             
             

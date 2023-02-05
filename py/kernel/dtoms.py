@@ -27,17 +27,24 @@ class DtoMs(bureaucrat.Bureaucrat):
             datatypes.DTN_STRLIST:      "string",
             datatypes.DTN_TIMESTAMP:    "string",
             datatypes.DTN_TIMESTAMP_TZ: "string",
+            datatypes.DTN_DATE:         "string",
             datatypes.DTN_JSON:         "json"
         }
 
         return utils.safeval(utils.safedic(dt_map, icap_datatype_name), "string")
 
 
+    def is_serialization_required(self, icap_datatype_name):
+
+        return self.dto_datatype_name(icap_datatype_name) == "string"
+
+
     def get_format_for_datatype(self, icap_datatype_name):
 
         format_map = {
             datatypes.DTN_TIMESTAMP:    "%Y-%m-%d %H:%M:%S.%f",
-            datatypes.DTN_TIMESTAMP_TZ: "%Y-%m-%d %H:%M:%S.%f %z"
+            datatypes.DTN_TIMESTAMP_TZ: "%Y-%m-%d %H:%M:%S.%f %z",
+            datatypes.DTN_DATE:         "%Y-%m-%d"
         }
 
         return utils.safedic(format_map, icap_datatype_name)

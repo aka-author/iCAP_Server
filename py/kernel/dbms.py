@@ -27,6 +27,7 @@ class Dbms(bureaucrat.Bureaucrat):
             datatypes.DTN_STRLIST:      "varchar",
             datatypes.DTN_TIMESTAMP:    "timestamp",
             datatypes.DTN_TIMESTAMP_TZ: "timestamptz",
+            datatypes.DTN_DATE:         "timestamp",
             datatypes.DTN_JSON:         "json"
         }
 
@@ -37,7 +38,8 @@ class Dbms(bureaucrat.Bureaucrat):
 
         fmt_map = {
             datatypes.DTN_TIMESTAMP:    datatypes.get_default_timestamp_format(),
-            datatypes.DTN_TIMESTAMP_TZ: datatypes.get_default_timestamp_tz_format()
+            datatypes.DTN_TIMESTAMP_TZ: datatypes.get_default_timestamp_tz_format(),
+            datatypes.DTN_DATE:         datatypes.get_default_date_format()
         }
 
         return utils.safedic(fmt_map, datatype_name)
@@ -46,7 +48,7 @@ class Dbms(bureaucrat.Bureaucrat):
 
     def sql_typed_phrase(self, phrse, icap_datatype_name):
 
-        return phrse + "::" + self.get_sql_datatype_name(icap_datatype_name)
+        return phrse + "::" + self.sql_datatype_name(icap_datatype_name)
 
 
     def sql_varname(self, icap_varname):
@@ -64,7 +66,7 @@ class Dbms(bureaucrat.Bureaucrat):
         s_v = "null"
 
         if raw_value_for_sql is not None:
-            sql_datatype_name = self.get_sql_datatype_name(icap_datatype_name)
+            sql_datatype_name = self.sql_datatype_name(icap_datatype_name)
             need_apos = ["uuid", "varchar", "timestamp", "timestamptz", "json"]
             s_v = utils.apos(raw_value_for_sql) if sql_datatype_name in need_apos else raw_value_for_sql
 

@@ -1,23 +1,23 @@
 
 import sys
-sys.path.append("C:\privat\misha\webhelp\iCAP_Server\py\modules")
+sys.path.append("C:\privat\misha\webhelp\iCAP_Server\py\kernel")
 import ramtable, fields
 
 
 rt = ramtable.Table("animals")
 #print(rt.get_table_name())
 
-rt.add_field(fields.UuidField("uuid"))
-rt.add_field(fields.StringField("name"))
-rt.add_field(fields.StringField("species"))
-rt.add_field(fields.IntField("weight"))
-rt.add_field(fields.TimestampField("date_of_birth"), "out", "mandatory")
+rt.fm.add_field(fields.UuidField("uuid"))\
+     .add_field(fields.StringField("name"))\
+     .add_field(fields.StringField("species"))\
+     .add_field(fields.BigintField("weight"))\
+     .add_field(fields.DateField("date_of_birth"), "mandatory")
 
-print(rt.count_fields())
+print(rt.fm.count_fields())
 
-rt.insert_from_dic({"name": "Tuzik", "species": "dog", "weight": 12})
+rt.insert({"name": "Tuzik", "species": "dog", "weight": 12})
 print(rt.count_rows())
-print(rt.select_by_index(0).field_values)
+print(rt.select_by_index(0))
 
 
 
