@@ -42,15 +42,22 @@ class Auth(controller.Controller):
         return sessions.UserSession(self).direct_load("uuid", session_uuid).is_valid()
 
 
-    def close_session(self, session_uuid):
+    def close_session(self, session):
 
         dbl = self.get_dbl()
 
+        # upd_q = dbl.new_update()\
+        #    .TABLE.sql.set("icap.user_sessions").q\
+        #    .SET.sql.set("closed_at = '{0}'".format(utils.timestamp2str(datetime.now()))).q\
+        #    .WHERE.sql.set("uuid = '{0}'".format(str(session_uuid))).q
+
+
         upd_q = dbl.new_update()\
-            .TABLE.sql.set("icap.user_sessions").q\
-            .SET.sql.set("closed_at = '{0}'".format(utils.timestamp2str(datetime.now()))).q\
-            .WHERE.sql.set("uuid = '{0}'".format(str(session_uuid))).q
-        
+            .TABLE.sql.set("{scheme}.user_session").q\
+            .SET.sql.set(session.fm.sql_equal("closed_at", datetime.now())).q\
+            .WHERE.sql.set(session.fm.sql_equal("uuid")).q
+
+
         dbl.execute(upd_q).commit()
 
         return self

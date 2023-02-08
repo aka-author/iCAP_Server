@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import uuid
-import utils, bureaucrat
+import utils, datatypes, bureaucrat
 
 
 class Sql(bureaucrat.Bureaucrat):
@@ -18,11 +18,6 @@ class Sql(bureaucrat.Bureaucrat):
         self.snippet = ""
 
 
-    def get_dbms(self):
-
-        self.get_app().get_dbms()
-
-
     def set_snippet(self, snippet):
 
         self.snippet = snippet 
@@ -30,14 +25,14 @@ class Sql(bureaucrat.Bureaucrat):
         return self
 
 
-    def get_snippet(self):
-
-        return self.snippet
-
-
     def set(self, snippet=""):
 
         return self.set_snippet(snippet)
+
+
+    def set_list_items(self, snippets):
+
+        return self.set_snippet(", ".join(snippets))
 
 
     def add(self, snippet, separ=" "):
@@ -49,70 +44,114 @@ class Sql(bureaucrat.Bureaucrat):
 
         return self.set_snippet(utils.separate(self.snippet, separ, ", ".join(snippets)))
 
-    
-    def assembe_field_snippet(self, field):
 
-        if field.has_sql_agg_expr():
-            return utils.separate(field.get_sql_agg_expr(), " AS ", field.get_varname())
-        else:
-            return field.get_varname()
+    def add_all_fields(self, fm):
 
-
-    def add_ramtable_fields(self, rt):
-
-        self.add_list_items([self.assembe_field_snippet(rt.get_field(field_name)) \
-                                  for field_name in rt.get_field_names()])
+        self.add_list_items(self.assemble_all_fields_snippet(fm))
 
         return self
+
+
+    def as_varname(self, expr, varname):
+
+        return utils.separate(expr, " AS ", self.get_dbms().sql_varname(varname))
+
+
+    def sql_varname(self, varname, table_alias=None):
+
+        return self.get_dbms().sql_varname(varname, table_alias)
+
+
+    def get_things(self, fm, varname):
+
+        return self.get_dbms(), fm.get_field(varname), fm.get_field_value(varname)
+
+
+    def sql_varname(self, fm, varname, table_alias=None):
+
+        dbms, _, _ = self.get_things(fm, varname)
+
+        return dbms.sql_varname(varname, table_alias)
+
+
+    def sql_typed_varname(self, fm, varname, table_alias=None):
+
+        dbms, field, _ = self.get_things(fm, varname)
+
+        return dbms.sql_typed_varname(varname, field.get_base_datatype_name(), table_alias)
+
+
+    def sql_value(self, fm, varname, other_native_value=datatypes.DTN_UNDEFINED):
+
+        dbms, field, field_native_value = self.get_things(fm, varname)
+
+        native_value = other_native_value if not datatypes.is_undefined(other_native_value) else field_native_value
+
+        base_datatype_name = field.get_base_datatype_name()
+
+        if native_value is not None:
+            format = dbms.get_format_for_datatype(base_datatype_name)
+            raw_sql_value = field.get_serialized_value(native_value, format)
+        else:
+            raw_sql_value = None
+
+        return dbms.sql_value(raw_sql_value, base_datatype_name)
+
+
+    def sql_typed_value(self, fm, varname, native_value=datatypes.DTN_UNDEFINED):
         
-
-    def sql_field_value(self, row, field_name):
-
-        self.get_dbms().sql_value(se)
-
-        # assemble_pure_value_snippet
-
-        field = row.get_table().get_field(field_name)
-        nature = field.get_nature()
-        dtq = self.assemble_datatype_qualifier(nature)
-        field_value = row.get_field_value(field_name)
-
-        if field_value is not None:
-            if nature == "string":
-                value_snippet = utils.apos(utils.escsql(field_value))
-            elif nature == "numeric" or nature == "boolean":
-                value_snippet = field.serialize_value(field_value)
-            elif nature == "uuid":
-                value_snippet = utils.apos(field.serialize_value(field_value)) + dtq
-            elif nature == "timestamp":
-                value_snippet = utils.apos(field.serialize_value(field_value)) + dtq
-            else:
-                value_snippet = utils.apos(field_value)
-        else:
-            value_snippet = "null" + dtq
-
-        return value_snippet
+        return self.get_dbms().sql_typed_phrase(self.sql_value(fm, varname, native_value))
 
 
-    def typed_value(self, row, field_name):
+    def sql_expr(self, fm, varname, table_alias=None):
 
-        # assemble_value_snippet
+        dbms, field, _ = self.get_things(fm, varname)
 
-        field = row.get_table().get_field(field_name)
+        varnames = [varname for varname in fm.get_varnames()]
 
-        return utils.separate(self.value(row, field_name), " AS ", field.get_varname())
+        return self.get_dbms().sql_substitute_varnames(field.get_expr(), varnames, table_alias)
 
 
-    def add_ramtable_values(self, row):
+    def sql_all_fields(self, fm, table_alias=None):
 
-        table = row.get_table()
-        field_names = table.get_field_names()
+        dbms = self.get_dbms()
 
-        self.add_list_items(\
-            [self.assemble_value_snippet(row, field_name) \
-                for field_name in field_names if table.is_insertable(field_name)])
+        return dbms.sql_list([self.sql_varname(fm, varname, table_alias) for varname in fm.get_varnames()])
 
-        return self
+
+    def sql_insertable_fields(self, fm, table_alias=None):
+
+        dbms = self.get_dbms()
+
+        return dbms.sql_list([self.sql_varname(dbms, varname, table_alias) \
+                                for varname in self.get_varnames() if fm.get_field(varname).is_insertable()])
+
+
+    def sql_all_typed_values(self, fm):
+
+        dbms = self.get_dbms()
+
+        return dbms.sql_list([self.sql_typed_value(fm, varname) for varname in fm.get_varnames()])
+
+
+    def sql_insertable_typed_values(self, fm):
+
+        dbms = self.get_dbms()
+
+        return dbms.sql_list([self.sql_typed_value(fm, varname) \
+                                for varname in fm.get_varnames() if fm.get_field(varname).is_insertable()])
+
+
+    def sql_equal(self, fm, varname, native_value=datatypes.DTN_UNDEFINED, table_alias=None):
+
+        _, _, native_value = self.get_things(fm, varname)
+
+        return self.sql_varname(fm, varname, table_alias) + " = " + self.sql_typed_value(fm, varname, native_value)
+
+
+    def get_snippet(self):
+
+        return self.snippet
 
 
 class ClauseSql(Sql):
@@ -443,16 +482,16 @@ class Insert(Query):
         self.clauses = [self.INTO, self.VALUES, self.SELECT, self.FROM, self.WHERE]
 
 
-    def import_source_ramtable_row(self, row):
+    def import_source_field_manager(self, table_name, field_manager):
 
-        t = row.get_table()
-        field_names = t.get_field_names()
+        varnames = field_manager.get_varnames()
 
-        column_list = utils.pars(", ".join([fn for fn in field_names]))
-        self.INTO.sql.set(self.qualify_table_name(t.get_table_name())).add(column_list)
+        column_list = ", ".join([varname for varname in varnames])
+        self.INTO.sql.set(self.qualify_table_name(table_name)).add(utils.pars(column_list))
 
-        value_list = utils.pars(", ".join([self.VALUES.sql.assemble_pure_value_snippet(row, fn) for fn in field_names]))
-        self.VALUES.sql.set(value_list)
+        dbms = self.get_app().get_dbms()
+        value_list = ", ".join([field_manager.sql_typed_value(varname, dbms) for varname in varnames]) 
+        self.VALUES.sql.set(utils.pars(value_list))
 
         return self
 
@@ -485,18 +524,14 @@ class Update(Query):
         self.clauses = [self.TABLE, self.SET, self.WHERE]
 
 
-    def import_source_ramtable_row(self, row):
+    def import_source_field_manager(self, table_name, fm):
 
-        rt = row.get_table()
+        varnames = fm.get_varnames()
 
-        field_names = rt.get_field_names()
+        dbms = self.get_dbms()
 
-        self.TABLE.sql.set(rt.get_table_name())
-
-        updates = ", ".join([fn + " = " + self.VALUES.sql.assemble_value_snippet(row, fn) \
-                            for fn in field_names])
-
-        self.SET.sql.set(updates)
+        self.TABLE.sql.set(self.qualify_table_name(table_name)).q\
+            .SET.sql.setlist(dbms, [fm.sql_equal(dbms, varname) for varname in varnames])
 
         return self
 

@@ -4,24 +4,24 @@ sys.path.append("C:\privat\misha\webhelp\iCAP_Server\py\kernel")
 import dbms, dtoms, fields
 
 
-def check_pet_sql(fm, d):
+def check_pet_sql(d, fm):
 
-    sql_pet_name_value = fm.code_field_value_for_sql("pet_name", d)
+    sql_pet_name_value = fm.code_field_value_for_sql(d, "pet_name")
     print(sql_pet_name_value)
 
-    sql_pet_name_typed_value = fm.code_typed_field_value_for_sql("pet_name", d)
+    sql_pet_name_typed_value = fm.sql_typed_field_value(d, "pet_name")
     print(sql_pet_name_typed_value)
 
-    sql_weight_value = fm.code_field_value_for_sql("weight", d)
+    sql_weight_value = fm.code_field_value_for_sql(d, "weight")
     print(sql_weight_value)
 
-    sql_weight_typed_value = fm.code_typed_field_value_for_sql("weight", d)
+    sql_weight_typed_value = fm.sql_typed_field_value(d, "weight")
     print(sql_weight_typed_value)
 
-    sql_date_of_birth_value = fm.code_field_value_for_sql("date_of_birth", d)
+    sql_date_of_birth_value = fm.code_field_value_for_sql(d, "date_of_birth")
     print(sql_date_of_birth_value)
 
-    sql_date_of_birth_typed_value = fm.code_typed_field_value_for_sql("date_of_birth", d)
+    sql_date_of_birth_typed_value = fm.sql_typed_field_value(d, "date_of_birth")
     print(sql_date_of_birth_typed_value)
 
 
@@ -51,7 +51,7 @@ assert pet_name == "Tuzik"
 
 d = dbms.Dbms(None)
 
-check_pet_sql(fm, d)
+check_pet_sql(d, fm)
 
 
 # Testing import from DTO
@@ -60,12 +60,12 @@ fm.reset_field_values()
 
 dto_impl = dtoms.DtoMs(None)
 
-fm.import_field_value_from_dto("pet_name", "Barsik", dto_impl)\
-  .import_field_value_from_dto("species", "cat", dto_impl)\
-  .import_field_value_from_dto("weight", 6, dto_impl)\
-  .import_field_value_from_dto("date_of_birth", "2020-02-03", dto_impl)     
+fm.import_field_value_from_dto(dto_impl, "pet_name", "Barsik")\
+  .import_field_value_from_dto(dto_impl, "species", "cat")\
+  .import_field_value_from_dto(dto_impl, "weight", 6)\
+  .import_field_value_from_dto(dto_impl, "date_of_birth", "2020-02-03")     
 
-check_pet_sql(fm, d)
+check_pet_sql(d, fm)
 
 
 

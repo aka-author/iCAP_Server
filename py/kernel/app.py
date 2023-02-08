@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import os, sys, pathlib, uuid
-import status, dblayer, dtoms, cfg, controller, logs, dirdesk, srcdesk
+import status, dblayer, dtoms, dbms, cfg, controller, logs, dirdesk, srcdesk
 
 
 GLOBAL_APP = None
@@ -26,7 +26,9 @@ class Application (controller.Controller):
 
         GLOBAL_APP = self
         
-        self.dbl = dblayer.Dbl(self)
+        self.dbms = dbms.Dbms(self)
+        self.dbl = dblayer.Dbl(self, dbms)
+        
         self.dtoms = dtoms.DtoMs(self)
         
         self.logger = logs.Logger(self)

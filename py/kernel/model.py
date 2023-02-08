@@ -59,7 +59,7 @@ class Model(bureaucrat.Bureaucrat):
 
         for dto_field_name in dto.keys():
             if self.fm.has_field(dto_field_name):
-                self.fm.import_field_value_from_dto(dto_field_name, dto[dto_field_name], self.get_app().get_dtoms())
+                self.fm.import_field_value_from_dto(self.get_app().get_dtoms(), dto_field_name, dto[dto_field_name])
 
         return self
 
@@ -69,7 +69,7 @@ class Model(bureaucrat.Bureaucrat):
         dto = {}
 
         for varname in self.fm.get_varnames():
-            dto[varname] = self.fm.export_field_value_for_dto(varname, self.get_app().get_dtoms())
+            dto[varname] = self.fm.export_field_value_for_dto(self.get_app().get_dtoms(), varname)
 
         return dto
 

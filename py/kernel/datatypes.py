@@ -18,6 +18,7 @@ DTN_TIMESTAMP    = "timestamp"
 DTN_TIMESTAMP_TZ = "timestamp_tz"
 DTN_DATE         = "date"
 DTN_JSON         = "json"
+DTN_UNDEFINED    = "fd3034bd-565b-4823-81f4-19cc2f47915f"
 
 
 #  Detecting atomic data types
@@ -25,12 +26,17 @@ DTN_JSON         = "json"
 def get_atomic_datatype_names():
 
     return [DTN_UUID, DTN_BOOLEAN, DTN_BIGINT, DTN_DOUBLE, DTN_STRING, \
-            DTN_STRLIST, DTN_TIMESTAMP, DTN_TIMESTAMP_TZ, DTN_DATATYPE, DTN_JSON]
+            DTN_STRLIST, DTN_TIMESTAMP, DTN_TIMESTAMP_TZ, DTN_DATE, DTN_JSON]
 
 
 def is_atomic(datatype_name):
 
     return datatype_name.lower() in get_atomic_datatype_names()
+
+
+def is_undefined(some_value):
+
+    return some_value == DTN_UNDEFINED
 
 
 # Timestamps

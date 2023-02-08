@@ -26,7 +26,7 @@ class Field:
         self.serialize_format = None
         self.parse_format = None 
 
-        self.sql_agg_expr = None
+        self.expr = None
 
 
     def get_varname(self):
@@ -142,7 +142,7 @@ class Field:
 
     # Exchanging values with DTOs
 
-    def import_value_from_dto(self, dto_value, dtoms):
+    def import_value_from_dto(self, dtoms, dto_value):
 
         native_value = None
 
@@ -153,7 +153,7 @@ class Field:
         return native_value
 
 
-    def export_value_for_dto(self, native_value, dtoms):
+    def export_value_for_dto(self, dtoms, native_value):
 
         datatype_name = self.get_datatype_name()
 
@@ -168,56 +168,21 @@ class Field:
 
     # Exchanging values with a DB 
 
-    def code_varname_for_sql(self, dbms):
+    def set_expr(self, expr):
 
-        return dbms.sql_varname(self.get_varname())
-
-
-    def code_typed_varname_sql(self, dbms):
-
-        return dbms.sql_typed_varname(self.get_varname(), self.get_base_datatype_name())
-
-
-    def code_value_for_sql(self, native_value, dbms):
-
-        raw_value_for_sql = None
-
-        base_datatype_name = self.get_base_datatype_name()
-
-        if native_value is not None:
-            format = dbms.get_format_for_datatype(base_datatype_name)
-            raw_value_for_sql = self.get_serialized_value(native_value, format)
-
-        return dbms.sql_value(raw_value_for_sql, base_datatype_name)
-
-
-    def code_typed_value_for_sql(self, native_value, dbms):
-
-        base_datatype_name = self.get_base_datatype_name()
-        sql_value = self.code_value_for_sql(native_value, dbms)
-        
-        return dbms.sql_typed_phrase(sql_value, base_datatype_name)
-
-
-    def set_sql_agg_expr(self, snippet, dbms=None):
-
-        if dbms is not None:
-            sql_varname = dbms.sql_varname(self.get_varname())
-            self.sql_agg_expr = snippet.format(sql_varname)
-        else:
-            self.sql_agg_expr = snippet
+        self.expr = expr
 
         return self
 
 
-    def has_sql_agg_expr(self):
+    def has_expr(self):
 
-        return self.sql_agg_expr is not None
+        return self.expr is not None
 
 
-    def code_sql_agg_expr(self):
+    def get_expr(self):
 
-        return self.sql_agg_expr
+        return self.expr
 
 
     def import_from_query_output(self, query_output_value):
@@ -475,27 +440,27 @@ class FieldManager:
     @property
     def fields(self):
 
-        return self.fk.fields
+        return self.get_field_keeper().fields
 
     @property 
     def fields_by_varnames(self):
 
-        return self.fk.fields_by_varnames
+        return self.get_field_keeper().fields_by_varnames
 
     @property 
     def subkey_varnames(self):
 
-        return self.fk.subkey_varnames
+        return self.get_field_keeper().subkey_varnames
 
     @property 
     def mandatory_varnames(self):
 
-        return self.fk.mandatory_varnames
+        return self.get_field_keeper().mandatory_varnames
 
     @property 
     def autoins_varnames(self):
 
-        return self.fk.autoins_varnames
+        return self.get_field_keeper().autoins_varnames
 
 
     def define_subkey(self, varname):
@@ -568,7 +533,7 @@ class FieldManager:
 
     def is_insertable(self, varname):
 
-        return not (varname in self.autoins_field_names)
+        return not (varname in self.autoins_field_names or self.get_field(varname).has_expr())
 
 
     def set_field_value(self, varname, native_value):
@@ -600,7 +565,7 @@ class FieldManager:
         return utils.safedic(self.field_values, varname)
 
 
-    def parse_to_field_value(self, varname, serialized_value, format=None):
+    def parse_to_native_value(self, varname, serialized_value, format=None):
 
         native_value = self.get_field(varname).parse_to_value(serialized_value, format)
 
@@ -614,32 +579,55 @@ class FieldManager:
         return self.get_field(varname).get_serialized_value(native_value, format)
 
 
-    def import_field_value_from_dto(self, varname, dto_value, dtoms):
+    def import_field_value_from_dto(self, dtoms, varname, dto_value):
 
-        native_value = self.get_field(varname).import_value_from_dto(dto_value, dtoms)
+        native_value = self.get_field(varname).import_value_from_dto(dtoms, dto_value)
 
         return self.set_field_value(varname, native_value)
 
 
-    def export_field_value_for_dto(self, varname, dtoms):
+    def export_field_value_for_dto(self, dtoms, varname):
 
         native_value = self.get_field_value(varname)
 
-        return self.get_field(varname).export_value_for_dto(native_value, dtoms)
+        return self.get_field(varname).export_value_for_dto(dtoms, native_value)
+        
+
+    def sql_all_fields(self, dbms, table_alias=None):
+
+        return dbms.sql_list([self.sql_field(dbms, varname, table_alias) \
+                                for varname in self.get_varnames()])
 
 
-    def code_field_value_for_sql(self, varname, dbms):
+    def sql_insertable_fields(self, dbms, table_alias=None):
 
-        native_value = self.get_field_value(varname)
+        return dbms.sql_list([self.sql_field(dbms, varname, table_alias) \
+                                for varname in self.get_varnames() \
+                                    if self.get_field(varname).is_insertable()])
 
-        return self.get_field(varname).code_value_for_sql(native_value, dbms)
+
+    
+
+    def sql_all_field_values(self, dbms):
+
+        return dbms.sql_list([self.sql_field_value(dbms, varname) \
+                                for varname in self.get_varnames()])
 
 
-    def code_typed_field_value_for_sql(self, varname, dbms):
+    def sql_insertable_field_values(self, dbms):
 
-        native_value = self.get_field_value(varname)
+        return dbms.sql_list([self.sql_field_value(dbms, varname) \
+                                for varname in self.get_varnames() \
+                                    if self.get_field(varname).is_insertable()])
 
-        return self.get_field(varname).code_typed_value_for_sql(native_value, dbms)
+
+    def sql_equal(self, dbms, varname, native_value=None, table_alias=None):
+
+        field = self.get_field(varname)
+
+        actual_value = utils.safeval(native_value, self.get_field_value(varname))
+
+        return field.sql_varname(dbms, varname, table_alias) + " = " + field.sql_typed_value(dbms, actual_value)
 
 
     def fetch_field_value_from_query_output(self, varname, dto_value):

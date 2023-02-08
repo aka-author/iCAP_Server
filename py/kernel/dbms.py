@@ -45,20 +45,42 @@ class Dbms(bureaucrat.Bureaucrat):
         return utils.safedic(fmt_map, datatype_name)
 
 
+    def sql_list(self, items):
+
+        return ", ".join(items)
+
 
     def sql_typed_phrase(self, phrse, icap_datatype_name):
 
         return phrse + "::" + self.sql_datatype_name(icap_datatype_name)
 
 
-    def sql_varname(self, icap_varname):
+    def sql_table_alias(self, table_alias):
 
-        return icap_varname.replace(".", "__").replace(" ", "_")
+        return table_alias + "." if table_alias is not None else ""
 
 
-    def sql_typed_varname(self, icap_varname, icap_datatype_name):
+    def sql_varname(self, icap_varname, table_alias=None):
 
-        return self.sql_typed_phrase(self.sql_varname(icap_varname), icap_datatype_name)
+        return self.sql_table_alias(table_alias) + icap_varname.replace(".", "__").replace(" ", "_")
+
+
+    def sql_typed_varname(self, icap_varname, icap_datatype_name, table_alias=None):
+
+        return self.sql_typed_phrase(self.sql_varname(icap_varname, table_alias), icap_datatype_name)
+
+
+    def sql_substitute_varnames(self, expr, varnames, table_alias=None):
+
+        # {price}*{numner} -> t.price*t.number 
+
+        expr_sv = expr
+
+        for varname in varnames:
+            varname_pattern = "{" + varname + "}"
+            expr_sv = expr_sv.replace(varname_pattern, self.sql_varname(varname, table_alias))
+
+        return expr_sv 
 
 
     def sql_value(self, raw_value_for_sql, icap_datatype_name):
@@ -76,3 +98,14 @@ class Dbms(bureaucrat.Bureaucrat):
     def sql_typed_value(self, serialized_value, icap_datatype_name):
 
         return self.sql_typed_phrase(self.sql_value(serialized_value), icap_datatype_name)
+
+
+    def sql_table_name(self, table_local_name, scheme_name=None):
+
+        sql_tn = table_local_name
+
+        if scheme_name is not None:
+            sql_tn = scheme_name + "." + table_local_name
+
+        return sql_tn 
+

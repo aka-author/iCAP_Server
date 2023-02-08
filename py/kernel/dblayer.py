@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# ##################### 
 
 import psycopg2
-import status, bureaucrat, dbms, buildsql
+import status, bureaucrat, buildsql
 
 
 class DbConnector(bureaucrat.Bureaucrat):
@@ -85,17 +85,12 @@ class DbConnector(bureaucrat.Bureaucrat):
 
 class Dbl(bureaucrat.Bureaucrat):
 
-    def __init__(self, chief):
+    def __init__(self, chief, dbms):
 
         super().__init__(chief)
 
         self.dbc = DbConnector(self)
-        self.dbms = self.create_dbms()
-
-
-    def create_dbms(self):
-
-        return dbms.Dbms(self)
+        self.dbms = dbms
 
 
     def get_dbms(self):

@@ -79,6 +79,11 @@ class Bureaucrat:
                else None)     
 
 
+    def get_dbms(self):
+
+        return self.get_app().get_dbms()
+
+
     def get_dtoms(self):
 
         return self.get_app().get_dtoms()
