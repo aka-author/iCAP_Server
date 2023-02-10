@@ -18,43 +18,9 @@ class Sql(bureaucrat.Bureaucrat):
         self.snippet = ""
 
 
-    def set_snippet(self, snippet):
+    def get_things(self, fm, varname):
 
-        self.snippet = snippet 
-
-        return self
-
-
-    def set(self, snippet=""):
-
-        return self.set_snippet(snippet)
-
-
-    def set_list_items(self, snippets):
-
-        return self.set_snippet(", ".join(snippets))
-
-
-    def add(self, snippet, separ=" "):
-
-        return self.set_snippet(utils.separate(self.snippet, separ, snippet))
-
-
-    def add_list_items(self, snippets, separ=" "):
-
-        return self.set_snippet(utils.separate(self.snippet, separ, ", ".join(snippets)))
-
-
-    def add_all_fields(self, fm):
-
-        self.add_list_items(self.assemble_all_fields_snippet(fm))
-
-        return self
-
-
-    def as_varname(self, expr, varname):
-
-        return utils.separate(expr, " AS ", self.get_dbms().sql_varname(varname))
+        return self.get_dbms(), fm.get_field(varname), fm.get_field_value(varname)
 
 
     def sql_varname(self, varname, table_alias=None):
@@ -62,23 +28,21 @@ class Sql(bureaucrat.Bureaucrat):
         return self.get_dbms().sql_varname(varname, table_alias)
 
 
-    def get_things(self, fm, varname):
-
-        return self.get_dbms(), fm.get_field(varname), fm.get_field_value(varname)
-
-
-    def sql_varname(self, fm, varname, table_alias=None):
-
-        dbms, _, _ = self.get_things(fm, varname)
-
-        return dbms.sql_varname(varname, table_alias)
-
-
     def sql_typed_varname(self, fm, varname, table_alias=None):
 
         dbms, field, _ = self.get_things(fm, varname)
 
         return dbms.sql_typed_varname(varname, field.get_base_datatype_name(), table_alias)
+
+
+    def sql_all_varnames(self, fm, table_alias=None):
+
+        varname_snippets = [self.sql_varname(fm, varname, table_alias) for varname in fm.get_varnames()]
+
+        return self.get_dbms().sql_list(varname_snippets)
+
+
+    
 
 
     def sql_value(self, fm, varname, other_native_value=datatypes.DTN_UNDEFINED):
@@ -103,20 +67,29 @@ class Sql(bureaucrat.Bureaucrat):
         return self.get_dbms().sql_typed_phrase(self.sql_value(fm, varname, native_value))
 
 
+    
     def sql_expr(self, fm, varname, table_alias=None):
 
         dbms, field, _ = self.get_things(fm, varname)
 
         varnames = [varname for varname in fm.get_varnames()]
 
-        return self.get_dbms().sql_substitute_varnames(field.get_expr(), varnames, table_alias)
+        return dbms.sql_substitute_varnames(field.get_expr(), varnames, table_alias)
+
+    def as_varname(self, expr, varname):
+
+        return utils.separate(expr, " AS ", self.get_dbms().sql_varname(varname))
 
 
-    def sql_all_fields(self, fm, table_alias=None):
+    
 
-        dbms = self.get_dbms()
 
-        return dbms.sql_list([self.sql_varname(fm, varname, table_alias) for varname in fm.get_varnames()])
+    def sql_selectable_field(self, fm, varname, alias_table=None):
+
+        _, field, _ = self.get_things(fm, varname)
+
+        return self.as_varname(self.sql_expr(fm, varname, alias_table), varname) if field.has_expr() \
+                    else self.sql_varname(fm, varname, alias_table)
 
 
     def sql_insertable_fields(self, fm, table_alias=None):
@@ -147,6 +120,42 @@ class Sql(bureaucrat.Bureaucrat):
         _, _, native_value = self.get_things(fm, varname)
 
         return self.sql_varname(fm, varname, table_alias) + " = " + self.sql_typed_value(fm, varname, native_value)
+
+
+    def set_snippet(self, snippet):
+
+        self.snippet = snippet 
+
+        return self
+
+
+    def set(self, snippet=""):
+
+        return self.set_snippet(snippet)
+
+
+    def set_list_items(self, snippets):
+
+        return self.set_snippet(", ".join(snippets))
+
+
+    def add(self, snippet, separ=" "):
+
+        return self.set_snippet(utils.separate(self.snippet, separ, snippet))
+
+
+    def add_list_items(self, snippets, separ=" "):
+
+        return self.set_snippet(utils.separate(self.snippet, separ, ", ".join(snippets)))
+
+
+    def add_selectable_fields(self, fm, table_alias=None):
+
+        dbms = self.get_dbms()
+
+        return dbms.sql_list([self.sql_selectable_field(fm, varname, table_alias) for varname in fm.get_varnames()])
+
+
 
 
     def get_snippet(self):
@@ -425,14 +434,12 @@ class Select(SelectiveQuery):
         self.clauses = [self.DISTINCT, self.COLUMNS, self.FROM, self.WHERE, self.GROUP_BY, self.ORDER_BY]
 
     
-    def set_output_ramtable(self, out_rt):
+    def set_output_field_owner(self, out):
         
-        super().set_output_ramtable(out_rt)
+        super().set_output_field_owner(out)
 
-        self.COLUMNS.sql.add_ramtable_fields(out_rt)
-
-        if out_rt.get_table_name() is not None:
-            self.FROM.sql.set(self.qualify_table_name(out_rt.get_table_name()))
+        self.COLUMNS.sql.add_selectable_fields(out.fm).q\
+            .FROM.sql.add_table_name(out.get_table_name())
 
         return self 
 

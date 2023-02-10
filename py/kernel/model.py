@@ -55,6 +55,8 @@ class Model(bureaucrat.Bureaucrat):
         return True
 
 
+    # Working with a DTO
+
     def import_dto(self, dto):
 
         for dto_field_name in dto.keys():
@@ -130,16 +132,16 @@ class Model(bureaucrat.Bureaucrat):
 
     def get_direct_load_query(self, field_name, field_value):
 
-        dlq = self.get_dbl().new_select("selusers", "icap").set_output_ramtable(self.get_empty_master_ramtable())
+        # dlq = self.get_dbl().new_select("savemodel").set_output_field_(self.get_empty_master_ramtable())
         
         dlq.WHERE.sql.add("{0} = '{1}'".format(field_name, str(field_value)))
 
         return dlq
 
 
-    def direct_load(self, field_name, field_value):
+    def direct_load(self, target_varname, target_value):
 
-        dlq = self.get_direct_load_query(field_name, field_value)
+        dlq = self.get_direct_load_query(target_varname, target_value)
 
         self.get_dbl().execute(dlq)
 
@@ -153,9 +155,7 @@ class Model(bureaucrat.Bureaucrat):
 
     def get_direct_save_query(self):
 
-        row_m = self.export_master_ramtable().select_by_index(0)
-
-        return self.get_dbl().new_insert("ins", "icap").import_source_ramtable_row(row_m) 
+        return self.get_dbl().new_insert().import_source_field_manager(self.fm) 
 
 
     def direct_save(self):

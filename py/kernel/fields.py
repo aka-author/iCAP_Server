@@ -591,43 +591,6 @@ class FieldManager:
         native_value = self.get_field_value(varname)
 
         return self.get_field(varname).export_value_for_dto(dtoms, native_value)
-        
-
-    def sql_all_fields(self, dbms, table_alias=None):
-
-        return dbms.sql_list([self.sql_field(dbms, varname, table_alias) \
-                                for varname in self.get_varnames()])
-
-
-    def sql_insertable_fields(self, dbms, table_alias=None):
-
-        return dbms.sql_list([self.sql_field(dbms, varname, table_alias) \
-                                for varname in self.get_varnames() \
-                                    if self.get_field(varname).is_insertable()])
-
-
-    
-
-    def sql_all_field_values(self, dbms):
-
-        return dbms.sql_list([self.sql_field_value(dbms, varname) \
-                                for varname in self.get_varnames()])
-
-
-    def sql_insertable_field_values(self, dbms):
-
-        return dbms.sql_list([self.sql_field_value(dbms, varname) \
-                                for varname in self.get_varnames() \
-                                    if self.get_field(varname).is_insertable()])
-
-
-    def sql_equal(self, dbms, varname, native_value=None, table_alias=None):
-
-        field = self.get_field(varname)
-
-        actual_value = utils.safeval(native_value, self.get_field_value(varname))
-
-        return field.sql_varname(dbms, varname, table_alias) + " = " + field.sql_typed_value(dbms, actual_value)
 
 
     def fetch_field_value_from_query_output(self, varname, dto_value):

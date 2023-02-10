@@ -1,8 +1,8 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  dbms.py                                      (\(\
-# Func:    Achieving compatibility with a certain DBMS  (^.^)
+# Module:  dbms.py                                     (\(\
+# Func:    Achieving compatibility with certain DBMSs  (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import utils, datatypes, bureaucrat
