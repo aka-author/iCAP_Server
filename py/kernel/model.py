@@ -11,25 +11,25 @@ import utils, fields, ramtable, bureaucrat
 
 class Model(bureaucrat.Bureaucrat):
 
-    def __init__(self, chief, model_name):
+    def __init__(self, chief: bureaucrat.Bureaucrat, model_name: str):
 
         super().__init__(chief)
 
         self.model_name = model_name
         self.set_plural()
 
-        self.fm = self.create_field_manager()
+        self.fm = self.create_field_manager().set_recordset_name(self.get_plural())
         self.define_fields()
 
         self.fm.reset_field_values()
 
 
-    def get_model_name(self):
+    def get_model_name(self) -> str:
 
         return self.model_name
 
     
-    def set_plural(self, plural=None):
+    def set_plural(self, plural: str=None) -> object:
 
         if plural is None:
             last_letter = self.model_name[len(self.model_name) - 1]
@@ -40,59 +40,71 @@ class Model(bureaucrat.Bureaucrat):
         return self
 
 
-    def get_plural(self):
+    def get_plural(self) -> str:
 
         return self.plural
 
 
-    def create_field_manager(self):
+    def create_field_manager(self) -> fields.FieldManager:
 
         return fields.FieldManager(self)
 
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
 
         return True
 
 
     # Working with a DTO
 
-    def import_dto(self, dto):
+    def import_field_value_from_dto(self, varname: str, dto_value: any) -> object:
 
-        for dto_field_name in dto.keys():
-            if self.fm.has_field(dto_field_name):
-                self.fm.import_field_value_from_dto(self.get_app().get_dtoms(), dto_field_name, dto[dto_field_name])
+        datatype_name = self.fm.get_field(varname).get_datatype_name()
+
+        native_value = self.get_dtoms().repair_value_from_dto(dto_value, datatype_name)
+
+        return self.fm.set_field_value(varname, native_value)
+
+
+    def import_submodels_from_dto(self, dto: object) -> object:
 
         return self
 
-        
-    def export_dto(self):
+
+    def import_dto(self, dto: object) -> object:
+
+        for varname in self.fm.get_varnames():
+            self.import_field_value_from_dto(varname, dto.get(varname))
+
+        self.import_submodels_from_dto(dto)
+
+        return self
+
+
+    def export_field_value_for_dto(self, varname: str) -> any:
+
+        native_value = self.fm.get_field_value(varname)
+
+        datatype_name = self.fm.get_field(varname).get_datatype_name()
+
+        return self.get_dtoms().prapare_value_for_dto(native_value, datatype_name)
+
+
+    def export_submodels_to_dto(self, dto: object) -> object:
+
+        self
+
+
+    def export_dto(self) -> object:
 
         dto = {}
 
         for varname in self.fm.get_varnames():
-            dto[varname] = self.fm.export_field_value_for_dto(self.get_app().get_dtoms(), varname)
+            dto[varname] = self.export_field_value_for_dto(varname)
+
+        self.export_submodels_to_dto(dto)
 
         return dto
-
-
-    # Serializing and parsing
-
-    def serialize(self, format=None):
-
-        return json.dumps(self.export_dto())
-
-
-    def parse(self, serialized_model, format=None):
-
-        return self.import_dto(json.load(serialized_model)) 
-
-
-    # Publishing models
-
-    def publish(self, format=None):
-
-        return self.serialize(format)
 
 
     # Working with a database and ramtables
@@ -130,37 +142,64 @@ class Model(bureaucrat.Bureaucrat):
         return rt    
 
 
-    def get_direct_load_query(self, field_name, field_value):
+    # Loading models from a database
 
-        # dlq = self.get_dbl().new_select("savemodel").set_output_field_(self.get_empty_master_ramtable())
+    def get_load_query(self, key_varname, key_value):
+
+        self.fm.set_field_value(key_varname, key_value)
+
+        dlq = self.get_dbl().new_select("loadmodel").set_output_field_manager(self.fm)
         
-        dlq.WHERE.sql.add("{0} = '{1}'".format(field_name, str(field_value)))
+        dlq.WHERE.sql.add_field_equal(self.fm, key_varname)
 
         return dlq
 
 
-    def direct_load(self, target_varname, target_value):
-
-        dlq = self.get_direct_load_query(target_varname, target_value)
-
-        self.get_dbl().execute(dlq)
-
-        rt = dlq.get_output_ramtable()
-
-        if rt.count_rows() == 1:
-            self.import_master_ramtable_row(rt.select_by_index(0))
+    def load_submodels(self):
 
         return self
 
 
-    def get_direct_save_query(self):
+    def load(self, key_varname, key_value):
 
-        return self.get_dbl().new_insert().import_source_field_manager(self.fm) 
+        load_query = self.get_load_query(key_varname, key_value)
+
+        self.get_dbl().execute(load_query)
+
+        rt = load_query.get_output_ramtable()
+
+        if rt.count_rows() == 1:
+            self.import_master_ramtable_row(rt.select_by_index(0))
+
+        self.load_submodels()
+
+        return self
 
 
-    def direct_save(self):
+    # Saving models to a database
+
+    def get_save_query(self):
+
+        return self.get_dbl().new_insert().set_field_values(self.get_plural(), self.fm) 
+
+
+    def get_submodel_save_queries(self):
+
+        return []
+
+
+    def get_save_script(self):
+
+        save_script = self.get_dbl().new_script().add(self.get_save_query())
+
+        for save_query in self.get_submodel_save_queries(): save_script.add(save_query)
+
+        return save_script
+
+
+    def save(self):
         
-        self.get_dbl().execute(self.get_direct_save_query()).commit()
+        self.get_dbl().execute(self.get_save_script()).commit()
 
         return self
 
@@ -168,6 +207,25 @@ class Model(bureaucrat.Bureaucrat):
     def get_sql_conditions(self, field_name, col_name):
 
         return self.fields[field_name].get_sql_conditions(self.get_field_value(field_name), col_name)
+
+
+    # Serializing and parsing
+
+    def serialize(self, format: str=None) -> str:
+
+        return json.dumps(self.export_dto())
+
+
+    def parse(self, serialized_model: str, format: str=None) -> object:
+
+        return self.import_dto(json.load(serialized_model)) 
+
+
+    # Publishing models
+
+    def publish(self, format: str=None) -> str:
+
+        return self.serialize(format)
 
 
     # Debugging

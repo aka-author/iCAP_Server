@@ -42,9 +42,6 @@ class Sql(bureaucrat.Bureaucrat):
         return self.get_dbms().sql_list(varname_snippets)
 
 
-    
-
-
     def sql_value(self, fm, varname, other_native_value=datatypes.DTN_UNDEFINED):
 
         dbms, field, field_native_value = self.get_things(fm, varname)
@@ -66,7 +63,6 @@ class Sql(bureaucrat.Bureaucrat):
         
         return self.get_dbms().sql_typed_phrase(self.sql_value(fm, varname, native_value))
 
-
     
     def sql_expr(self, fm, varname, table_alias=None):
 
@@ -79,9 +75,6 @@ class Sql(bureaucrat.Bureaucrat):
     def as_varname(self, expr, varname):
 
         return utils.separate(expr, " AS ", self.get_dbms().sql_varname(varname))
-
-
-    
 
 
     def sql_selectable_field(self, fm, varname, alias_table=None):
@@ -156,6 +149,9 @@ class Sql(bureaucrat.Bureaucrat):
         return dbms.sql_list([self.sql_selectable_field(fm, varname, table_alias) for varname in fm.get_varnames()])
 
 
+    def sql_add_field_equal(self, fm, varname, native_value=datatypes.DTN_UNDEFINED, table_alias):
+
+        return self.add_list_items([self.sql_equal(fm, varname, native_value, table_alias)])
 
 
     def get_snippet(self):
@@ -489,15 +485,16 @@ class Insert(Query):
         self.clauses = [self.INTO, self.VALUES, self.SELECT, self.FROM, self.WHERE]
 
 
-    def import_source_field_manager(self, table_name, field_manager):
+    def set_field_values(self, fm, table_name=None):
 
-        varnames = field_manager.get_varnames()
+        varnames = fm.get_varnames()
+        actual_table_name = utils.safeval(table_name, fm.get_recordset_name())
 
         column_list = ", ".join([varname for varname in varnames])
-        self.INTO.sql.set(self.qualify_table_name(table_name)).add(utils.pars(column_list))
+        self.INTO.sql.set(self.qualify_table_name(actual_table_name)).add(utils.pars(column_list))
 
         dbms = self.get_app().get_dbms()
-        value_list = ", ".join([field_manager.sql_typed_value(varname, dbms) for varname in varnames]) 
+        value_list = ", ".join([fm.sql_typed_value(varname, dbms) for varname in varnames]) 
         self.VALUES.sql.set(utils.pars(value_list))
 
         return self
