@@ -7,7 +7,7 @@
 
 from typing import Dict, List
 from datetime import datetime
-import uuid, re
+import copy, uuid
 import datatypes
 
 
@@ -17,157 +17,155 @@ class Dto():
 
         self.payload = payload
 
-        self.repair_object()
+        
+    # Converting properties from JSON datatypes to iCAP datatypes 
 
+    def detect_value_datatype(self, dto_value: any) -> str:
 
-    def dto_varname(self, icap_varname: str) -> str:
+        if datatypes.is_string(dto_value):
+            return datatypes.detect_serialized_value_datatype(dto_value)
+        else:   
+            return datatypes.detect_native_value_datatype(dto_value)
+                     
 
-        return icap_varname
+    def repair_value_datatype(self, dto_value: any) -> any:
 
-
-    def get_format_for_datatype(self, icap_datatype_name: str) -> str:
-
-        format_map = {       
-            datatypes.DTN_TIMESTAMP:    datatypes.get_default_timestamp_format(),
-            datatypes.DTN_TIMESTAMP_TZ: datatypes.get_default_timestamp_tz_format(),
-            datatypes.DTN_DATE:         datatypes.get_default_date_format(),
-            datatypes.DTN_TIME:         datatypes.get_default_time_format()
-        }
-
-        return format_map.get(icap_datatype_name)
-
-
-    def get_regexp_for_datatype(self, icap_datatype_name: str) -> str:
-
-        format_map = {                  
-            datatypes.DTN_UUID:         "^[\dA-Fa-f]{8}(\-([\dA-Fa-f]{4})){3}\-[\dA-Fa-f]{12}$",
-            datatypes.DTN_TIMESTAMP:    "^\d\d\d\d\-\d\d\-\d\d \d\d:\d\d:\d\d\.(\d+)$",
-            datatypes.DTN_TIMESTAMP_TZ: "^\d\d\d\d\-\d\d\-\d\d \d\d:\d\d:\d\d\.(\d+) [+\-]\d\d:\d\d$",
-            datatypes.DTN_DATE:         "^\d{4}\-\d\d\-\d\d$",
-            datatypes.DTN_TIME:         "^\d\d:\d\d:\d\d$"
-        }
-
-        return format_map.get(icap_datatype_name, ".*")
-
-
-    def match_datatype_format(self, serialized_value: str, icap_datatype_name: str) -> str:
-
-        return re.search(self.get_regexp_for_datatype(icap_datatype_name), serialized_value) is not None
-
-
-    def detect_datatype_by_value(self, dto_value: any) -> str:
-
-        if isinstance(dto_value, bool):
-            icap_type_name = datatypes.DTN_BOOLEAN
-        elif isinstance(dto_value, int):
-            icap_type_name = datatypes.DTN_BIGINT
-        elif isinstance(dto_value, float):
-            icap_type_name = datatypes.DTN_DOUBLE
-        elif isinstance(dto_value, list):
-            icap_type_name = datatypes.DTN_OBJECT
-        elif isinstance(dto_value, dict):
-            icap_type_name = datatypes.DTN_OBJECT
-        elif isinstance(dto_value, str):
-            if self.match_datatype(dto_value, datatypes.DTN_UUID):
-                icap_type_name = datatypes.DTN_UUID
-            elif self.match_datatype(dto_value, datatypes.DTN_TIMESTAMP_TZ):
-                icap_type_name = datatypes.DTN_TIMESTAMP_TZ
-            elif self.match_datatype(dto_value, datatypes.DTN_TIMESTAMP):
-                icap_type_name = datatypes.DTN_TIMESTAMP
-            elif self.match_datatype(dto_value, datatypes.DTN_DATE):
-                icap_type_name = datatypes.DTN_DATE
-            elif self.match_datatype(dto_value, datatypes.DTN_TIME):
-                icap_type_name = datatypes.DTN_TIME
-            else:
-                icap_type_name = datatypes.DTN_STRING
-
-        return icap_type_name
-            
-
-    def repair_value(self, dto_value: any, icap_datatype_name: str) -> any:
+        icap_datatype_name = self.detect_value_datatype(dto_value)
 
         if icap_datatype_name == datatypes.DTN_UUID:
-            try:
-                native_value = uuid.UUID(dto_value)
-            except:
-                native_value = None
-        elif icap_datatype_name in self.get_datetime_datatype_names():
-            try:
-                parse_format = self.get_format_for_datatype(icap_datatype_name)
-                native_value = datetime.strptime(dto_value, parse_format)
-            except:
-                native_value = None
-        elif icap_datatype_name == datatypes.DTN_OBJECT:
-            native_value = self.repair_object(dto_value)
+            native_value = uuid.UUID(dto_value)            
+        elif datatypes.is_datetime_datatype(icap_datatype_name):
+            parse_format = datatypes.get_format(icap_datatype_name)
+            native_value = datetime.strptime(dto_value, parse_format)
+        elif icap_datatype_name == datatypes.DTN_DICT:
+            native_value = self.import_src_dict(dto_value)
         else:
             native_value = dto_value
             
         return native_value
 
 
-    def repair_object(self, obj: Dict) -> object:
+    def repair_listitem_datatypes(self, dto_list: List) -> object:
 
-        for (prop_name, prop_value) in obj.items():
-            if isinstance(prop_value, str):
-                icap_datatype_name = self.detect_datatype(prop_value)
-                obj[prop_name] = self.repair_value_from_dto(prop_value, icap_datatype_name)
-            elif isinstance(prop_value, list):
-                for item_idx, item_value in enumerate(prop_value):
-                    icap_datatype_name = self.detect_datatype(item_value)
-                    if icap_datatype_name == datatypes.DTN_OBJECT:
-                        self.detect_datatype(item_value)
-                    else:
-                        prop_value[item_idx] = self.repair_value_from_dto(item_value, icap_datatype_name)   
+        for listitem_idx, listitem_value in enumerate(dto_list):           
+            if isinstance(listitem_value, list):
+                self.repair_listitem_datatypes(listitem_value)
+            if isinstance(listitem_value, dict):
+                self.repair_prop_datatypes(listitem_value)
+            else:
+                dto_list[listitem_idx] = self.repair_value_datatype(listitem_value)  
+
+        return self
+
+
+    def repair_prop_datatypes(self, dto_dict: Dict) -> object:
+
+        for (prop_name, prop_value) in dto_dict.items():
+            if isinstance(prop_value, list):
+                self.repair_listitem_datatypes(prop_value)
             elif isinstance(prop_value, dict):
-                self.repair_object(prop_value)
+                self.repair_prop_datatypes(prop_value)
+            else:
+                dto_dict[prop_name] = self.repair_value_datatype(prop_value)
 
         return self
 
 
-    def prapare_value_for_dto(self, native_value: any, icap_datatype_name: str) -> any:
+    def repair_datatypes(self) -> object: 
 
-        if native_value is None or datatypes.is_undefined(native_value):
-            dto_value = None
-        elif icap_datatype_name == datatypes.DTN_UUID:
-            dto_value = str(native_value)
-        elif icap_datatype_name in self.get_datetime_datatype_names():               
-            serialize_format = self.get_format_for_datatype(icap_datatype_name)
-            dto_value = datetime.strftime(native_value, serialize_format) 
+        self.repair_prop_datatypes(self.payload)
+
+        return self
+
+
+    # Exporting a DTO for serialization
+
+    def dto_varname(self, icap_varname: str) -> str:
+
+        return icap_varname
+
+
+    def prepare_value_datatype(self, native_value: any) -> any:
+
+        icap_datatype_name = self.detect_value_datatype(native_value)
+
+        if icap_datatype_name == datatypes.DTN_UUID:
+            native_value = str(native_value)            
+        elif datatypes.is_datetime_datatype(icap_datatype_name):
+            parse_format = datatypes.get_format(icap_datatype_name)
+            native_value = datetime.strftime(native_value, parse_format)
+        elif icap_datatype_name == datatypes.DTN_DICT:
+            native_value = self.import_src_dict(native_value)
         else:
-            dto_value = native_value
+            native_value = native_value
+            
+        return native_value
 
-        return dto_value
 
+    def prepare_listitem_datatypes(self, native_list: List) -> object:
 
-    def set_prop(self, prop_name, native_value, source_icap_datatype_name) -> object:
-
-        self.payload[prop_name] = self.prapare_value_for_dto(native_value, source_icap_datatype_name)
+        for listitem_idx, listitem_value in enumerate(native_list):           
+            if isinstance(listitem_value, list):
+                self.prepare_listitem_datatypes(listitem_value)
+            if isinstance(listitem_value, dict):
+                self.prepare_prop_datatypes(listitem_value)
+            else:
+                native_list[listitem_idx] = self.prepare_value_datatype(listitem_value)  
 
         return self
 
 
-    def get_prop(self, prop_name: str, required_icap_datatype_name: str) -> any:
+    def prepare_prop_datatypes(self, native_dict) -> any:
 
-        
+        for (prop_name, prop_value) in native_dict.items():
+            if isinstance(prop_value, list):
+                self.prepare_listitem_datatypes(prop_value)
+            elif isinstance(prop_value, dict):
+                self.prepare_prop_datatypes(prop_value)
+            else:
+                native_dict[prop_name] = self.prepare_value_datatype(prop_value)
 
-        return 
+        return native_dict
 
 
+    def export_payload(self) -> Dict:
+
+        return self.prepare_prop_datatypes(copy.deepcopy(self.payload))
 
 
+    # Accessing DTO properties
 
-pl = {
-    "uuid": "fd3034bd-565b-4823-81f4-19cc2f47915f",
-    "name": "Tuzik",
-    "weight": 12,
-    "date_of_birth": "2020-03-12",
-    "arnocles": ["2020-03-12", "2020-03-13", "2020-03-14"],
-    "arnocles2": [{"foo": ["a", "b", "c"]}, "2020-03-12 10:10:10.123456", "2020-03-13 10:10:10.123456", "2020-03-14 10:10:10.123456"],
-    "arnocles3": {"pivo": "raki"}
-}
+    def get_payload(self):
 
-d = Dto(pl)
+        return self.payload
 
-d.repair_object()
 
-print(pl)
+    def set_prop(self, prop_name, native_value) -> object:
+
+        self.payload[prop_name] = native_value
+
+        return self
+
+
+    def get_prop(self, prop_name: str) -> any:
+
+        return self.payload.get(prop_name)
+
+
+    def count_nested(self, prop_name: str) -> int:
+
+        prop_value = self.get_prop(prop_name)
+
+        if isinstance(prop_value, dict) or isinstance(prop_value, list):
+            return len(prop_name)
+        else:
+            return 0
+
+
+    def extract_dto(self, prop_name: str, index_key: int=None) -> object:
+
+        prop_value = self.get_prop(prop_name)
+
+        payload = prop_value[index_key] if index_key is not None else prop_value(prop_name)
+
+        return Dto(payload)

@@ -66,7 +66,7 @@ DATATYPES = {
 
     DTN_TIMESTAMP_TZ:   {"atomic": True,
                          "format": "%Y-%m-%d %H:%M:%S.%f %z", 
-                         "regexp": "^\d\d\d\d\-\d\d\-\d\d \d\d:\d\d:\d\d\.(\d+) [+\-]\d\d:\d\d$"},
+                         "regexp": "^\d\d\d\d\-\d\d\-\d\d \d\d:\d\d:\d\d\.(\d+) [+\-]\d\d(:?)\d\d$"},
 
     DTN_DATE:           {"atomic": True,
                          "format": "%Y-%m-%d", 
@@ -125,7 +125,7 @@ def get_datetime_datatype_names() -> List:
         return dt_names
 
 
-def is_datetime(datatype_name: str) -> bool:
+def is_datetime_datatype(datatype_name: str) -> bool:
 
     return datatype_name.lower() in get_datetime_datatype_names()
 
@@ -162,7 +162,7 @@ def is_defined(some_value: any) -> bool:
     return not is_undefined(some_value)
 
 
-def detect_native_value_type(native_value: any) -> str:
+def detect_native_value_datatype(native_value: any) -> str:
 
     if native_value is None:
         icap_datatype_name = DTN_NULL
@@ -182,7 +182,10 @@ def detect_native_value_type(native_value: any) -> str:
         if isinstance(native_value, uuid.UUID):
             icap_datatype_name = DTN_UUID
         elif isinstance(native_value, datetime):
-            icap_datatype_name = DTN_TIMESTAMP
+            if native_value.tzinfo is not None:
+                icap_datatype_name = DTN_TIMESTAMP_TZ
+            else:    
+                icap_datatype_name = DTN_TIMESTAMP
         else:
             icap_datatype_name = DTN_OBJECT
             
@@ -191,12 +194,12 @@ def detect_native_value_type(native_value: any) -> str:
 
 def is_atomic_value(some_value: any) -> bool:
 
-    return is_atomic_type(detect_native_value_type(some_value))
+    return is_atomic_type(detect_native_value_datatype(some_value))
 
 
 def is_array_value(native_value: any) -> bool:
 
-    return is_array_type(detect_native_value_type(native_value))
+    return is_array_type(detect_native_value_datatype(native_value))
 
 
 def match_datatype_format(serialized_value: str, icap_datatype_name: str) -> str:
@@ -204,7 +207,7 @@ def match_datatype_format(serialized_value: str, icap_datatype_name: str) -> str
         return re.search(get_regexp(icap_datatype_name), serialized_value) is not None
 
 
-def detect_serialized_value_type(serialized_value: any) -> str:
+def detect_serialized_value_datatype(serialized_value: any) -> str:
 
     if match_datatype_format(serialized_value, DTN_NULL):
         icap_type_name = DTN_NULL
@@ -228,3 +231,8 @@ def detect_serialized_value_type(serialized_value: any) -> str:
         icap_type_name = DTN_STRING
 
     return icap_type_name
+
+
+def is_string(native_value):
+
+    return detect_native_value_datatype(native_value) == DTN_STRING
