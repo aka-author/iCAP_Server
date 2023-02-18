@@ -1,21 +1,23 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  dtoms.py                                    (\(\
-# Func:    Achieving compatibility with DTO formats    (^.^)
+# Module:  dtos.py                                  (\(\
+# Func:    Working with data transfer objects       (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from datetime import datetime
 import uuid, re
-import datatypes, bureaucrat
+import datatypes
 
 
-class DtoMs(bureaucrat.Bureaucrat):
+class Dto():
 
-    def __init__(self, chief: bureaucrat.Bureaucrat):
+    def __init__(self, payload):
 
-        super().__init__(chief)
+        self.payload = payload
+
+        self.repair_object()
 
 
     def dto_varname(self, icap_varname: str) -> str:
@@ -23,37 +25,7 @@ class DtoMs(bureaucrat.Bureaucrat):
         return icap_varname
 
 
-    def dto_datatype_name(self, icap_datatype_name: str) -> str:
-
-        dt_map = {
-            datatypes.DTN_UUID:         "string", 
-            datatypes.DTN_BOOLEAN:      "boolean",
-            datatypes.DTN_NUMERIC:      "numeric",
-            datatypes.DTN_BIGINT:       "numeric",
-            datatypes.DTN_DOUBLE:       "numeric",
-            datatypes.DTN_STRING:       "string",
-            datatypes.DTN_STRLIST:      "string",
-            datatypes.DTN_TIMESTAMP:    "string",
-            datatypes.DTN_TIMESTAMP_TZ: "string",
-            datatypes.DTN_DATE:         "string",
-            datatypes.DTN_OBJECT:       "object",
-            datatypes.DTN_JSON:         "json"
-        }
-
-        return dt_map.get(icap_datatype_name, "string")
-
-
-    def get_datetime_datatype_names(self) -> List:
-
-        dt_names = [datatypes.DTN_TIMESTAMP, 
-                    datatypes.DTN_TIMESTAMP_TZ, 
-                    datatypes.DTN_DATE, 
-                    datatypes.DTN_TIME]
-
-        return dt_names
-
-
-    def get_format_for_datatype(self, icap_datatype_name: str) -> bool:
+    def get_format_for_datatype(self, icap_datatype_name: str) -> str:
 
         format_map = {       
             datatypes.DTN_TIMESTAMP:    datatypes.get_default_timestamp_format(),
@@ -65,7 +37,7 @@ class DtoMs(bureaucrat.Bureaucrat):
         return format_map.get(icap_datatype_name)
 
 
-    def get_datatype_regexp(self, icap_datatype_name: str) -> str:
+    def get_regexp_for_datatype(self, icap_datatype_name: str) -> str:
 
         format_map = {                  
             datatypes.DTN_UUID:         "^[\dA-Fa-f]{8}(\-([\dA-Fa-f]{4})){3}\-[\dA-Fa-f]{12}$",
@@ -78,12 +50,12 @@ class DtoMs(bureaucrat.Bureaucrat):
         return format_map.get(icap_datatype_name, ".*")
 
 
-    def match_datatype(self, serialized_value: str, icap_datatype_name: str) -> str:
+    def match_datatype_format(self, serialized_value: str, icap_datatype_name: str) -> str:
 
-        return re.search(self.get_datatype_regexp(icap_datatype_name), serialized_value) is not None
+        return re.search(self.get_regexp_for_datatype(icap_datatype_name), serialized_value) is not None
 
 
-    def detect_datatype(self, dto_value: any) -> str:
+    def detect_datatype_by_value(self, dto_value: any) -> str:
 
         if isinstance(dto_value, bool):
             icap_type_name = datatypes.DTN_BOOLEAN
@@ -112,7 +84,7 @@ class DtoMs(bureaucrat.Bureaucrat):
         return icap_type_name
             
 
-    def repair_value_from_dto(self, dto_value: any, icap_datatype_name: str) -> any:
+    def repair_value(self, dto_value: any, icap_datatype_name: str) -> any:
 
         if icap_datatype_name == datatypes.DTN_UUID:
             try:
@@ -181,7 +153,7 @@ class DtoMs(bureaucrat.Bureaucrat):
         return 
 
 
-d = DtoMs(None)
+
 
 
 pl = {
@@ -194,6 +166,8 @@ pl = {
     "arnocles3": {"pivo": "raki"}
 }
 
-d.repair_object(pl)
+d = Dto(pl)
+
+d.repair_object()
 
 print(pl)
