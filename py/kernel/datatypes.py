@@ -22,6 +22,7 @@ DTN_TIMESTAMP_TZ = "timestamp_tz"
 DTN_DATE         = "date"
 DTN_TIME         = "time"
 DTN_JSON         = "json"
+DTN_OBJECT       = "object"
 DTN_UNDEFINED    = "fd3034bd-565b-4823-81f4-19cc2f47915f"
 
 
