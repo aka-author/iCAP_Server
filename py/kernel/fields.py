@@ -6,9 +6,9 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import List, Dict
-import math, uuid
+import copy, math, uuid
 from datetime import datetime
-import utils, datatypes, dtoms
+import utils, datatypes
 
 
 class Field: 
@@ -361,7 +361,9 @@ class DateField(TimestampField):
 
 class FieldKeeper:
 
-    def __init__(self):
+    def __init__(self, recordset_name: str=None):
+
+        self.recordset_name = recordset_name
 
         self.fields = []
         self.fields_by_varnames = {}
@@ -371,47 +373,9 @@ class FieldKeeper:
         self.autoins_varnames = []
 
 
-class FieldManager:
-
-    def __init__(self, owner: object, field_keeper: FieldKeeper=None):
-
-        self.owner = owner
-
-        self.fk = field_keeper if field_keeper is not None else FieldKeeper()
-        
-        self.field_values = {}
-        self.reset_field_values()
-
-
-    def set_owner(self, owner: object) -> object:
-
-        self.owner = owner
-
-        return self
-
-
-    def get_owner(self) -> object:
-
-        return self.owner
-
-
-    def set_field_keeper(self, field_keeper: FieldKeeper) -> object:
-
-        self.fk = field_keeper
-
-        return self
-
-
-    def get_field_keeper(self) -> FieldKeeper:
-
-        return self.fk
-
-
     def set_recordset_name(self, recordset_name: str) -> object:
 
         self.recordset_name = recordset_name
-
-        return self
 
 
     def get_recordset_name(self) -> str:
@@ -419,49 +383,23 @@ class FieldManager:
         return self.recordset_name
 
 
-    @property
-    def fields(self) -> List:
+    def define_subkey(self, field_name: str) -> object:
 
-        return self.get_field_keeper().fields
-
-    @property 
-    def fields_by_varnames(self) -> Dict:
-
-        return self.get_field_keeper().fields_by_varnames
-
-    @property 
-    def subkey_varnames(self) -> List:
-
-        return self.get_field_keeper().subkey_varnames
-
-    @property 
-    def mandatory_varnames(self) -> List:
-
-        return self.get_field_keeper().mandatory_varnames
-
-    @property 
-    def autoins_varnames(self) -> List:
-
-        return self.get_field_keeper().autoins_varnames
-
-
-    def define_subkey(self, varname: str) -> object:
-
-        self.subkey_varnames.append(varname)
+        self.masubkey_varnames.append(field_name)
 
         return self
 
 
-    def define_mandatory(self, varname: str) -> object:
+    def define_mandatory(self, field_name: str) -> object:
 
-        self.mandatory_varnames.append(varname)
+        self.mandatory_varnames.append(field_name)
 
         return self
 
 
-    def define_autoins(self, varname: str) -> object:
+    def define_autoins(self, field_name: str) -> object:
 
-        self.autoins_varnames.append(varname)
+        self.autoins_varnames.append(field_name)
 
         return self
 
@@ -490,9 +428,14 @@ class FieldManager:
         return len(self.fields)
 
 
+    def get_fields(self) -> List:
+
+        return self.fields
+
+
     def get_varnames(self):
 
-        return self.fields_by_varnames.keys()
+        return [field.get_varname() for field in self.fields]
 
 
     def has_field(self, varname: str) -> bool:
@@ -520,13 +463,111 @@ class FieldManager:
         return not (varname in self.autoins_field_names or self.get_field(varname).has_expr())
 
 
-    def set_field_value(self, varname: str, native_value: any) -> object:
 
+class FieldManager:
+
+    def __init__(self, field_keeper: FieldKeeper=None):
+
+        self.fk = field_keeper if field_keeper is not None else FieldKeeper()
+        
+        self.field_values = {}
+        self.reset_field_values()
+
+
+    def set_field_keeper(self, field_keeper: FieldKeeper) -> object:
+
+        self.fk = field_keeper
+
+        return self
+
+
+    def get_field_keeper(self) -> FieldKeeper:
+
+        return self.fk
+
+
+    def set_recordset_name(self, recordset_name: str) -> object:
+
+        self.get_field_keeper().set_recordset_name(recordset_name)
+
+        return self
+
+
+    def get_recordset_name(self) -> str:
+
+        return self.get_field_keeper().get_recordset_name()
+
+
+    def define_subkey(self, varname: str) -> object:
+
+        self.get_field_keeper().define_subkey(varname)
+
+        return self
+
+
+    def define_mandatory(self, varname: str) -> object:
+
+        self.get_field_keeper().define_mandatory(varname) 
+
+        return self
+
+
+    def define_autoins(self, varname: str) -> object:
+
+        self.get_field_keeper().define_autoins(varname)
+
+        return self
+
+
+    def add_field(self, field: Field, options: str="optional") -> object:
+
+        self.get_field_keeper().add_field(field, options)
+
+        return self
+
+
+    def count_fields(self) -> int:
+
+        return self.get_field_keeper().count_fields() 
+
+
+    def get_varnames(self):
+
+        return self.get_field_keeper().get_varnames()
+
+
+    def has_field(self, varname: str) -> bool:
+
+        return self.get_field_keeper().has_field(varname)
+
+
+    def get_field(self, varname: str) -> Field:
+
+        return self.get_field_keeper().get_field(varname)
+
+
+    def is_subkey(self, varname: str) -> bool:
+
+        return self.get_field_keeper().is_subkey(varname)
+
+
+    def is_mandatory(self, varname: str) -> bool:
+
+        return self.get_field_keeper().is_mandatory(varname)
+
+
+    def is_insertable(self, varname: str) -> bool:
+
+        return self.get_field_keeper().is_insertable(varname)
+
+
+    def set_field_value(self, varname: str, native_value: any) -> object:
+        
         self.field_values[varname] = native_value
 
         return self
-            
 
+    
     def set_field_values(self, native_values: Dict) -> object:
 
         for (varname, native_value) in native_values.items():
@@ -538,7 +579,7 @@ class FieldManager:
 
     def reset_field_values(self) -> object:
 
-        for field in self.fields:
+        for field in self.get_field_keeper().get_fields():
             self.set_field_value(field.get_varname(), field.get_default_value())
                 
         return self
@@ -547,6 +588,11 @@ class FieldManager:
     def get_field_value(self, varname: str) -> any:
 
         return self.field_values.get(varname, self.get_field(varname).get_default_value())
+
+
+    def get_field_values(self) -> Dict:
+
+        return copy.copy(self.field_values)
 
 
     def parse_to_native_value(self, varname: str, serialized_value: str, format: str=None) -> any:

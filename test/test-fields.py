@@ -1,99 +1,79 @@
 
-import sys
+import sys, datetime
 sys.path.append("C:\privat\misha\webhelp\iCAP_Server\py\kernel")
-import dbms, dtoms, fields
+import fields
 
 
-# def check_pet_sql(d, fm):
+def get_pet_Tuzik():
 
-    #sql_pet_name_value = fm.code_field_value_for_sql(d, "pet_name")
-    #print(sql_pet_name_value)
-
-    #sql_pet_name_typed_value = fm.sql_typed_field_value(d, "pet_name")
-    #print(sql_pet_name_typed_value)
-
-    #sql_weight_value = fm.code_field_value_for_sql(d, "weight")
-    #print(sql_weight_value)
-
-    #sql_weight_typed_value = fm.sql_typed_field_value(d, "weight")
-    #print(sql_weight_typed_value)
-
-    #sql_date_of_birth_value = fm.code_field_value_for_sql(d, "date_of_birth")
-    #print(sql_date_of_birth_value)
-
-    #sql_date_of_birth_typed_value = fm.sql_typed_field_value(d, "date_of_birth")
-    #print(sql_date_of_birth_typed_value)
+    return {"pet_name": "Tuzik", "species": "dog", "weight": 12}
 
 
-def check_pet_sql(fm):
+def get_pet_Barsik():
+
+    return {"pet_name": "Barsik", "species": "cat", "weight": 5}
+
+
+def check_fm(fm):
+
+    recordset_name = fm.get_recordset_name()
+    print(recordset_name)
+    assert recordset_name == "pets"
+
+    count_fields = fm.count_fields()    
+    print(count_fields)
+    assert count_fields == 5
+    
+
+def check_pet(fm, pet):
 
     str_pet_name_value = fm.get_serialized_field_value("pet_name")
     print(str_pet_name_value)
+    assert str_pet_name_value == pet["pet_name"]
 
-    #sql_pet_name_typed_value = fm.sql_typed_field_value(d, "pet_name")
-    #print(sql_pet_name_typed_value)
+    str_pet_species = fm.get_serialized_field_value("species")
+    print(str_pet_species)
+    assert str_pet_species == pet["species"]
 
-    #sql_weight_value = fm.code_field_value_for_sql(d, "weight")
-    #print(sql_weight_value)
-
-    #sql_weight_typed_value = fm.sql_typed_field_value(d, "weight")
-    #print(sql_weight_typed_value)
-
-    #sql_date_of_birth_value = fm.code_field_value_for_sql(d, "date_of_birth")
-    #print(sql_date_of_birth_value)
+    str_pet_weight = fm.get_serialized_field_value("weight")
+    print(str_pet_weight)
+    assert str_pet_weight == str(pet['weight'])
 
     str_pet_name_value = fm.get_serialized_field_value("date_of_birth")
     print(str_pet_name_value)
 
+def check_module():
+
+    fm = fields.FieldManager()\
+        .add_field(fields.UuidField("uuid"))\
+        .add_field(fields.StringField("pet_name"))\
+        .add_field(fields.StringField("species"))\
+        .add_field(fields.BigintField("weight"))\
+        .add_field(fields.DateField("date_of_birth"), "mandatory")\
+        .reset_field_values().set_recordset_name("pets")
+
+    check_fm(fm)
 
 
-fm = fields.FieldManager(None)\
-    .add_field(fields.UuidField("uuid"))\
-    .add_field(fields.StringField("pet_name"))\
-    .add_field(fields.StringField("species"))\
-    .add_field(fields.BigintField("weight"))\
-    .add_field(fields.DateField("date_of_birth"), "mandatory")\
-    .reset_field_values()
+    # Test Tuzik
+
+    fm.set_field_values(get_pet_Tuzik())
+    check_pet(fm, get_pet_Tuzik())
 
 
-count_fields = fm.count_fields()
-print(count_fields)
+    # Test Barsik
 
-fm.set_field_values({"pet_name": "Tuzik", "species": "dog", "weight": 12})
+    barsik = get_pet_Barsik()
 
-pet_name = fm.get_field_value("pet_name")
-print(pet_name)
+    fm.set_field_value("pet_name", barsik["pet_name"])
+    fm.set_field_value("species", barsik["species"])
+    fm.set_field_value("weight", barsik["weight"])
+    fm.set_field_value("date_of_birth", datetime.datetime.strptime("2020-11-08", "%Y-%m-%d"))
 
-date_of_birth = fm.get_field_value("date_of_birth")
-print(date_of_birth)
-
-assert count_fields == 5 
-assert pet_name == "Tuzik"
-
-# d = dbms.Dbms(None)
-
-# check_pet_sql(d, fm)
+    check_pet(fm, barsik)
 
 
-# Testing import from DTO
-
-fm.reset_field_values()
-
-dto_impl = dtoms.DtoMs(None)
-
-# fm.import_field_value_from_dto(dto_impl, "pet_name", "Barsik")\
-#  .import_field_value_from_dto(dto_impl, "species", "cat")\
-#  .import_field_value_from_dto(dto_impl, "weight", 6)\
-#  .import_field_value_from_dto(dto_impl, "date_of_birth", "2020-02-03")     
-
-fm.set_field_value("pet_name", dto_impl.repair_value_from_dto("Barsik", fm.get_field("pet_name").get_datatype_name()))\
-  .set_field_value("species", dto_impl.repair_value_from_dto("cat", fm.get_field("species").get_datatype_name()))\
-  .set_field_value("weight", dto_impl.repair_value_from_dto(6, fm.get_field("weight").get_datatype_name()))\
-  .set_field_value("date_of_birth", dto_impl.repair_value_from_dto("2020-02-03", fm.get_field("date_of_birth").get_datatype_name()))
-
-     
-
-check_pet_sql(fm)
+check_module()
 
 
 

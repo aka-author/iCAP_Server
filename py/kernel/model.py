@@ -5,8 +5,8 @@
 # Func:    Processing subject area data              (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import json
-import utils, fields, ramtable, bureaucrat
+from typing import List
+import utils, dtos, dbms, fields, ramtable, bureaucrat
 
 
 class Model(bureaucrat.Bureaucrat):
@@ -57,13 +57,11 @@ class Model(bureaucrat.Bureaucrat):
 
     # Working with a DTO
 
-    def import_field_value_from_dto(self, varname: str, dto_value: any) -> object:
+    def import_field_value_from_dto(self, varname: str, native_value: any) -> object:
 
-        datatype_name = self.fm.get_field(varname).get_datatype_name()
+        self.fm.set_field_value(varname, native_value)
 
-        native_value = self.get_dtoms().repair_value_from_dto(dto_value, datatype_name)
-
-        return self.fm.set_field_value(varname, native_value)
+        return self
 
 
     def import_submodels_from_dto(self, dto: object) -> object:
@@ -71,7 +69,7 @@ class Model(bureaucrat.Bureaucrat):
         return self
 
 
-    def import_dto(self, dto: object) -> object:
+    def import_dto(self, dto: dtos.Dto) -> object:
 
         for varname in self.fm.get_varnames():
             self.import_field_value_from_dto(varname, dto.get(varname))
@@ -83,24 +81,20 @@ class Model(bureaucrat.Bureaucrat):
 
     def export_field_value_for_dto(self, varname: str) -> any:
 
-        native_value = self.fm.get_field_value(varname)
-
-        datatype_name = self.fm.get_field(varname).get_datatype_name()
-
-        return self.get_dtoms().prapare_value_for_dto(native_value, datatype_name)
+        return self.fm.get_field_value(varname)
 
 
     def export_submodels_to_dto(self, dto: object) -> object:
 
-        self
+        return self
 
 
     def export_dto(self) -> object:
 
-        dto = {}
+        dto = dtos.Dto()
 
         for varname in self.fm.get_varnames():
-            dto[varname] = self.export_field_value_for_dto(varname)
+            dto.set_prop_value(self.export_field_value_for_dto(varname))
 
         self.export_submodels_to_dto(dto)
 
@@ -144,7 +138,7 @@ class Model(bureaucrat.Bureaucrat):
 
     # Loading models from a database
 
-    def get_load_query(self, key_varname, key_value):
+    def get_load_query(self, dbl: dbms.DbLayer, key_varname: str, key_value: any) -> sqlqueries.Query:
 
         self.fm.set_field_value(key_varname, key_value)
 
@@ -155,23 +149,33 @@ class Model(bureaucrat.Bureaucrat):
         return dlq
 
 
-    def load_submodels(self):
+    def load_siblings_and_self(self, dbl: dbms.DbLayer) -> List:
 
+        siblings_and_self = []
+
+        r_load = dbl.execute_query(self.get_load_query(dbl)).get_query_result()
+
+        while not r_load.fetch().eof():
+            sibling = type(self)(self.get_chief()) if r_load.rownumber() < r_load.rowcount() - 1 else self
+            siblings_and_self.append(sibling.set_field_values(r_load.fm))
+
+        return siblings_and_self
+
+
+    def load_submodels(self, dbl: dbms.DbLayer) -> object:
+
+        # my_uuid = self.get_field_value("uuid")
+        # self.Cows = Cow(self).set_field_value("farm_uuid", my_uuid).load_siblings_and_self(dbl)
+        # self.Hens = Hen(self).set_field_value("farm_uuid", my_uuid).load_siblings_and_self(dbl)
+        
         return self
 
 
-    def load(self, key_varname, key_value):
+    def load(self, dbl: dbms.DbLayer, key_varname: str, key_value: any) -> object:
 
-        load_query = self.get_load_query(key_varname, key_value)
+        dbl.execute(self.get_load_query(dbl, key_varname, key_value))
 
-        self.get_dbl().execute(load_query)
-
-        rt = load_query.get_output_ramtable()
-
-        if rt.count_rows() == 1:
-            self.import_master_ramtable_row(rt.select_by_index(0))
-
-        self.load_submodels()
+        self.load_submodels(dbl)
 
         return self
 
@@ -180,7 +184,7 @@ class Model(bureaucrat.Bureaucrat):
 
     def get_save_query(self):
 
-        return self.get_dbl().new_insert().set_field_values(self.get_plural(), self.fm) 
+        return self.get_dbl().new_insert().set_field_manager(self.fm)  
 
 
     def get_submodel_save_queries(self):
@@ -207,25 +211,6 @@ class Model(bureaucrat.Bureaucrat):
     def get_sql_conditions(self, field_name, col_name):
 
         return self.fields[field_name].get_sql_conditions(self.get_field_value(field_name), col_name)
-
-
-    # Serializing and parsing
-
-    def serialize(self, format: str=None) -> str:
-
-        return json.dumps(self.export_dto())
-
-
-    def parse(self, serialized_model: str, format: str=None) -> object:
-
-        return self.import_dto(json.load(serialized_model)) 
-
-
-    # Publishing models
-
-    def publish(self, format: str=None) -> str:
-
-        return self.serialize(format)
 
 
     # Debugging

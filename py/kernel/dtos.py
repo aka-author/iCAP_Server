@@ -13,9 +13,9 @@ import datatypes
 
 class Dto():
 
-    def __init__(self, payload):
+    def __init__(self, payload=None):
 
-        self.payload = payload
+        self.payload = payload if payload is not None else {}
 
         
     # Converting properties from JSON datatypes to iCAP datatypes 
@@ -140,14 +140,14 @@ class Dto():
         return self.payload
 
 
-    def set_prop(self, prop_name, native_value) -> object:
+    def set_prop_value(self, prop_name, native_value) -> object:
 
         self.payload[prop_name] = native_value
 
         return self
 
 
-    def get_prop(self, prop_name: str) -> any:
+    def get_prop_value(self, prop_name: str) -> any:
 
         return self.payload.get(prop_name)
 
@@ -162,7 +162,7 @@ class Dto():
             return 0
 
 
-    def extract_dto(self, prop_name: str, index_key: int=None) -> object:
+    def extract_nested(self, prop_name: str, index_key: int=None) -> object:
 
         prop_value = self.get_prop(prop_name)
 
