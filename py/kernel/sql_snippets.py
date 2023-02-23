@@ -6,10 +6,10 @@
 # # ## ### ##### ######## ############# #####################
 
 import uuid
-import utils, datatypes, fields, bureaucrat
+import utils, datatypes, fields, workers
 
 
-class Sql(bureaucrat.Bureaucrat):
+class Sql(worker.worker):
 
     def __init__(self, chief):
 
@@ -254,7 +254,7 @@ class ClauseSql(Sql):
         return self.get_chief().get_chief()
 
 
-class Clause(bureaucrat.Bureaucrat):
+class Clause(worker.worker):
 
     def __init__(self, chief, clause_name=""):
 

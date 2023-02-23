@@ -1,14 +1,14 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  controller.py                               (\(\
+# Module:  controllers.py                               (\(\
 # Func:    Defining common behavior of controllers     (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import bureaucrat
+import workers
 
 
-class Controller(bureaucrat.Bureaucrat):
+class Controller(workers.Worker):
 
     def __init__(self, chief=None):
 

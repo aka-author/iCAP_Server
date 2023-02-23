@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 from datetime import datetime
-import status, utils, controller, sessions
+import utils, controller, sessions
 
 
 class Auth(controller.Controller):

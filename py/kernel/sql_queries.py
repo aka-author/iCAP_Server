@@ -1,16 +1,17 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  sqlqueries.py                  (\(\
-# Func:    Accessing SQL queries          (^.^)
+# Module:  sql_queries.py                 (\(\
+# Func:    Building SQL queries           (^.^)
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict, List
 import uuid
-import utils, fields, ramtables, bureaucrat, dbms, sqlsnippets
+import utils, fields, ramtables, workers
+import query_runners, db_recordsets, sql_snippets
 
 
-class Subqueries(bureaucrat.Bureaucrat):
+class Subqueries(workers.Worker):
 
     def __init__(self, chief: 'Query'):
 
@@ -24,7 +25,7 @@ class Subqueries(bureaucrat.Bureaucrat):
         return len(self.subqueries)
 
 
-    def add(self, query: 'Query') -> object:
+    def add(self, query: 'Query') -> 'Subqueries':
 
         self.subqueries[query.get_query_name()] = query.set_chief(self)
         query.set_subquery_flag()
@@ -68,46 +69,13 @@ class Subqueries(bureaucrat.Bureaucrat):
         return False
 
 
-class FieldGroup(fields.FieldKeeper):
+class Query(db_recordsets.Recordset):
 
-    def __init__(self, field_group_name: str):
-
-        super().__init__(field_group_name)
-
-
-class TableObject(bureaucrat.Bureaucrat):
-
-    def __init__(self, chief: dbms.DbLayer, recordset_name: str):
-
-        super().__init__(chief)
-
-        self.recordset_name = recordset_name
-
-        self.main_field_group = FieldGroup(self, "main")
-
-
-    def get_recordset_name(self) -> str:
-
-        return self.recordset_name
-
-
-class Table(TableObject):
-
-    def __init__(self, chief: dbms.DbLayer, table_name: str):
-
-        super().__init__(chief, table_name)
-
-
-class Query(TableObject):
-
-    def __init__(self, chief: dbms.DbLayer, operator_name: str, query_name: str=None):
+    def __init__(self, chief: query_runners.QueryRunner, operator_name: str, query_name: str=None):
 
         super().__init__(chief, utils.safeval(query_name, self.assemble_unique_query_name()))
 
         self.operator_name = operator_name
-
-        self.field_groups = []
-        self.field_groups_by_names = {}
         
         self.subqueries = self.new_subqueries().set_chief(self)
         self.subquery_flag = False
@@ -138,26 +106,14 @@ class Query(TableObject):
         return self
 
 
-    def add_field_group(self, field_group_name: str) -> object:
+    
 
-        fg = FieldGroup(field_group_name)
-        self.field_groups.append(fg)
-        self.field_groups_by_names[field_group_name] = fg
+    
+    def add_fields(self, fk: fields.FieldKeeper, field_group_name: str=None) -> 'Query':
 
-        return self
-
-
-    def get_field_group(self, field_group_name: str) -> FieldGroup:
-
-        return self.field_groups[field_group_name]
-
-
-    def add_field(self, field: fields.Field, field_group_name=None) -> object:
-
-        self.fm.add_field(field)
-
-        if field_group_name is not None:
-            self.get_field_group(field_group_name).add_field(field)
+        for varname in fk.get_varnames():
+            if not self.fk.has_field(varname):
+                self.add_field(fk.get_field(varname), field_group_name)
 
         return self
 

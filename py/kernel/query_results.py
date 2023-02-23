@@ -1,17 +1,17 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  sqlresults.py                             (\(\
+# Module:  query_results.py                          (\(\
 # Func:    Fetching and iterating query results      (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import Dict, List
-import fields, ramtables, bureaucrat, dbms
+from typing import Dict
+import fields, ramtables, workers, query_runners
 
 
-class Result(bureaucrat.Bureaucrat):
+class QueryResult(workers.Worker):
 
-    def __init__(self, chief: dbms.DbLayer, fk: fields.FieldKeeper, cursor: object):
+    def __init__(self, chief: query_runners.QueryRunner, fk: fields.FieldKeeper, cursor: object):
 
         super().__init__(chief)
 
@@ -27,14 +27,14 @@ class Result(bureaucrat.Bureaucrat):
         return self.cursor
 
 
-    def set_eof_flag(self, state: bool=True) -> 'Result':
+    def set_eof_flag(self, state: bool=True) -> 'QueryResult':
 
         self.eof_flag = state
 
         return self
 
 
-    def fetchone(self) -> 'Result':
+    def fetchone(self) -> 'QueryResult':
 
         row = self.get_cursor().fetchone()
 
@@ -73,4 +73,3 @@ class Result(bureaucrat.Bureaucrat):
             rt_dump.insert(buffer)
 
         return rt_dump
-

@@ -106,7 +106,7 @@ def md5(str):
     return hashlib.md5(str.encode("utf-8")).hexdigest()
 
 
-# UUID
+# UUID and unique names
 
 def str2uuid(str):
 
@@ -118,6 +118,11 @@ def str2uuid(str):
         native_uuid = None
 
     return native_uuid 
+
+
+def unique_name(prefix: str="n") -> str: 
+
+    return prefix + str(uuid.uuid4()).replace("-", "")
 
 
 # Date & time

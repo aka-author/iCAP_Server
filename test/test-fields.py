@@ -23,6 +23,14 @@ def check_fm(fm):
     count_fields = fm.count_fields()    
     print(count_fields)
     assert count_fields == 5
+
+    varnames = fm.get_varnames()
+    print(fm.get_varnames())
+    assert varnames[0] == "uuid"
+    assert varnames[1] == "pet_name"
+    assert varnames[2] == "species"
+    assert varnames[3] == "weight"
+    assert varnames[4] == "date_of_birth"
     
 
 def check_pet(fm, pet):
@@ -71,6 +79,13 @@ def check_module():
     fm.set_field_value("date_of_birth", datetime.datetime.strptime("2020-11-08", "%Y-%m-%d"))
 
     check_pet(fm, barsik)
+
+
+    # Test clone
+
+    clone = fm.get_field("uuid").clone()
+    print(clone)
+    print(clone.get_varname())
 
 
 check_module()

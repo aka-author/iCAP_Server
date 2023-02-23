@@ -1,12 +1,12 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  app.py                                      (\(\
+# Module:  apps.py                                      (\(\
 # Func:    Providing a prototype for each iCAP script  (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import os, sys, pathlib, uuid
-import status, dblayer, dtoms, dbms, cfg, controller, logs, dirdesk, srcdesk
+import os, pathlib, uuid
+import controller, cfg, dbms, logs, dirdesk, srcdesk
 
 
 GLOBAL_APP = None
@@ -26,116 +26,113 @@ class Application (controller.Controller):
 
         GLOBAL_APP = self
         
-        self.dbms = dbms.Dbms(self)
-        self.dbl = dblayer.Dbl(self, dbms)
-        
-        self.dtoms = dtoms.DtoMs(self)
-        
+        self.dbms = self.new_dbms(self)
+                
         self.logger = logs.Logger(self)
 
         self.source_desk = srcdesk.SourceDesk(self)
         self.directory_desk = dirdesk.DirectoryDesk(self)
 
 
-    def get_app_name(self):
+    def get_app_name(self) -> str:
 
         return self.app_name
 
 
-    def get_session_id(self):
+    def get_session_id(self) -> uuid.UUID:
 
         return self.session_id
 
 
-    def assemble_component_path(self, rel_path):
+    def assemble_component_path(self, rel_path: str) -> str:
 
         script_path = str(pathlib.Path(__file__).parent.absolute())
 
         return os.path.abspath(script_path + "/../" + rel_path)
 
 
-    def set_cfg_file_path(self, rel_cfg_file_path):
+    def set_cfg_file_path(self, rel_cfg_file_path: str) -> 'Application':
 
         self.cfg_file_path = self.assemble_component_path(rel_cfg_file_path)
 
         return self
 
 
-    def get_cfg_file_path(self): 
+    def get_cfg_file_path(self) -> str: 
         
         return self.cfg_file_path
 
 
-    def is_debug_mode(self):
+    def is_debug_mode(self) -> bool:
 
         return self.get_cfg().is_debug_mode()
 
 
-    def is_console_mode(self):
+    def is_console_mode(self) -> bool:
         
         return self.get_cfg().is_console_mode()
 
 
-    def is_cgi_mode(self):
+    def is_cgi_mode(self) -> bool:
         
         return self.get_cfg().is_cgi_mode()
 
 
-    def is_batch_mode(self):
+    def is_batch_mode(self) -> bool:
         
         return self.get_cfg().is_batch_mode()
 
 
-    def get_dtoms(self):
+    def new_dbms(self) -> dbms.Dbms:
 
-        return self.dtoms
+        return dbms.Dbms(self)
 
 
-    def get_log_file_name(self):
+    def get_log_file_name(self) -> str:
         
         return self.get_app_name().lower() + ".log"
 
 
-    def get_log_file_path(self):
+    def get_log_file_path(self) -> str:
 
         log_file_rel_path = self.get_cfg().get_log_folder_path() + "/" + self.get_log_file_name()
 
         return self.assemble_component_path(log_file_rel_path)
 
 
-    def get_logger(self):
+    def get_logger(self) -> logs.Logger:
 
         return self.logger
 
 
-    def log(self, record_type, wording="", details=""):
+    def log(self, record_type: str, wording: str="", details: str="") -> 'Application':
 
         self.get_logger().log(record_type, wording, details)
 
         return self
 
 
-    def is_log_to_file_mode(self):
+    def is_log_to_file_mode(self) -> bool:
 
         return self.get_cfg().is_log_to_file_mode()
 
 
-    def is_log_to_db_mode(self):
+    def is_log_to_db_mode(self) -> bool:
 
         return self.get_cfg().is_log_to_db_mode()
 
 
-    def get_source_desk(self):
+    def get_source_desk(self) -> srcdesk.SourceDesk:
 
         return self.source_desk
         
 
-    def get_directory_desk(self):
+    def get_directory_desk(self) -> dirdesk.DirectoryDesk:
 
         return self.directory_desk
 
 
-    def quit(self):
+    def quit(self) -> 'Application':
 
         self.get_logger().close_all()
 

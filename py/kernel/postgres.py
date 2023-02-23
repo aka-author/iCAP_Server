@@ -5,16 +5,36 @@
 # Func:    Working with Postgres databases       (^.^)
 # # ## ### ##### ######## ############# #####################
 
+from typing import Dict
 import psycopg2
-import status, datatypes, bureaucrat, dbms, sqlbuilder
-    
-
-class PostgreSql(sqlbuilder.Sql):
-
-    pass
+import status, datatypes, controllers
+import dbms_instances, db_instances, query_runners
 
 
-class Postgres(dbms.Dbms):
+class PostgresQueryRunner(query_runners.QueryRunner):
+
+    def connect(self, db: db_instances.Db) -> query_runners.QueryRunner:
+
+        status_code = status.OK
+
+        try:
+            self.connection = psycopg2.connect(\
+                dbname=self.get_chief().get_access_param("host"),
+                dbname=db.get_connection_param("database"),
+                dbname=db.get_connection_param("user"),
+                dbname=db.get_connection_param("password"))
+        except:
+            status_code = status.ERR_DB_CONNECTION_FAILED
+
+        return status_code 
+
+
+class Postgres(dbms_instances.DbmsInstance):
+
+    def __init__(self, chief: controllers.Controller, access_params: Dict):
+
+        super().__init__(chief, access_params)
+
 
     def sql_datatype_name(self, icap_datatype_name: str) -> str:
 
@@ -36,22 +56,9 @@ class Postgres(dbms.Dbms):
         return dt_map.get(icap_datatype_name, "varchar")
 
 
-    def new_sql(self, owner: bureaucrat.Bureaucrat) -> sqlbuilder.Sql:
+    def new_query_runner(self) -> query_runners.QueryRunner:
 
-        return PostgreSql(owner)
+        return PostgresQueryRunner(self)
 
 
-    def connect(self, connection_params) -> object:
-
-        status_code = status.OK
-
-        try:
-            self.connection = psycopg2.connect(\
-                dbname=connection_params["database"], 
-                host=connection_params["host"], 
-                user=connection_params["user"], 
-                password=connection_params["password"])
-        except:
-            status_code = status.ERR_DB_CONNECTION_FAILED
-
-        return status_code 
+    

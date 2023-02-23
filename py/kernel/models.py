@@ -1,17 +1,18 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  model.py                                  (\(\
+# Module:  models.py                                  (\(\
 # Func:    Processing subject area data              (^.^)
 # # ## ### ##### ######## ############# #####################
 
 from typing import List
-import utils, dtos, dbms, fields, ramtable, bureaucrat
+import dtos, workers, fields
+import dbms, sqlscripts, sqlqueries
 
 
-class Model(bureaucrat.Bureaucrat):
+class Model(workers.Worker):
 
-    def __init__(self, chief: bureaucrat.Bureaucrat, model_name: str):
+    def __init__(self, chief: workers.Worker, model_name: str):
 
         super().__init__(chief)
 
@@ -29,7 +30,7 @@ class Model(bureaucrat.Bureaucrat):
         return self.model_name
 
     
-    def set_plural(self, plural: str=None) -> object:
+    def set_plural(self, plural: str=None) -> 'Model':
 
         if plural is None:
             last_letter = self.model_name[len(self.model_name) - 1]
@@ -57,19 +58,19 @@ class Model(bureaucrat.Bureaucrat):
 
     # Working with a DTO
 
-    def import_field_value_from_dto(self, varname: str, native_value: any) -> object:
+    def import_field_value_from_dto(self, varname: str, native_value: any) -> 'Model':
 
         self.fm.set_field_value(varname, native_value)
 
         return self
 
 
-    def import_submodels_from_dto(self, dto: object) -> object:
+    def import_submodels_from_dto(self, dto: object) -> 'Model':
 
         return self
 
 
-    def import_dto(self, dto: dtos.Dto) -> object:
+    def import_dto(self, dto: dtos.Dto) -> 'Model'
 
         for varname in self.fm.get_varnames():
             self.import_field_value_from_dto(varname, dto.get(varname))
@@ -84,12 +85,12 @@ class Model(bureaucrat.Bureaucrat):
         return self.fm.get_field_value(varname)
 
 
-    def export_submodels_to_dto(self, dto: object) -> object:
+    def export_submodels_to_dto(self, dto: object) -> 'Model':
 
         return self
 
 
-    def export_dto(self) -> object:
+    def export_dto(self) -> dtos.Dto:
 
         dto = dtos.Dto()
 
@@ -101,44 +102,9 @@ class Model(bureaucrat.Bureaucrat):
         return dto
 
 
-    # Working with a database and ramtables
-
-    def import_master_ramtable_row(self, row):
-
-        for field_name in row.get_table().get_field_names():
-            if self.has_field(field_name):
-                self.set_field_value(field_name, row.get_field_value(field_name))
-
-        return self
-
-
-    def get_empty_master_ramtable(self):
-
-        rt = ramtable.Table(self.get_plural().lower())
-
-        for field_name in self.fields:
-            rt.add_field(self.get_field(field_name))
-
-        return rt
-
-
-    def export_master_ramtable(self):
-
-        rt = self.get_empty_master_ramtable()
-
-        field_values_dic = {}
-        for field_name in self.fields:
-            if self.fields[field_name].is_atomic():
-                field_values_dic[field_name] = self.get_field_value(field_name)
-
-        rt.insert(field_values_dic)
-
-        return rt    
-
-
     # Loading models from a database
 
-    def get_load_query(self, dbl: dbms.DbLayer, key_varname: str, key_value: any) -> sqlqueries.Query:
+    def get_load_query(self, dbl: dbms.DbLayer, key_varname: str, key_value: any) -> sqlqueries.SelectiveQuery:
 
         self.fm.set_field_value(key_varname, key_value)
 
@@ -162,7 +128,7 @@ class Model(bureaucrat.Bureaucrat):
         return siblings_and_self
 
 
-    def load_submodels(self, dbl: dbms.DbLayer) -> object:
+    def load_submodels(self, dbl: dbms.DbLayer) -> 'Model':
 
         # my_uuid = self.get_field_value("uuid")
         # self.Cows = Cow(self).set_field_value("farm_uuid", my_uuid).load_siblings_and_self(dbl)
@@ -182,17 +148,17 @@ class Model(bureaucrat.Bureaucrat):
 
     # Saving models to a database
 
-    def get_save_query(self):
+    def get_save_query(self) -> sqlqueries.Insert:
 
         return self.get_dbl().new_insert().set_field_manager(self.fm)  
 
 
-    def get_submodel_save_queries(self):
+    def get_submodel_save_queries(self) -> List:
 
         return []
 
 
-    def get_save_script(self):
+    def get_save_script(self) -> sqlscripts.Script:
 
         save_script = self.get_dbl().new_script().add(self.get_save_query())
 
@@ -201,7 +167,7 @@ class Model(bureaucrat.Bureaucrat):
         return save_script
 
 
-    def save(self):
+    def save(self) -> 'Model':
         
         self.get_dbl().execute(self.get_save_script()).commit()
 

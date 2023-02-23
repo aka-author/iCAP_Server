@@ -191,6 +191,12 @@ class Field:
 
         return cmp > 0 if cmp is not None else False
 
+    # Misc.
+
+    def clone(self) -> 'Field':
+
+        return type(self)(self.get_varname())
+
 
 class UuidField(Field):
 

@@ -1,7 +1,7 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  bureaucrat.py                               (\(\
+# Module:  worker.py                               (\(\
 # Func:    Giving a pattern for all the objects here   (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
@@ -10,9 +10,9 @@ import uuid
 import status
 
 
-class Bureaucrat:
+class Worker:
 
-    def __init__(self, chief: 'Bureaucrat'=None):
+    def __init__(self, chief: 'Worker'=None):
 
         self.chief = chief
         self.id = uuid.uuid4()
@@ -25,14 +25,14 @@ class Bureaucrat:
         self.req = None
 
 
-    def set_chief(self, chief: 'Bureaucrat') -> 'Bureaucrat':
+    def set_chief(self, chief: 'Worker') -> 'Worker':
 
         self.chief = chief
 
         return self
 
 
-    def get_chief(self) -> 'Bureaucrat':
+    def get_chief(self) -> 'Worker':
 
         return self.chief
 
@@ -42,7 +42,7 @@ class Bureaucrat:
         return self.id 
 
 
-    def set_status_code(self, status_code: int) -> 'Bureaucrat':
+    def set_status_code(self, status_code: int) -> 'Worker':
 
         self.status_code = status_code
 
@@ -59,14 +59,14 @@ class Bureaucrat:
         return self.get_status_code() == status.OK
 
 
-    def get_app(self) -> 'Bureaucrat':
+    def get_app(self) -> 'Worker':
 
         return self.app if self.app is not None \
                else (self.get_chief().get_app() if self.get_chief() is not None \
                else None) 
 
 
-    def set_cfg(self, cfg: Dict) -> 'Bureaucrat':
+    def set_cfg(self, cfg: Dict) -> 'Worker':
 
         self.cfg = cfg
 
@@ -80,7 +80,7 @@ class Bureaucrat:
                else None)     
 
 
-    def get_dbms(self) -> 'Bureaucrat':
+    def get_dbms(self) -> 'Worker':
 
         return self.get_chief().get_dbms() if self.has_chief() else None
 
