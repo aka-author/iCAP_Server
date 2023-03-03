@@ -21,6 +21,11 @@ class Db(workers.Worker):
         self.schemes_by_names = {}
 
 
+    def get_dbms(self):
+
+        return self.get_chief()
+    
+
     def get_connection_param(self, param_name: str) -> str:
 
         return self.connetion_params.get(param_name)

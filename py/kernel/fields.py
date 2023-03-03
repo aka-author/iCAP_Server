@@ -1,8 +1,9 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  fields.py                                  (\(\
-# Func:    Managing data fields                       (^.^)
+# Module:  fields.py                                  
+# Func:    Managing data fields                      (\(\   
+# Usage:   Create objects bases on the classes       (^.^)
 # # ## ### ##### ######## ############# #####################
 
 from typing import List, Dict
@@ -379,9 +380,11 @@ class FieldKeeper:
         self.autoins_varnames = []
 
 
-    def set_recordset_name(self, recordset_name: str) -> object:
+    def set_recordset_name(self, recordset_name: str) -> 'FieldKeeper':
 
         self.recordset_name = recordset_name
+
+        return self
 
 
     def get_recordset_name(self) -> str:
@@ -389,28 +392,28 @@ class FieldKeeper:
         return self.recordset_name
 
 
-    def define_subkey(self, field_name: str) -> object:
+    def define_subkey(self, field_name: str) -> 'FieldKeeper':
 
         self.masubkey_varnames.append(field_name)
 
         return self
 
 
-    def define_mandatory(self, field_name: str) -> object:
+    def define_mandatory(self, field_name: str) -> 'FieldKeeper':
 
         self.mandatory_varnames.append(field_name)
 
         return self
 
 
-    def define_autoins(self, field_name: str) -> object:
+    def define_autoins(self, field_name: str) -> 'FieldKeeper':
 
         self.autoins_varnames.append(field_name)
 
         return self
 
 
-    def add_field(self, field: Field, options: str="optional") -> object:
+    def add_field(self, field: Field, options: str="optional") -> 'FieldKeeper':
 
         varname = field.get_varname()
                  
@@ -480,7 +483,7 @@ class FieldManager:
         self.reset_field_values()
 
 
-    def set_field_keeper(self, field_keeper: FieldKeeper) -> object:
+    def set_field_keeper(self, field_keeper: FieldKeeper) -> 'FieldManager':
 
         self.fk = field_keeper
 
@@ -492,7 +495,7 @@ class FieldManager:
         return self.fk
 
 
-    def set_recordset_name(self, recordset_name: str) -> object:
+    def set_recordset_name(self, recordset_name: str) -> 'FieldManager':
 
         self.get_field_keeper().set_recordset_name(recordset_name)
 
@@ -511,21 +514,21 @@ class FieldManager:
         return self
 
 
-    def define_mandatory(self, varname: str) -> object:
+    def define_mandatory(self, varname: str) -> 'FieldManager':
 
         self.get_field_keeper().define_mandatory(varname) 
 
         return self
 
 
-    def define_autoins(self, varname: str) -> object:
+    def define_autoins(self, varname: str) -> 'FieldManager':
 
         self.get_field_keeper().define_autoins(varname)
 
         return self
 
 
-    def add_field(self, field: Field, options: str="optional") -> object:
+    def add_field(self, field: Field, options: str="optional") -> 'FieldManager':
 
         self.get_field_keeper().add_field(field, options)
 
@@ -567,14 +570,14 @@ class FieldManager:
         return self.get_field_keeper().is_insertable(varname)
 
 
-    def set_field_value(self, varname: str, native_value: any) -> object:
+    def set_field_value(self, varname: str, native_value: any) -> 'FieldManager':
         
         self.field_values[varname] = native_value
 
         return self
 
     
-    def set_field_values(self, native_values: Dict) -> object:
+    def set_field_values(self, native_values: Dict) -> 'FieldManager':
 
         for (varname, native_value) in native_values.items():
             if self.has_field(varname):
@@ -583,7 +586,15 @@ class FieldManager:
         return self
 
 
-    def reset_field_values(self) -> object:
+    def set_field_values_from_field_manager(self, fm: 'FieldManager') -> 'FieldManager':
+
+        for varname in fm.get_varnames():
+            self.set_field_value(varname, fm.get_field_value(varname))
+
+        return self
+
+
+    def reset_field_values(self) -> 'FieldManager':
 
         for field in self.get_field_keeper().get_fields():
             self.set_field_value(field.get_varname(), field.get_default_value())

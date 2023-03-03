@@ -34,7 +34,7 @@ class QueryResult(workers.Worker):
         return self
 
 
-    def fetchone(self) -> 'QueryResult':
+    def fetch_one(self) -> 'QueryResult':
 
         row = self.get_cursor().fetchone()
 

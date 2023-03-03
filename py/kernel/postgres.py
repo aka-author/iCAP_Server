@@ -7,9 +7,59 @@
 
 from typing import Dict
 import psycopg2
-import status, datatypes, controllers
-import dbms_instances, db_instances, query_runners
+import utils, status, datatypes, controllers
+import dbms_instances, db_instances, query_runners 
+import sql_workers, sql_builders, sql_queries
 
+
+class PostgresSqlBuilder(sql_builders.SqlBuilder):
+
+    def __init__(self, owner: sql_workers):
+
+        super().__init__(owner)
+
+
+    def icap2sql_datatype_name(self, icap_datatype_name: str) -> str:
+
+        dt_map = {
+            datatypes.DTN_UUID:         "uuid", 
+            datatypes.DTN_BOOLEAN:      "boolean",
+            datatypes.DTN_NUMERIC:      "numeric",
+            datatypes.DTN_BIGINT:       "bigint",
+            datatypes.DTN_DOUBLE:       "double",
+            datatypes.DTN_STRING:       "varchar",
+            datatypes.DTN_TIMESTAMP:    "timestamp",
+            datatypes.DTN_TIMESTAMP_TZ: "timestamptz",
+            datatypes.DTN_DATE:         "timestamp",
+            datatypes.DTN_TIME:         "timestamp",
+            datatypes.DTN_JSON:         "json"
+        }
+
+        return dt_map.get(icap_datatype_name, "varchar")
+
+
+    def looks_like_string(self, dbms_datatype_name: str) -> bool:
+
+        dont_require_apos = ("boolean", "numeric", "bigint", "double")
+
+        return dbms_datatype_name not in dont_require_apos
+
+
+class PostgresSubqueries(sql_queries.Subqueries):
+     
+    def get_subquery_def(self, query: sql_queries.Query) -> str:
+
+        return self.sql.as_subst(query.get_query_name(), utils.pars(query.get_snippet()))
+     
+
+    def get_snippet(self) -> str:
+        
+        if len(self.subqueries) > 0:
+            defs = [self.get_subquery_def(self.subqueries[sq_name]) for sq_name in self.subqueries]
+            return "WITH\n" + self.sql.list_in_column(defs)  + "\n"
+        else:
+            return ""
+        
 
 class PostgresQueryRunner(query_runners.QueryRunner):
 
@@ -36,29 +86,16 @@ class Postgres(dbms_instances.DbmsInstance):
         super().__init__(chief, access_params)
 
 
-    def sql_datatype_name(self, icap_datatype_name: str) -> str:
+    def new_sql_builder(self, owner: sql_workers.SqlWorker) -> sql_builders.SqlBuilder:
 
-        dt_map = {
-            datatypes.DTN_UUID:         "uuid", 
-            datatypes.DTN_BOOLEAN:      "boolean",
-            datatypes.DTN_NUMERIC:      "numeric",
-            datatypes.DTN_BIGINT:       "bigint",
-            datatypes.DTN_DOUBLE:       "double",
-            datatypes.DTN_STRING:       "varchar",
-            datatypes.DTN_STRLIST:      "varchar",
-            datatypes.DTN_TIMESTAMP:    "timestamp",
-            datatypes.DTN_TIMESTAMP_TZ: "timestamptz",
-            datatypes.DTN_DATE:         "timestamp",
-            datatypes.DTN_TIME:         "timestamp",
-            datatypes.DTN_JSON:         "json"
-        }
+        return PostgresSqlBuilder(self, owner)
 
-        return dt_map.get(icap_datatype_name, "varchar")
+
+    def new_subqueries(self, chief_query: sql_queries.Query) -> sql_queries.Subqueries:
+
+        return PostgresSubqueries(chief_query)
 
 
     def new_query_runner(self) -> query_runners.QueryRunner:
 
-        return PostgresQueryRunner(self)
-
-
-    
+        return PostgresQueryRunner(self)    

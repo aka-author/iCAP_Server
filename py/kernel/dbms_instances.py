@@ -8,7 +8,7 @@
 from typing import Dict
 import fields, workers, controllers
 import db_instances, db_objects, query_runners, query_results 
-import sql_scripts, sql_queries, sql_snippets
+import sql_workers, sql_scripts, sql_queries, sql_builders
 
 
 class Dbms(workers.Worker):
@@ -25,14 +25,14 @@ class Dbms(workers.Worker):
         return self.access_params.get(param_name)
 
 
-    def get_dbms_instance(self) -> 'Dbms':
+    def get_dbms(self) -> 'Dbms':
 
         return self
 
 
-    def new_snippet(self, owner: workers.Worker) -> sql_snippets.Snippet:
+    def new_sql_builder(self, owner: sql_workers.SqlWorker) -> sql_builders.SqlBuilder:
 
-        return sql_snippets.Snippet(self, owner)
+        return sql_builders.SqlBuilder(self, owner)
 
 
     def new_table(self, scheme: db_objects.Scheme, table_name: str) -> db_objects.Table:
@@ -48,6 +48,11 @@ class Dbms(workers.Worker):
     def new_db(self) -> db_instances.Db:
 
         return db_instances.Db(self)
+
+
+    def new_subqueries(self, chief_query: sql_queries.Query) -> sql_queries.Subqueries:
+
+        return sql_queries.Subqueries(chief_query)
 
 
     def new_select(self, query_name: str=None) -> sql_queries.Select:

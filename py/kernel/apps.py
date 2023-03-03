@@ -1,17 +1,18 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  apps.py                                      (\(\
-# Func:    Providing a prototype for each iCAP script  (^.^)
+# Module:  apps.py                                     
+# Func:    Providing a prototype for each iCAP script   (\(\
+# Usage:   The class is abstract                        (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import os, pathlib, uuid
-import controller, cfg, dbms, logs, dirdesk, srcdesk
+import controllers, cfg, dbms_instances, logs, dirdesk, srcdesk
 
 
 GLOBAL_APP = None
 
-class Application (controller.Controller):
+class Application (controllers.Controller):
 
     def __init__(self, app_name, rel_cfg_file_path):
 
@@ -26,7 +27,7 @@ class Application (controller.Controller):
 
         GLOBAL_APP = self
         
-        self.dbms = self.new_dbms(self)
+        self.default_dbms = self.new_default_dbms(self)
                 
         self.logger = logs.Logger(self)
 
@@ -83,9 +84,11 @@ class Application (controller.Controller):
         return self.get_cfg().is_batch_mode()
 
 
-    def new_dbms(self) -> dbms.Dbms:
+    def new_default_dbms(self) -> dbms_instances.Dbms:
 
-        return dbms.Dbms(self)
+        # This method is almost useless. Redefine it in a subclass.
+
+        return dbms_instances.Dbms(self)
 
 
     def get_log_file_name(self) -> str:

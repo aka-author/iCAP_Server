@@ -1,8 +1,9 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  query_runners.py                           (\(\
-# Func:    Connecting databases and running queries   (^.^)
+# Module:  query_runners.py                           
+# Func:    Connecting databases and running queries    (\(\
+# Usage:   Create objects based on this class          (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
 import status, workers
@@ -64,11 +65,11 @@ class QueryRunner(workers.Worker):
 
     def execute_script(self, script: sql_scripts.Script) -> 'QueryRunner':
 
-        cursor = self.execute_sql(script.sql.get_snippet())
+        cursor = self.execute_sql(script.get_snippet())
 
         fk = script.get_selective_query().get_field_keeper()
 
-        self.query_result = self.get_dbms_instance().new_result(self, fk, cursor)
+        self.query_result = self.get_dbms().new_result(self, fk, cursor)
 
         return self
 
@@ -91,3 +92,10 @@ class QueryRunner(workers.Worker):
     def get_query_result(self) -> query_results.QueryResult:
 
         return self.query_result
+    
+
+    def close(self) -> 'QueryRunner':
+
+        self.connection.close()
+
+        return self

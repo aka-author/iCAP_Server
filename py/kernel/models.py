@@ -1,28 +1,37 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  models.py                                  (\(\
-# Func:    Processing subject area data              (^.^)
+# Module:  models.py                                  
+# Func:    Processing subject area entities         (\(\     
+# Usage:   The class is abstract                    (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import List
+from typing import Dict, List
 import dtos, workers, fields
-import dbms, sqlscripts, sqlqueries
+import db_instances, sql_scripts, sql_queries
 
 
 class Model(workers.Worker):
 
-    def __init__(self, chief: workers.Worker, model_name: str):
+    def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
 
-        self.model_name = model_name
-        self.set_plural()
+        self.model_name = "model"
 
-        self.fm = self.create_field_manager().set_recordset_name(self.get_plural())
+        self.fk = self.create_field_keeper().set_recordset_name("models")
+        self.fm = self.create_field_manager(self.fk)
         self.define_fields()
-
         self.fm.reset_field_values()
+
+
+    def set_model_name(self, model_name: str) -> 'Model':
+
+        self.model_name = model_name
+
+        self.get_field_keeper().set_recordset_name(self.get_plural())
+
+        return self
 
 
     def get_model_name(self) -> str:
@@ -38,17 +47,41 @@ class Model(workers.Worker):
         else:
             self.plural = plural
 
+        self.fm.set_recordset_name(self.plural)
+
         return self
 
 
     def get_plural(self) -> str:
 
         return self.plural
+    
+
+    def create_field_keeper(self) -> fields.FieldKeeper:
+
+        return fields.FieldKeeper()
+    
+
+    def get_field_keeper(self) -> fields.FieldKeeper:
+
+        return self.get_field_manager().get_field_keeper()
 
 
     def create_field_manager(self) -> fields.FieldManager:
 
         return fields.FieldManager(self)
+
+
+    def get_field_manager(self) -> fields.FieldManager:
+
+        return self.fm
+    
+
+    def set_field_values_from_field_manager(self, fm: fields.FieldManager) -> 'Model':
+
+        self.get_field_manager().set_field_values_from_field_manager(fm)
+
+        return self
 
 
     def is_valid(self) -> bool:
@@ -104,79 +137,113 @@ class Model(workers.Worker):
 
     # Loading models from a database
 
-    def get_load_query(self, dbl: dbms.DbLayer, key_varname: str, key_value: any) -> sqlqueries.SelectiveQuery:
+    def get_load_query(self, db: db_instances.Db, target_varname: str, target_value: any) -> sql_queries.SelectiveQuery:
 
-        self.fm.set_field_value(key_varname, key_value)
+        recordset_name = self.get_field_keeper().get_recordset_name()
 
-        dlq = self.get_dbl().new_select("loadmodel").set_output_field_manager(self.fm)
-        
-        dlq.WHERE.sql.add_field_equal(self.fm, key_varname)
+        load_query = db.get_dbms().new_select().build_of_field_manager(self.get_field_manager())
 
-        return dlq
+        load_query.WHERE("{0}={1}", 
+                   {"recordset_name": recordset_name, "varname": target_varname}, 
+                   {"value": target_value})
+
+        return load_query
 
 
-    def load_siblings_and_self(self, dbl: dbms.DbLayer) -> List:
+    def load_siblings_and_self(self, db: db_instances.Db) -> List:
 
         siblings_and_self = []
 
-        r_load = dbl.execute_query(self.get_load_query(dbl)).get_query_result()
+        query_runner = db.get_dbms().new_query_runner()
 
-        while not r_load.fetch().eof():
-            sibling = type(self)(self.get_chief()) if r_load.rownumber() < r_load.rowcount() - 1 else self
-            siblings_and_self.append(sibling.set_field_values(r_load.fm))
+        query_result = query_runner.execute_query(self.get_load_query(db)).get_query_result()
+        fm = query_result.get_field_manager()
+
+        while not query_result.fetch().eof():
+            sibling = type(self)(self.get_chief()) \
+                        if query_result.rownumber() < query_result.rowcount() - 1 \
+                        else self
+            siblings_and_self.append(sibling.set_field_values_from_field_manager(fm))
 
         return siblings_and_self
 
 
-    def load_submodels(self, dbl: dbms.DbLayer) -> 'Model':
+    def load_submodels(self, db: db_instances.Db) -> 'Model':
 
         # my_uuid = self.get_field_value("uuid")
-        # self.Cows = Cow(self).set_field_value("farm_uuid", my_uuid).load_siblings_and_self(dbl)
-        # self.Hens = Hen(self).set_field_value("farm_uuid", my_uuid).load_siblings_and_self(dbl)
+        # self.Cows = Cow(self).set_field_value("farm_uuid", my_uuid).load_siblings_and_self(db)
+        # self.Hens = Hen(self).set_field_value("farm_uuid", my_uuid).load_siblings_and_self(db)
         
         return self
 
 
-    def load(self, dbl: dbms.DbLayer, key_varname: str, key_value: any) -> object:
+    def load(self, db: db_instances.Db, target_varname: str, target_value: any) -> 'Model':
 
-        dbl.execute(self.get_load_query(dbl, key_varname, key_value))
+        query_runner = db.get_dbms().new_query_runner()
 
-        self.load_submodels(dbl)
+        query_runner.execute(self.get_load_query(db, target_varname, target_value)).fetch_one()
+
+        self.load_submodels(db)
 
         return self
 
 
-    # Saving models to a database
+    # Inserting models to a database
 
-    def get_save_query(self) -> sqlqueries.Insert:
+    def get_insert_query(self, db: db_instances.Db) -> sql_queries.Insert:
 
-        return self.get_dbl().new_insert().set_field_manager(self.fm)  
+        return db.get_dbms().new_insert().build_of_field_manager(self.get_field_manager())
 
 
-    def get_submodel_save_queries(self) -> List:
+    def get_update_query(self, db: db_instances.Db) -> sql_queries.Insert:
+
+        return db.get_dbms().new_update().build_of_field_manager(self.get_field_manager()) 
+
+
+    def get_save_query(self, db: db_instances.Db, options: Dict) -> sql_queries.Insert: 
+
+        if options["mode"] == "insert":
+            save_query = self.get_insert_query(self, db)
+        elif options["mode"] == "update":
+            return self.get_update_query(self, db)
+        
+        return save_query
+
+
+    def get_submodel_save_queries(self, options: Dict) -> List:
 
         return []
 
 
-    def get_save_script(self) -> sqlscripts.Script:
+    def get_save_script(self, db: db_instances.Db, options: Dict) -> sql_scripts.Script:
 
-        save_script = self.get_dbl().new_script().add(self.get_save_query())
+        save_script = db.get_dbms().new_script().add(self.get_save_query(db, options))
 
-        for save_query in self.get_submodel_save_queries(): save_script.add(save_query)
+        for save_query in self.get_submodel_save_queries(db, options): 
+            save_script.add(save_query)
 
         return save_script
 
 
-    def save(self) -> 'Model':
+    def save(self, db: db_instances.Db, options: Dict) -> 'Model':
         
-        self.get_dbl().execute(self.get_save_script()).commit()
+        query_runner = db.get_dbms().new_query_runner()
+
+        save_script = self.get_save_script(db, options)
+
+        query_runner.execute_script(save_script).commit().close()
 
         return self
+    
 
+    def insert(self, db):
 
-    def get_sql_conditions(self, field_name, col_name):
+        return self.save(db, {"mode": "insert"})
+    
 
-        return self.fields[field_name].get_sql_conditions(self.get_field_value(field_name), col_name)
+    def update(self, db):
+
+        return self.save(db, {"mode": "update"})
 
 
     # Debugging

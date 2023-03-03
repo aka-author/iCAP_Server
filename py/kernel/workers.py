@@ -1,11 +1,12 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  worker.py                               (\(\
-# Func:    Giving a pattern for all the objects here   (^.^)
+# Module:  worker.py                               
+# Func:    Giving a pattern for all the objects here    (\(\
+# Usage:   The class is abstract                        (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
-from typing import Dict, List
+from typing import Dict
 import uuid
 import status
 
@@ -21,7 +22,7 @@ class Worker:
 
         self.app = None
         self.cfg = None
-        self.dbl = None
+        self.default_dbms = None
         self.req = None
 
 
@@ -80,9 +81,9 @@ class Worker:
                else None)     
 
 
-    def get_dbms(self) -> 'Worker':
+    def get_default_dbms(self) -> 'Worker':
 
-        return self.get_chief().get_dbms() if self.has_chief() else None
+        return self.get_chief().get_default_dbms() if self.has_chief() else None
 
     
     def set_req(self, req: object) -> object:

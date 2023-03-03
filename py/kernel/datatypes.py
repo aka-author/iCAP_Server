@@ -116,13 +116,27 @@ def get_regexp(datatype_name):
     return get_datatype(datatype_name)["regexp"]
 
 
+# Numerics
+
+def get_numeric_datatype_names() -> List:
+
+    dt_names = [DTN_NUMERIC, DTN_BIGINT, DTN_DOUBLE]
+
+    return dt_names
+
+
+def is_numeric_datatype(datatype_name: str) -> bool:
+
+    return datatype_name.lower() in get_numeric_datatype_names()
+
+
 # Timestamps and dates
 
 def get_datetime_datatype_names() -> List:
 
-        dt_names = [DTN_TIMESTAMP, DTN_TIMESTAMP_TZ, DTN_DATE, DTN_TIME]
+    dt_names = [DTN_TIMESTAMP, DTN_TIMESTAMP_TZ, DTN_DATE, DTN_TIME]
 
-        return dt_names
+    return dt_names
 
 
 def is_datetime_datatype(datatype_name: str) -> bool:
