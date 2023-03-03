@@ -188,7 +188,7 @@ class Model(workers.Worker):
         return self
 
 
-    # Inserting models to a database
+    # Inserting/updating models to/in a database
 
     def get_insert_query(self, db: db_instances.Db) -> sql_queries.Insert:
 

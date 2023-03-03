@@ -20,7 +20,7 @@ class User(models.Model):
     def define_fields(self):
         
         self.get_field_manager()\
-            .add_field(fields.UuidField("uuid"), "key")\
+            .add_field(fields.UuidField("uuid"), "subkey,autoins")\
             .add_field(fields.StringField("username"))\
             .add_field(fields.StringField("password_hash"))\
             .add_field(fields.BooleanField("auth_required"))\
@@ -64,4 +64,3 @@ class User(models.Model):
     def may_fetch_reports(self):
 
         return self.get_field_manager().get_field_value("fetching_reports")
-        

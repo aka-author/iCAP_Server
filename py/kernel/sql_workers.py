@@ -15,8 +15,8 @@ class SqlWorker(workers.Worker):
 
         super().__init__(chief)
 
-        self.snippet = ""
-        self.sql_builder = self.get_default_dbms().new_sql_builder(self)
+        self.snippet = None
+        self.sql_builder = self.get_dbms().new_sql_builder(self)
 
 
     def get_dbms(self) -> 'SqlWorker':
@@ -39,7 +39,7 @@ class SqlWorker(workers.Worker):
 
     def extend_snippet(self, snippet_extension: str, separ: str=" ") -> "SqlWorker":
 
-        curr_snippet = self.get_snippet()
+        curr_snippet = str(self.snippet)
 
         snippet_head = curr_snippet + separ if curr_snippet != "" else "" 
 
@@ -48,6 +48,11 @@ class SqlWorker(workers.Worker):
         return self
 
 
+    def assemble_snippet(self) -> str:
+
+        return ""
+
+
     def get_snippet(self) -> str:
 
-        return self.snippet
+        return self.snippet if self.snippet is not None else self.assemble_snippet()

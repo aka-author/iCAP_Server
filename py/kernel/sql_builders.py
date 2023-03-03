@@ -166,12 +166,3 @@ class SqlBuilder(workers.Worker):
 
         return (scheme_name + "." if scheme_name is not None else "") + table_name
 
-
-
-
-
-
-
-
-
-

@@ -76,6 +76,9 @@ class Clause(sql_workers.SqlWorker):
         super().__init__(chief)
 
         self.clause_name = clause_name
+
+        self.headless_flag = False
+
         self.useful_flag = False
 
 
@@ -83,6 +86,16 @@ class Clause(sql_workers.SqlWorker):
 
         return self.clause_name
 
+
+    def set_headless_flag(self, flag: bool=True) -> 'Clause':
+
+        self.headless_flag = flag
+
+
+    def is_headless(self) -> bool:
+
+        return self.headless_flag
+    
 
     def turn_on(self) -> 'Clause': 
 
@@ -98,14 +111,103 @@ class Clause(sql_workers.SqlWorker):
 
     def set_snippet(self, snippet: str) -> 'Clause':
 
-        self.get_chief().turn_on()
+        self.snippet = snippet
+        self.turn_on()
 
-        return super().set_snippet(snippet) 
+        return self 
     
 
     def get_snippet(self) -> str:
 
-        return utils.separate(self.get_clause_name(), " ", super().get_snippet())
+        if self.is_headless():
+            snippet = " ".join(self.get_clause_name(), super().get_snippet())
+        else:
+            snippet = super().get_snippet()
+
+        return snippet
+    
+
+class MonotableClause(Clause):
+
+    def __init__(self, chief, clause_name: str=""):
+
+        super().__init__(chief, clause_name)
+
+        self.db_scheme_name = None
+        self.table_name = None
+
+
+    def set_db_scheme_name(self, db_scheme_name: str) -> 'MonotableClause':
+
+        self.db_scheme_name = db_scheme_name
+
+        return self
+    
+
+    def get_db_scheme_name(self) -> str: 
+
+        return self.db_scheme_name
+    
+
+    def set_table_name(self, table_name: str) -> 'MonotableClause':
+
+        self.table_name = table_name
+
+        return self
+    
+
+    def get_table_name(self) -> str: 
+
+        return self.table_name 
+    
+
+    def get_qualified_table_name(self) -> str:
+
+        return self.sql.qualified_table_name(self.get_table_name(), self.get_db_scheme_name())
+
+
+class WhereClause(Clause):
+
+    def __init__(self, chief, clause_name: str=""):
+
+        super().__init__(chief, clause_name)
+
+        self.clause_name = "WHERE"
+
+        self.espression = ""
+        self.operands = []
+
+
+    def set_expression(self, expression: str) -> 'WhereClause':
+
+        self.expression = expression
+
+        return self
+
+
+    def extend_expression(self, logfunc: str, *expressions: str) -> 'WhereClause':
+
+        logfunc_padded = " " + logfunc.upper() + " "
+        expression_parsed = [utils.pars(expression) for expression in expressions]
+        head = utils.pars(self.expression)
+        tail = logfunc_padded.join(expression_parsed)
+
+        self.expression = logfunc_padded.join(head, tail)
+
+        return self
+
+
+    def add_operands(self, *operands) -> 'WhereClause':
+
+        for operand in operands:
+            self.operands.append(operand)
+
+        return self
+
+
+    def assemble_snippet(self) -> str:
+        
+        return self.expression.format(*self.operands)
 
 
 class Query(db_recordsets.Recordset):
