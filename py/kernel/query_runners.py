@@ -12,7 +12,7 @@ import dbms_instances, db_instances, sql_queries, sql_scripts, query_results
 
 class QueryRunner(workers.Worker):
 
-    def __init__(self, chief: dbms_instances.Dbms):
+    def __init__(self, chief):
 
         super().__init__(chief)
     

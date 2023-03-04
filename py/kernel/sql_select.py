@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict, List
-import fields, query_runners, sql_builders, sql_queries
+import fields, db_objects, query_runners, sql_builders, sql_queries
 
 
 class FieldGroup(fields.FieldKeeper):
@@ -77,13 +77,13 @@ class ClauseSelect(sql_queries.Clause):
 
         field_refs = []
 
-        if len(field_infos) == 1 and field_infos[0].get("varname") == "*":
-            
-        else:
-            for field_info in field_infos:
+        # if len(field_infos) == 1 and field_infos[0].get("varname") == "*":
+        #    
+        #else:
+        #    for field_info in field_infos:
                 
 
-                field_refs.append(field_ref_snippet)
+        #        field_refs.append(field_ref_snippet)
 
         self.clause_select.set_snippet(self.sql_builder.list(field_refs))
 
@@ -109,7 +109,7 @@ class ClauseWhere(sql_queries.Clause):
 
 class Select(sql_queries.SelectiveQuery):
 
-    def __init__(self, chief: query_runners.QueryRunner, query_name: str=None):
+    def __init__(self, chief, query_name: str=None):
 
         super().__init__(chief, "SELECT", query_name)    
 

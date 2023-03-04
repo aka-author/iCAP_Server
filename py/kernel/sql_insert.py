@@ -10,7 +10,7 @@ import utils
 import fields, dbms_instances, sql_queries
 
 
-class IntoClause(sql_queries.Clause):
+class IntoClause(sql_queries.MonotableClause):
 
     def __init__(self, chief: sql_queries.Query):
 
@@ -21,7 +21,7 @@ class IntoClause(sql_queries.Clause):
         self.varnames = []
 
 
-    def set_varnames(self, varnames: List) -> 'ClauseInto':
+    def set_varnames(self, varnames: List) -> 'IntoClause':
 
         self.varnames = varnames
 
@@ -33,16 +33,15 @@ class IntoClause(sql_queries.Clause):
         return self.varnames
 
 
-    def get_varname_list(self) -> str:
+    def assemble_varname_list(self) -> str:
 
-        self.sql.list([self.sql.sql_varname(varname) for varname in self.get_varnames()])
+        return self.sql.list([self.sql.sql_varname(varname) for varname in self.get_varnames()])
 
 
     def assemble_snippet(self) -> str:
 
-        return " ".join([self.get_clause_name(), 
-                         self.get_qualified_table_name(), 
-                         utils.pars(self.get_varname_list())])
+        return " ".join([self.get_qualified_table_name(), 
+                         utils.pars(self.assemble_varname_list())])
                     
 
 class ValuesClause(sql_queries.Clause):
@@ -54,9 +53,11 @@ class ValuesClause(sql_queries.Clause):
         self.clause_name = "VALUES"
 
 
-    def set_values(self, values: List) -> 'ClauseValues':
+    def set_values(self, values: List) -> 'ValuesClause':
 
         self.values = values
+
+        return self
 
 
     def get_values(self) -> List:
@@ -71,12 +72,12 @@ class ValuesClause(sql_queries.Clause):
 
     def assemble_snippet(self) -> str: 
 
-        return " ".join([self.get_clause_name(), utils.pars(self.get_value_list())])
+        return utils.pars(self.get_value_list())
 
 
 class Insert(sql_queries.Query):
 
-    def __init__(self, chief: dbms_instances.Dbms, query_name: str=None):
+    def __init__(self, chief, query_name: str=None):
 
         super().__init__(chief, "INSERT", query_name)
 
@@ -91,7 +92,7 @@ class Insert(sql_queries.Query):
 
     def INTO(self, db_scheme_name, table_name, *varnames) -> 'Insert':
 
-        self.clauses["INTO"]\
+        self.clauses_by_names["INTO"]\
             .set_table_name(table_name)\
             .set_db_scheme_name(db_scheme_name)\
             .set_varnames(varnames).turn_on()
@@ -101,7 +102,7 @@ class Insert(sql_queries.Query):
 
     def VALUES(self, *values) -> 'Insert':
 
-        self.clauses["VALUES"].set_values(values).turn_on()
+        self.clauses_by_names["VALUES"].set_values(values).turn_on()
 
         return self
 
@@ -112,7 +113,7 @@ class Insert(sql_queries.Query):
         values = []
 
         for varname in fm.get_varnames():
-            if fm.get_field(varname).is_insertable():
+            if fm.is_insertable(varname):
                 varnames.append(varname)
                 values.append(fm.get_field_value(varname))
 

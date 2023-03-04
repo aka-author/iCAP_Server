@@ -5,10 +5,10 @@
 # Func:    Working with database objects           (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import workers, dbinstances, dbrecordsets
+import workers, db_instances, db_recordsets
 
 
-class Table(dbrecordsets.Recordsets):
+class Table(db_recordsets.Recordset):
 
     def __init__(self, chief: 'Scheme', table_name: str):
 
@@ -24,7 +24,7 @@ class Table(dbrecordsets.Recordsets):
 
 class Scheme(workers.Worker):
 
-    def __init__(self, dbi: dbinstances.DbInstance, scheme_name: str):
+    def __init__(self, dbi, scheme_name: str):
 
         super().__init__(self, dbi)
 
@@ -45,6 +45,6 @@ class Scheme(workers.Worker):
         self.tables_by_names[table.get_table_name] = table
 
     
-    def get_table(self, table_name: str) -> Table
+    def get_table(self, table_name: str) -> Table:
 
         return self.tables_by_names[table_name]

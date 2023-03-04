@@ -375,6 +375,7 @@ class FieldKeeper:
         self.fields = []
         self.fields_by_varnames = {}
 
+        self.surrogate_key_name = None
         self.subkey_varnames = []
         self.mandatory_varnames = []
         self.autoins_varnames = []
@@ -392,25 +393,40 @@ class FieldKeeper:
         return self.recordset_name
 
 
-    def define_subkey(self, field_name: str) -> 'FieldKeeper':
+    def define_subkey(self, varname: str) -> 'FieldKeeper':
 
-        self.masubkey_varnames.append(field_name)
-
-        return self
-
-
-    def define_mandatory(self, field_name: str) -> 'FieldKeeper':
-
-        self.mandatory_varnames.append(field_name)
+        self.masubkey_varnames.append(varname)
 
         return self
 
 
-    def define_autoins(self, field_name: str) -> 'FieldKeeper':
+    def define_mandatory(self, varname: str) -> 'FieldKeeper':
 
-        self.autoins_varnames.append(field_name)
+        self.mandatory_varnames.append(varname)
 
         return self
+
+
+    def define_autoins(self, varname: str) -> 'FieldKeeper':
+
+        self.autoins_varnames.append(varname)
+
+        return self
+
+
+    def define_surrogate_key(self, varname: str) -> 'FieldKeeper':
+
+        self.surrogate_key_name = varname
+
+
+    def get_surrogate_key_name(self) -> str:
+
+        if self.surrogate_key_name is not None:
+            return self.surrogate_key_name
+        elif self.has_field("uuid"):
+            return "uuid"
+        else:
+            return None
 
 
     def add_field(self, field: Field, options: str="optional") -> 'FieldKeeper':
@@ -469,7 +485,7 @@ class FieldKeeper:
 
     def is_insertable(self, varname: str) -> bool:
 
-        return not (varname in self.autoins_field_names or self.get_field(varname).has_expr())
+        return not (varname in self.autoins_varnames or self.get_field(varname).has_expr())
 
 
 
@@ -553,6 +569,11 @@ class FieldManager:
     def get_field(self, varname: str) -> Field:
 
         return self.get_field_keeper().get_field(varname)
+
+
+    def get_surrogate_key_name(self) -> str:
+
+        return self.get_field_keeper().get_surrogate_key_name()
 
 
     def is_subkey(self, varname: str) -> bool:

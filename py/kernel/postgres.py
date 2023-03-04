@@ -15,7 +15,7 @@ import sql_workers, sql_builders, sql_queries
 class PostgresSqlBuilder(sql_builders.SqlBuilder):
 
     def __init__(self, owner: sql_workers):
-
+        
         super().__init__(owner)
 
 
@@ -69,17 +69,17 @@ class PostgresQueryRunner(query_runners.QueryRunner):
 
         try:
             self.connection = psycopg2.connect(\
-                dbname=self.get_chief().get_access_param("host"),
+                host=self.get_chief().get_access_param("host"),
                 dbname=db.get_connection_param("database"),
-                dbname=db.get_connection_param("user"),
-                dbname=db.get_connection_param("password"))
+                user=db.get_connection_param("user"),
+                password=db.get_connection_param("password"))
         except:
             status_code = status.ERR_DB_CONNECTION_FAILED
 
         return status_code 
 
 
-class Postgres(dbms_instances.DbmsInstance):
+class Postgres(dbms_instances.Dbms):
 
     def __init__(self, chief: controllers.Controller, access_params: Dict):
 
@@ -87,8 +87,8 @@ class Postgres(dbms_instances.DbmsInstance):
 
 
     def new_sql_builder(self, owner: sql_workers.SqlWorker) -> sql_builders.SqlBuilder:
-
-        return PostgresSqlBuilder(self, owner)
+        
+        return PostgresSqlBuilder(owner)
 
 
     def new_subqueries(self, chief_query: sql_queries.Query) -> sql_queries.Subqueries:

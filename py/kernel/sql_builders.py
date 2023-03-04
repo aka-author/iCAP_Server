@@ -76,7 +76,7 @@ class SqlBuilder(workers.Worker):
 
     def biop(self, op_l: str, op: str, op_r: str) -> str:
 
-        return " ".join(op_l, op, op_r)
+        return " ".join([op_l, op, op_r])
     
 
     def eq(self, op_l: str, op_r: str) -> str:
@@ -111,7 +111,7 @@ class SqlBuilder(workers.Worker):
         if native_value is None:
             s_v = "null"
         else:
-            icap_datatype_name = datatypes.detect_native_value_datatype(icap_datatype_name)
+            icap_datatype_name = datatypes.detect_native_value_datatype(native_value)
             format = self.get_format_for_datatype(icap_datatype_name)
             if icap_datatype_name == datatypes.DTN_UUID:
                 s_v = str(native_value)
@@ -136,18 +136,18 @@ class SqlBuilder(workers.Worker):
 
     def sqlized_value(self, native_value: any) -> str:
 
-        sql_type_name = self.sql_type_name(native_value)
-        ser_val = self.serialized_field_value(native_value)
+        sql_datatype_name = self.sql_datatype_name(native_value)
+        ser_val = self.serialized_value(native_value)
 
-        return utils.apos(ser_val) if self.looks_like_string(sql_type_name) else ser_val
+        return utils.apos(ser_val) if self.looks_like_string(sql_datatype_name) else ser_val
     
 
     def typed_value(self, native_value: any) -> str:
 
-        sqlized_value = self.sqlized_field_value(native_value) 
-        sql_type_name = sql_type_name(native_value)
+        sqlized_value = self.sqlized_value(native_value) 
+        db_datatype_name = self.sql_datatype_name(native_value)
 
-        return  sqlized_value + "::" + sql_type_name
+        return  sqlized_value + "::" + db_datatype_name
     
 
     def typed_value_as_name(self, value_info: Dict) -> str:

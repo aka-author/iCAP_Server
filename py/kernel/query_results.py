@@ -11,7 +11,7 @@ import fields, ramtables, workers, query_runners
 
 class QueryResult(workers.Worker):
 
-    def __init__(self, chief: query_runners.QueryRunner, fk: fields.FieldKeeper, cursor: object):
+    def __init__(self, chief, fk: fields.FieldKeeper, cursor: object):
 
         super().__init__(chief)
 

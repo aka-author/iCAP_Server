@@ -9,7 +9,7 @@ from typing import Dict
 import dbms_instances, sql_queries
 
 
-class UpdateClause(sql_queries.MototableClause):
+class UpdateClause(sql_queries.MonotableClause):
 
     def __init__(self, chief: sql_queries.Query):
 
@@ -17,6 +17,11 @@ class UpdateClause(sql_queries.MototableClause):
 
         self.clause_name = "UPDATE"
         self.set_headless_flag()
+
+
+    def assemble_snippet(self) -> str:
+        
+        return self.get_qualified_table_name() 
 
 
 class SetClause(sql_queries.Clause):
@@ -41,15 +46,16 @@ class SetClause(sql_queries.Clause):
 
 
     def assemble_snippet(self) -> str:
+        print(self.field_values)
 
-        settings = [self.setting(varname, value) for varname, value in field_values.items]
+        settings = [self.setting(varname, value) for varname, value in self.field_values.items()]
 
         return self.sql.list(settings)
 
 
 class Update(sql_queries.Query):
 
-    def __init__(self, chief: dbms_instances.Dbms, query_name: str=None):
+    def __init__(self, chief, query_name: str=None):
 
         super().__init__(chief, "UPDATE", query_name)
 
@@ -65,7 +71,7 @@ class Update(sql_queries.Query):
 
     def UPDATE(self, table_name, db_scheme_name=None) -> 'Update':
 
-        self.clauses["UPDATE"]\
+        self.clauses_by_names["UPDATE"]\
             .set_table_name(table_name)\
             .set_db_scheme_name(db_scheme_name).turn_on()
 
@@ -74,31 +80,33 @@ class Update(sql_queries.Query):
 
     def SET(self, field_values: Dict) -> 'Update':
 
-        self.clauses["SET"].set_field_values(field_values).turn_on()
+        self.clauses_by_names["SET"].set_field_values(field_values).turn_on()
 
         return self
     
 
     def WHERE(self, expression: str, *operands) -> 'Update':
 
-        self.clauses["WHERE"].set_expression(expression).set_operands(*operands).turn_on()
+        self.clauses_by_names["WHERE"].set_expression(expression).add_operands(*operands).turn_on()
 
         return self
 
 
     def build_of_field_manager(self, fm, db_scheme_name: str=None) -> 'Update':
 
-        field_values = []
+        field_values = {}
 
-        for varname in fm.get_field_names():
-            if fm.get_field(varname).is_insertable():
+        for varname in fm.get_varnames():
+            if fm.is_insertable(varname):
                 field_values[varname] = fm.get_field_value(varname)
 
-        primary_key_name = self.sql.sql_varname(fm.get_primary_key_name())
-        primary_key_value = self.sel.typed_value(fm.get_field_value(primary_key_name))
+        surrogate_key_name = fm.get_surrogate_key_name()
 
-        self.UPDATE(db_scheme_name, fm.get_recordset_name())\
-            .SET(*field_values)\
-            .WHERE("{0}={1}", primary_key_name, primary_key_value)
+        if surrogate_key_name is not None:
+            self.UPDATE(fm.get_recordset_name(), db_scheme_name)\
+                .SET(field_values)\
+                .WHERE("{0} = {1}", 
+                       surrogate_key_name, 
+                       self.sql.typed_value(fm.get_field_value(surrogate_key_name)))
 
         return self

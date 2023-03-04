@@ -9,6 +9,7 @@ from typing import Dict
 import fields, workers, controllers
 import db_instances, db_objects, query_runners, query_results 
 import sql_workers, sql_scripts, sql_queries, sql_builders
+import sql_insert, sql_update, sql_select
 
 
 class Dbms(workers.Worker):
@@ -32,7 +33,7 @@ class Dbms(workers.Worker):
 
     def new_sql_builder(self, owner: sql_workers.SqlWorker) -> sql_builders.SqlBuilder:
 
-        return sql_builders.SqlBuilder(self, owner)
+        return sql_builders.SqlBuilder(owner)
 
 
     def new_table(self, scheme: db_objects.Scheme, table_name: str) -> db_objects.Table:
@@ -55,24 +56,24 @@ class Dbms(workers.Worker):
         return sql_queries.Subqueries(chief_query)
 
 
-    def new_select(self, query_name: str=None) -> sql_queries.Select:
+    def new_select(self, query_name: str=None) -> sql_select.Select:
 
         return sql_queries.Select(self, query_name)
 
 
-    def new_union(self, query_name: str=None) -> sql_queries.Union:
-
-        return sql_queries.Union(self, query_name)
-
-
-    def new_insert(self, query_name: str=None) -> sql_queries.Insert:
-
-        return sql_queries.Insert(self, query_name)
+    # def new_union(self, query_name: str=None) -> sql_queries.Union:
+    #
+    #    return sql_queries.Union(self, query_name)
 
 
-    def new_update(self, query_name: str=None) -> sql_queries.Update:
+    def new_insert(self, query_name: str=None) -> sql_insert.Insert:
 
-        return sql_queries.Update(self, query_name)
+        return sql_insert.Insert(self, query_name)
+
+
+    def new_update(self, query_name: str=None) -> sql_update.Update:
+
+        return sql_update.Update(self, query_name)
 
 
     def new_script(self, script_name: str="noname") -> sql_scripts.Script:
@@ -80,11 +81,11 @@ class Dbms(workers.Worker):
         return sql_scripts.Script(self, script_name)
 
 
-    def new_result(self, qres: query_runners.QueryRunner, fk: fields.FieldKeeper, cursor) -> query_results.QueryResult:
+    def new_result(self, qres, fk: fields.FieldKeeper, cursor) -> query_results.QueryResult:
 
         return query_results.Result(qres, fk, cursor)
     
 
-    def new_query_runner(self) -> query_runners.QueryRunner:
+    def new_query_runner(self) -> 'query_runners.QueryRunner':
 
         return query_runners.QueryRunner(self)

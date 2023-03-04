@@ -71,11 +71,11 @@ class Subqueries(sql_workers.SqlWorker):
 
 class Clause(sql_workers.SqlWorker):
 
-    def __init__(self, chief, clause_name: str=""):
+    def __init__(self, chief):
 
         super().__init__(chief)
 
-        self.clause_name = clause_name
+        self.clause_name = ""
 
         self.headless_flag = False
 
@@ -90,6 +90,8 @@ class Clause(sql_workers.SqlWorker):
     def set_headless_flag(self, flag: bool=True) -> 'Clause':
 
         self.headless_flag = flag
+
+        return self
 
 
     def is_headless(self) -> bool:
@@ -119,8 +121,8 @@ class Clause(sql_workers.SqlWorker):
 
     def get_snippet(self) -> str:
 
-        if self.is_headless():
-            snippet = " ".join(self.get_clause_name(), super().get_snippet())
+        if not self.is_headless():
+            snippet = " ".join([self.get_clause_name(), super().get_snippet()])
         else:
             snippet = super().get_snippet()
 
@@ -129,9 +131,9 @@ class Clause(sql_workers.SqlWorker):
 
 class MonotableClause(Clause):
 
-    def __init__(self, chief, clause_name: str=""):
+    def __init__(self, chief):
 
-        super().__init__(chief, clause_name)
+        super().__init__(chief)
 
         self.db_scheme_name = None
         self.table_name = None
@@ -168,9 +170,9 @@ class MonotableClause(Clause):
 
 class WhereClause(Clause):
 
-    def __init__(self, chief, clause_name: str=""):
+    def __init__(self, chief):
 
-        super().__init__(chief, clause_name)
+        super().__init__(chief)
 
         self.clause_name = "WHERE"
 
@@ -212,7 +214,7 @@ class WhereClause(Clause):
 
 class Query(db_recordsets.Recordset):
 
-    def __init__(self, chief: query_runners.QueryRunner, operator_name: str, query_name: str=None):
+    def __init__(self, chief, operator_name: str, query_name: str=None):
 
         super().__init__(chief, utils.safeval(query_name, self.assemble_unique_query_name()))
 
@@ -222,7 +224,7 @@ class Query(db_recordsets.Recordset):
         self.clauses_by_names = {}
         self.create_clauses()
 
-        self.subqueries = self.get_default_dbms().new_subqueries().set_chief(self)
+        self.subqueries = self.get_dbms().new_subqueries(self).set_chief(self)
         self.subquery_flag = False
 
         self.explicit_template = None
@@ -240,19 +242,7 @@ class Query(db_recordsets.Recordset):
         return utils.unique_name("q")
 
 
-    def new_clause(self, clause_name: str) -> Clause:
-
-        if clause_name == "SELECT":
-            clause = ClauseSelect(self)
-        else:
-            clause = Clause(self, clause_name)
-
-        return clause
-
-
-    def add_clause(self, clause_name: str) -> 'Query':
-
-        clause = self.new_clause(clause_name)
+    def add_clause(self, clause) -> 'Query':
 
         self.clauses.append(clause)
         self.clauses_by_names[clause.get_clause_name()] = clause 
@@ -356,7 +346,7 @@ class Query(db_recordsets.Recordset):
 
 class SelectiveQuery(Query):
 
-    def __init__(self, chief: query_runners.QueryRunner, operator_name: str, query_name: str=None):
+    def __init__(self, chief, operator_name: str, query_name: str=None):
 
         super().__init__(chief, operator_name, query_name)
 

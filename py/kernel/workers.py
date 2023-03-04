@@ -33,6 +33,11 @@ class Worker:
         return self
 
 
+    def has_chief(self) -> bool:
+
+        return self.chief is not None
+    
+
     def get_chief(self) -> 'Worker':
 
         return self.chief
