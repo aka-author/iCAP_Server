@@ -134,6 +134,18 @@ class SqlBuilder(workers.Worker):
         return True
     
 
+    def is_sql_duck_typed(self, native_value: any) -> bool:
+
+        icap_datatype_name = datatypes.detect_native_value_datatype(native_value)
+        
+        sql_ducks = (datatypes.DTN_BOOLEAN, 
+                     datatypes.DTN_BIGINT, 
+                     datatypes.DTN_DOUBLE, 
+                     datatypes.DTN_STRING)
+
+        return icap_datatype_name in sql_ducks
+    
+
     def sqlized_value(self, native_value: any) -> str:
 
         sql_datatype_name = self.sql_datatype_name(native_value)
@@ -142,22 +154,45 @@ class SqlBuilder(workers.Worker):
         return utils.apos(ser_val) if self.looks_like_string(sql_datatype_name) else ser_val
     
 
-    def typed_value(self, native_value: any) -> str:
+    def typed_value(self, native_value: any, options: str="duck_type") -> str:
 
         sqlized_value = self.sqlized_value(native_value) 
         db_datatype_name = self.sql_datatype_name(native_value)
 
-        return  sqlized_value + "::" + db_datatype_name
+        typed_value = sqlized_value
+
+        if (not self.is_sql_duck_typed(native_value)) or ("explicit_type" in options):
+            typed_value += "::" + db_datatype_name
+
+        return typed_value
     
 
-    def typed_value_as_name(self, value_info: Dict) -> str:
+    def typed_value_as_name(self, value_info: Dict, options: str="duck_type") -> str:
 
         # value_info = {"value": 12345, "as": "number_of_arnocles"}
 
-        typed_value = self.typed_value(value_info.get("value"))
+        typed_value = self.typed_value(value_info.get("value"), options)
         field_name =  value_info.get("as", utils.unique_name("f"))
 
         return typed_value + " AS " + field_name
+
+
+    # Operands
+
+    def operand(self, operand: any) -> str:
+
+        if isinstance(operand, tuple):
+            field_group_alias = None
+            if len(operand) > 1:
+                if isinstance(operand[1], int):
+                    field_group_alias = self.get_field_group_alias_by_index(operand[1])
+                elif isinstance(operand[1], str):
+                    field_group_alias = operand[1]                    
+            actual_operand = self.qualified_varname(operand[0], field_group_alias)
+        else:
+            actual_operand = self.typed_value(operand)
+
+        return actual_operand
 
 
     # Tables

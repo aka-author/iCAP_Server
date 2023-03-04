@@ -8,7 +8,7 @@ def get_pet_Tuzik():
 
 
 fm = fields.FieldManager()\
-        .add_field(fields.UuidField("uuid"))\
+        .add_field(fields.UuidField("uuid"), "autoins")\
         .add_field(fields.StringField("pet_name"))\
         .add_field(fields.StringField("species"))\
         .add_field(fields.BigintField("weight"))\

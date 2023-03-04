@@ -46,7 +46,6 @@ class SetClause(sql_queries.Clause):
 
 
     def assemble_snippet(self) -> str:
-        print(self.field_values)
 
         settings = [self.setting(varname, value) for varname, value in self.field_values.items()]
 
@@ -106,7 +105,7 @@ class Update(sql_queries.Query):
             self.UPDATE(fm.get_recordset_name(), db_scheme_name)\
                 .SET(field_values)\
                 .WHERE("{0} = {1}", 
-                       surrogate_key_name, 
-                       self.sql.typed_value(fm.get_field_value(surrogate_key_name)))
+                       (surrogate_key_name, None), 
+                       fm.get_field_value(surrogate_key_name))
 
         return self

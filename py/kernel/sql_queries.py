@@ -202,7 +202,7 @@ class WhereClause(Clause):
     def add_operands(self, *operands) -> 'WhereClause':
 
         for operand in operands:
-            self.operands.append(operand)
+            self.operands.append(self.sql.operand(operand))
 
         return self
 
@@ -327,7 +327,12 @@ class Query(db_recordsets.Recordset):
 
     def is_selective(self) -> bool:
 
-        return self.selective_flag;
+        return self.selective_flag
+    
+    
+    def get_field_group_alias_by_index(self, field_group_index: int) -> str:
+
+        return None
 
 
     def get_snippet(self, substitutes: List=None) -> str:
