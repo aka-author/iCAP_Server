@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict
-import dbms_instances, sql_queries
+import fields, dbms_instances, sql_queries
 
 
 class UpdateClause(sql_queries.MonotableClause):
@@ -54,7 +54,7 @@ class SetClause(sql_queries.Clause):
 
 class Update(sql_queries.Query):
 
-    def __init__(self, chief, query_name: str=None):
+    def __init__(self, chief: 'dbms_instances.Dbms', query_name: str=None):
 
         super().__init__(chief, "UPDATE", query_name)
 
@@ -68,7 +68,7 @@ class Update(sql_queries.Query):
         return self
 
 
-    def UPDATE(self, table_name, db_scheme_name=None) -> 'Update':
+    def UPDATE(self, table_name: str, db_scheme_name: str=None) -> 'Update':
 
         self.clauses_by_names["UPDATE"]\
             .set_table_name(table_name)\
@@ -91,19 +91,13 @@ class Update(sql_queries.Query):
         return self
 
 
-    def build_of_field_manager(self, fm, db_scheme_name: str=None) -> 'Update':
-
-        field_values = {}
-
-        for varname in fm.get_varnames():
-            if fm.is_insertable(varname):
-                field_values[varname] = fm.get_field_value(varname)
+    def build_of_field_manager(self, fm: fields.FieldManager, db_scheme_name: str=None) -> 'Update':
 
         surrogate_key_name = fm.get_surrogate_key_name()
 
         if surrogate_key_name is not None:
             self.UPDATE(fm.get_recordset_name(), db_scheme_name)\
-                .SET(field_values)\
+                .SET(fm.get_insertable_field_values())\
                 .WHERE("{0} = {1}", 
                        (surrogate_key_name, None), 
                        fm.get_field_value(surrogate_key_name))

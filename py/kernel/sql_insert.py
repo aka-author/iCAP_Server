@@ -77,7 +77,7 @@ class ValuesClause(sql_queries.Clause):
 
 class Insert(sql_queries.Query):
 
-    def __init__(self, chief, query_name: str=None):
+    def __init__(self, chief: 'dbms_instances.Dbms', query_name: str=None):
 
         super().__init__(chief, "INSERT", query_name)
 
@@ -112,10 +112,9 @@ class Insert(sql_queries.Query):
         varnames = []
         values = []
 
-        for varname in fm.get_varnames():
-            if fm.is_insertable(varname):
-                varnames.append(varname)
-                values.append(fm.get_field_value(varname))
+        for varname, native_value in fm.get_insertable_field_values().items():
+            varnames.append(varname)
+            values.append(native_value)
 
         self.INTO(db_scheme_name, fm.get_recordset_name(), *varnames)\
             .VALUES(*values)

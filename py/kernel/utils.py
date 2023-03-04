@@ -31,6 +31,38 @@ def safearg(func, val):
     return func(val) if val is not None else None
 
 
+def is_empty(s: str) -> bool:
+
+    return (s is None) or (s == "")
+
+
+def is_useful(s: str) -> bool:
+
+    return not is_empty(s)
+
+
+def prefix(prefix: str, separ: str, term: str="") -> str:
+
+    return (prefix + separ if is_useful(prefix) else "") + term
+
+
+def postfix(postfix: str, separ: str, term: str="") -> str:
+
+    return term + (separ + postfix if is_useful(postfix) else "")
+
+
+def infix(term1: str, infix: str, term2: str) -> str: 
+
+    if is_useful(term1) and is_useful(term2):
+        return term1 + infix + term2
+    elif is_useful(term1) and is_empty(term2):
+        return term1
+    elif is_empty(term1) and is_useful(term2):
+        return term2
+    else:
+        return ""
+    
+
 # Formatting, assembling, and processing strings
 
 def is_str(some_value):

@@ -6,9 +6,9 @@
 # Usage:    Query is an abstract class           (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import Dict, List
+from typing import List
 import utils
-import query_runners, db_recordsets, sql_builders, sql_workers
+import sql_workers, dbms_instances, db_recordsets
 
 
 class Subqueries(sql_workers.SqlWorker):
@@ -71,7 +71,7 @@ class Subqueries(sql_workers.SqlWorker):
 
 class Clause(sql_workers.SqlWorker):
 
-    def __init__(self, chief):
+    def __init__(self, chief: 'Query'):
 
         super().__init__(chief)
 
@@ -131,7 +131,7 @@ class Clause(sql_workers.SqlWorker):
 
 class MonotableClause(Clause):
 
-    def __init__(self, chief):
+    def __init__(self, chief: 'Query'):
 
         super().__init__(chief)
 
@@ -170,7 +170,7 @@ class MonotableClause(Clause):
 
 class WhereClause(Clause):
 
-    def __init__(self, chief):
+    def __init__(self, chief: 'Query'):
 
         super().__init__(chief)
 
@@ -214,7 +214,7 @@ class WhereClause(Clause):
 
 class Query(db_recordsets.Recordset):
 
-    def __init__(self, chief, operator_name: str, query_name: str=None):
+    def __init__(self, chief: 'dbms_instances.Dbms', operator_name: str, query_name: str=None):
 
         super().__init__(chief, utils.safeval(query_name, self.assemble_unique_query_name()))
 
@@ -242,7 +242,7 @@ class Query(db_recordsets.Recordset):
         return utils.unique_name("q")
 
 
-    def add_clause(self, clause) -> 'Query':
+    def add_clause(self, clause: Clause) -> 'Query':
 
         self.clauses.append(clause)
         self.clauses_by_names[clause.get_clause_name()] = clause 
@@ -274,11 +274,6 @@ class Query(db_recordsets.Recordset):
     def get_clauses_snippet(self) -> str:
 
         return "\n".join([clause.get_snippet() for clause in self.clauses if clause.is_useful()])
-
-
-    def new_subqueries(self) -> Subqueries:
-
-        return Subqueries(self)
 
 
     def has_subqueries(self) -> bool:
@@ -351,7 +346,7 @@ class Query(db_recordsets.Recordset):
 
 class SelectiveQuery(Query):
 
-    def __init__(self, chief, operator_name: str, query_name: str=None):
+    def __init__(self, chief: 'dbms_instances.Dbms', operator_name: str, query_name: str=None):
 
         super().__init__(chief, operator_name, query_name)
 

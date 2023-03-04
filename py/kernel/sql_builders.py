@@ -1,18 +1,18 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  sql_builders.py                      (\(\
-# Func:    Assembling SQL queries               (^.^)
+# Module:  sql_builders.py                           (\(\
+# Func:    Assembling simple SQL code snippets       (^.^)
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict, List
 from datetime import datetime
-import utils, datatypes, fields, workers, sql_workers
+import utils, datatypes, workers, sql_workers
 
 
 class SqlBuilder(workers.Worker):
 
-    def __init__(self, chief):
+    def __init__(self, chief: sql_workers.SqlWorker):
 
         super().__init__(chief)
 
@@ -42,20 +42,7 @@ class SqlBuilder(workers.Worker):
 
     def qualified_varname(self, varname, table_alias=None) -> str:
 
-        return (table_alias + "." if table_alias is not None else "") + varname
-    
-
-    def fieldref_as_name(self, field_info: Dict, as_name: str=None) -> str:
-
-        # Field info:
-        #    {"recordset": "rabbits", "varname": "pet_name"}
-
-        alias = self.get_chief().get_group_alias_by_field_info(field_info)
-        prefix = alias + "." if alias is not None else ""
-
-        postfix = (" AS " + as_name) if as_name is not None else ""
-
-        return prefix + field_info.get("varname") + postfix
+        return utils.prefix(table_alias, ".", varname)
     
 
     def expr_as_name(self, expr: str, field_infos: List, as_name: str=None) -> str:
@@ -136,14 +123,7 @@ class SqlBuilder(workers.Worker):
 
     def is_sql_duck_typed(self, native_value: any) -> bool:
 
-        icap_datatype_name = datatypes.detect_native_value_datatype(native_value)
-        
-        sql_ducks = (datatypes.DTN_BOOLEAN, 
-                     datatypes.DTN_BIGINT, 
-                     datatypes.DTN_DOUBLE, 
-                     datatypes.DTN_STRING)
-
-        return icap_datatype_name in sql_ducks
+        return False
     
 
     def sqlized_value(self, native_value: any) -> str:
@@ -197,7 +177,6 @@ class SqlBuilder(workers.Worker):
 
     # Tables
 
-    def qualified_table_name(self, table_name: str, scheme_name: str=None) -> str:
+    def qualified_table_name(self, table_name: str, db_scheme_name: str=None) -> str:
 
-        return (scheme_name + "." if scheme_name is not None else "") + table_name
-
+        return utils.prefix(db_scheme_name, ".", table_name)

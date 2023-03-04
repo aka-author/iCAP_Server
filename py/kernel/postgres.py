@@ -14,7 +14,7 @@ import sql_workers, sql_builders, sql_queries
 
 class PostgresSqlBuilder(sql_builders.SqlBuilder):
 
-    def __init__(self, owner: sql_workers):
+    def __init__(self, owner: sql_workers.SqlWorker):
         
         super().__init__(owner)
 
@@ -43,6 +43,18 @@ class PostgresSqlBuilder(sql_builders.SqlBuilder):
         dont_require_apos = ("boolean", "numeric", "bigint", "double")
 
         return dbms_datatype_name not in dont_require_apos
+    
+
+    def is_sql_duck_typed(self, native_value: any) -> bool:
+
+        icap_datatype_name = datatypes.detect_native_value_datatype(native_value)
+        
+        sql_ducks = (datatypes.DTN_BOOLEAN, 
+                     datatypes.DTN_BIGINT, 
+                     datatypes.DTN_DOUBLE, 
+                     datatypes.DTN_STRING)
+
+        return icap_datatype_name in sql_ducks
 
 
 class PostgresSubqueries(sql_queries.Subqueries):

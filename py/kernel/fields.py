@@ -488,7 +488,6 @@ class FieldKeeper:
         return not (varname in self.autoins_varnames or self.get_field(varname).has_expr())
 
 
-
 class FieldManager:
 
     def __init__(self, field_keeper: FieldKeeper=None):
@@ -631,6 +630,17 @@ class FieldManager:
     def get_field_values(self) -> Dict:
 
         return copy.copy(self.field_values)
+    
+
+    def get_insertable_field_values(self) -> List:
+
+        insertables = {}
+
+        for varname in self.get_varnames():
+            if self.is_insertable(varname):
+                insertables[varname] = self.get_field_value(varname)
+
+        return insertables
 
 
     def parse_to_native_value(self, varname: str, serialized_value: str, format: str=None) -> any:
