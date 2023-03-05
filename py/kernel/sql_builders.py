@@ -165,7 +165,7 @@ class SqlBuilder(workers.Worker):
             field_group_alias = None
             if len(operand) > 1:
                 if isinstance(operand[1], int):
-                    field_group_alias = self.get_field_group_alias_by_index(operand[1])
+                    field_group_alias = self.get_chief().get_chief().get_field_group_alias_by_index(operand[1])
                 elif isinstance(operand[1], str):
                     field_group_alias = operand[1]                    
             actual_operand = self.qualified_varname(operand[0], field_group_alias)

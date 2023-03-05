@@ -1,6 +1,6 @@
 import sys, datetime
 sys.path.append("C:\privat\misha\webhelp\iCAP_Server\py\kernel")
-import fields, postgres, sql_insert, sql_update
+import fields, postgres, sql_insert, sql_update, sql_select
 
 def get_pet_Tuzik():
 
@@ -27,4 +27,15 @@ print(q_insert.get_snippet())
 q_update = dbms.new_update()
 q_update.build_of_field_manager(fm, "icap")
 print(q_update.get_snippet())
+
+q_select = dbms.new_select()\
+    .FROM(("pets", "icap"),)\
+    .INNER_JOIN(("cities", "icap"),)\
+    .ON("{0}={1}", ("city_uuid", 0), ("uuid", 1))\
+    .WHERE("{0}={1}", ("pet_name", 0), "Tuzik")\
+    .SELECT_field("pet_name", "{0}", ("pet_name", 0))\
+    .SELECT_field("k_losev", "1/{0}", ("weight", 0))\
+    .SELECT_field("today", "{0}", datetime.datetime.now())
+
+print(q_select.get_snippet())
 

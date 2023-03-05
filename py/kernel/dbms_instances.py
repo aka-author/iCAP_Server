@@ -58,7 +58,7 @@ class Dbms(workers.Worker):
 
     def new_select(self, query_name: str=None) -> sql_select.Select:
 
-        return sql_queries.Select(self, query_name)
+        return sql_select.Select(self, query_name)
 
 
     # def new_union(self, query_name: str=None) -> sql_queries.Union:
