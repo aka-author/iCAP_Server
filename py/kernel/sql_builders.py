@@ -160,13 +160,13 @@ class SqlBuilder(workers.Worker):
     def operand(self, operand: any) -> str:
 
         if isinstance(operand, tuple):
-            field_group_alias = None
+            src_recordset_alias = None
             if len(operand) > 1:
                 if isinstance(operand[1], int):
-                    field_group_alias = self.get_query().get_field_group_alias_by_index(operand[1])
+                    src_recordset_alias = self.get_query().get_src_recordset_alias_by_index(operand[1])
                 elif isinstance(operand[1], str):
-                    field_group_alias = operand[1]                    
-            actual_operand = self.qualified_varname(operand[0], field_group_alias)
+                    src_recordset_alias = operand[1]                    
+            actual_operand = self.qualified_varname(operand[0], src_recordset_alias)
         else:
             actual_operand = self.typed_value(operand)
 

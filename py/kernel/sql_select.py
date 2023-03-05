@@ -289,13 +289,19 @@ class Select(sql_queries.SelectiveQuery):
         return self 
 
 
-    def build_of_field_manager(self, fm: fields.FieldManager) -> 'Select':
+    def build_of_field_manager(self, fm: fields.FieldManager, expr: str=None, *operands) -> 'Select':
 
         self.FROM((fm.get_recordset_name(),))
 
         for varname in fm.get_varnames():
             self.SELECT_field((varname, 0))
 
-        self.WHERE("{0}={1}", ("uuid", 0), fm.get_field_value("uuid"))
+        if expr is not None: 
+            print(expr, *operands)
+            self.WHERE(expr, *operands)
+        else:
+            surrogate_key_name = fm.get_surrogate_key_name()
+            surrogate_key_value = fm.get_field_value(surrogate_key_name)
+            self.WHERE("{0}={1}", (surrogate_key_name, 0), surrogate_key_value)
 
         return self

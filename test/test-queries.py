@@ -43,6 +43,7 @@ q_select = dbms.new_select()\
 
 print(q_select.get_snippet())
 
-q_select_fm = dbms.new_select().build_of_field_manager(fm)
+q_select_fm = dbms.new_select().build_of_field_manager(fm, \
+            '{0}={1} AND {2} is null', ("pet_name", 0), "Murzik", ("is_deleted", 0))
 
 print(q_select_fm.get_snippet())
