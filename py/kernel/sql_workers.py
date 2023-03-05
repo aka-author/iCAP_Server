@@ -35,11 +35,6 @@ class SqlWorker(workers.Worker):
         self.snippet = snippet
 
         return self
-    
-
-    def get_field_group_alias_by_index(self, field_group_index: int) -> str:
-
-        return self.get_chief().get_field_group_alias_by_index(field_group_index)
 
 
     def extend_snippet(self, snippet_extension: str, separ: str=" ") -> "SqlWorker":

@@ -20,6 +20,11 @@ class Subqueries(sql_workers.SqlWorker):
         self.subqueries = {}
 
 
+    def get_query(self) -> 'Query':
+
+        return self.get_chief()
+    
+
     def count(self) -> int:
 
         return len(self.subqueries)
@@ -85,6 +90,11 @@ class Clause(sql_workers.SqlWorker):
     def get_clause_name(self) -> str:
 
         return self.clause_name
+    
+
+    def get_query(self) -> 'Query':
+
+        return self.get_chief()
 
 
     def set_headless_flag(self, flag: bool=True) -> 'Clause':
@@ -176,7 +186,7 @@ class WhereClause(Clause):
 
         self.clause_name = "WHERE"
 
-        self.espression = ""
+        self.expression = ""
         self.operands = []
 
 
@@ -190,9 +200,9 @@ class WhereClause(Clause):
     def extend_expression(self, logfunc: str, *expressions: str) -> 'WhereClause':
 
         logfunc_padded = " " + logfunc.upper() + " "
-        expression_parsed = [utils.pars(expression) for expression in expressions]
+        expression_in_parses = [utils.pars(expression) for expression in expressions]
         head = utils.pars(self.expression)
-        tail = logfunc_padded.join(expression_parsed)
+        tail = logfunc_padded.join(expression_in_parses)
 
         self.expression = logfunc_padded.join(head, tail)
 

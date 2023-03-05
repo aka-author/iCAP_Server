@@ -32,7 +32,7 @@ q_select = dbms.new_select()\
     .FROM(("pets", "icap"),)\
     .INNER_JOIN(("cities", "icap"),)\
     .ON("{0}={1}", ("city_uuid", 0), ("uuid", 1))\
-    .INNER_JOIN(("countries", "icap"),)\
+    .LEFT_JOIN(("countries", "icap"),)\
     .ON("{0}={1}", ("country_uuid", 1), ("uuid", 2))\
     .WHERE("{0}={1}", ("pet_name", 0), "Tuzik")\
     .SELECT_field(("pet_name", 0))\
@@ -43,3 +43,6 @@ q_select = dbms.new_select()\
 
 print(q_select.get_snippet())
 
+q_select_fm = dbms.new_select().build_of_field_manager(fm)
+
+print(q_select_fm.get_snippet())

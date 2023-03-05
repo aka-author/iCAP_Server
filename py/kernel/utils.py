@@ -9,7 +9,7 @@ import hashlib, uuid, re
 from datetime import datetime
 
 
-# Avoiding None-related errors 
+# Avoiding errors the None and empty strings may cause
 
 def safeval(primary_value, default_value):
 
@@ -21,14 +21,9 @@ def safestr(s):
     return s if s is not None else ""
 
 
-def safedic(dic, key, default_value=None):
+def safearg(func, arg):
 
-    return safeval((dic[key] if key in dic else None) if dic is not None else None, default_value) 
-
-
-def safearg(func, val):
-
-    return func(val) if val is not None else None
+    return func(arg) if arg is not None else None
 
 
 def is_empty(s: str) -> bool:
@@ -97,34 +92,29 @@ def camel_to_snake(camel):
     return snake
 
 
+def pad(s: str, left: str, right: str=None) -> str:
+
+    return left + s + safeval(right, left)
+
+
+def wspad(s: str) -> str:
+
+    return pad(s, " ")
+
+
 def pars(s):
 
-    return "(" + safeval(s, "") + ")" 
+    return pad(safestr(s), "(", ")") 
 
 
 def apos(s):
 
-    return "'" + safeval(str(s), '') + "'" 
+    return pad(safestr(s), "'") 
 
 
 def quot(s):
 
-    return '"' + safeval(str(s), "") + '"' 
-
-
-def escsql(s):
-
-    return s.replace("'", "''")
-
-
-def consep(prefix, separ, postfix):
-
-    if prefix is not None and postfix is not None:
-        return prefix + separ + postfix
-    elif prefix is None:
-        return postfix
-    else:
-        return prefix
+    return pad(safestr(s), '"') 
 
 
 def separate(s1, separ, s2):

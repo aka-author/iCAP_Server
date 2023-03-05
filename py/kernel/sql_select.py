@@ -6,33 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict, List
-import utils, fields, db_objects, query_runners, sql_builders, sql_queries
-
-
-class FieldGroup(fields.FieldKeeper):
-
-    def __init__(self, field_group_name: str, field_group_alias: str=None):
-
-        super().__init__(field_group_name)
-
-        self.field_group_alias = field_group_alias
-
-
-    def get_field_group_name(self) -> str:
-
-        return self.get_recordset_name()
-
-
-    def set_field_group_alias(self, field_group_alias: str) -> 'FieldGroup':
-
-        self.field_group_alias = field_group_alias
-
-        return self
-
-
-    def get_field_group_alias(self) -> str:
-
-        return self.field_group_alias
+import utils, fields, sql_queries
 
 
 class DistinctClause(sql_queries.Clause):
@@ -75,7 +49,7 @@ class SelectClause(sql_queries.Clause):
             field_def["expr"].format(*operand_snippets)
         
         snippet = \
-            self.sql.as_subst(expr_snippet, field_def["alias"]) \
+            self.sql.AS(expr_snippet, field_def["alias"]) \
                 if field_def["alias"] is not None else expr_snippet
 
         return snippet
@@ -215,23 +189,33 @@ class Select(sql_queries.SelectiveQuery):
         return self
 
 
+    def get_SELECT(self) -> SelectClause:
+
+        return self.clauses_by_names["SELECT"]
+
+
     def SELECT_field(self, field_def, alias: str=None) -> 'Select':
 
-        self.clauses_by_names["SELECT"].add_field(alias, "{0}", *[field_def]).turn_on()
+        self.get_SELECT().add_field(alias, "{0}", *[field_def]).turn_on()
         
         return self
 
 
     def SELECT_expression(self, alias: str, expr: str, *operands) -> 'Select':
 
-        self.clauses_by_names["SELECT"].add_field(alias, expr, *operands).turn_on()
+        self.get_SELECT().add_field(alias, expr, *operands).turn_on()
         
         return self
     
 
+    def get_FROM(self) -> SelectClause:
+
+        return self.clauses_by_names["FROM"]
+    
+
     def count_src_recordsets(self) -> int:
 
-        return len(self.clauses_by_names["FROM"].src_recordsets)
+        return len(self.get_FROM().src_recordsets)
 
 
     def get_next_alias(self, alias: str) -> str:
@@ -239,17 +223,16 @@ class Select(sql_queries.SelectiveQuery):
         return utils.safeval(alias, "t" + str(self.count_src_recordsets()))
     
 
-    def get_field_group_alias_by_index(self, group_index: int) -> str:
+    def get_src_recordset_alias_by_index(self, index: int) -> str:
 
-        return self.clauses_by_names["FROM"].src_recordsets[group_index]["alias"]
+        return self.get_FROM().src_recordsets[index]["alias"]
 
 
     def FROM(self, recordset: tuple, alias: str=None) -> 'Select':
 
-        self.clauses_by_names["FROM"].add_src_recordset(\
+        self.get_FROM().add_src_recordset(\
             None,
-            recordset[0], 
-            recordset[1] if len(recordset) > 1 else None, 
+            recordset[0], recordset[1] if len(recordset) > 1 else None, 
             self.get_next_alias(alias)).turn_on()        
             
         return self
@@ -257,10 +240,9 @@ class Select(sql_queries.SelectiveQuery):
 
     def INNER_JOIN(self, recordset: tuple, alias: str=None) -> 'Select':
 
-        self.clauses_by_names["FROM"].add_src_recordset(\
+        self.get_FROM().add_src_recordset(\
             "INNER JOIN",
-            recordset[0], 
-            recordset[1] if len(recordset) > 1 else None, 
+            recordset[0], recordset[1] if len(recordset) > 1 else None, 
             self.get_next_alias(alias)) 
 
         return self
@@ -268,10 +250,9 @@ class Select(sql_queries.SelectiveQuery):
 
     def LEFT_JOIN(self, recordset: tuple, alias: str=None) -> 'Select':
         
-        self.clauses_by_names["FROM"].add_src_recordset(\
+        self.get_FROM().add_src_recordset(\
             "LEFT JOIN",
-            recordset[0], 
-            recordset[1] if len(recordset) > 1 else None, 
+            recordset[0], recordset[1] if len(recordset) > 1 else None, 
             self.get_next_alias(alias)) 
 
         return self
@@ -279,14 +260,19 @@ class Select(sql_queries.SelectiveQuery):
 
     def ON(self, join_expr, *operands) -> 'Select':
         
-        self.clauses_by_names["FROM"].define_join_condition(join_expr, *operands)
+        self.get_FROM().define_join_condition(join_expr, *operands)
 
         return self
 
 
+    def get_WHERE(self) -> sql_queries.WhereClause:
+
+        return self.clauses_by_names["WHERE"]
+    
+
     def WHERE(self, expression: str, *operands) -> 'Select':
 
-        self.clauses_by_names["WHERE"].set_expression(expression).add_operands(*operands).turn_on()
+        self.get_WHERE().set_expression(expression).add_operands(*operands).turn_on()
 
         return self
 
@@ -301,3 +287,15 @@ class Select(sql_queries.SelectiveQuery):
 
 
         return self 
+
+
+    def build_of_field_manager(self, fm: fields.FieldManager) -> 'Select':
+
+        self.FROM((fm.get_recordset_name(),))
+
+        for varname in fm.get_varnames():
+            self.SELECT_field((varname, 0))
+
+        self.WHERE("{0}={1}", ("uuid", 0), fm.get_field_value("uuid"))
+
+        return self

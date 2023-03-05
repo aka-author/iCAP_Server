@@ -19,7 +19,7 @@ class PostgresSqlBuilder(sql_builders.SqlBuilder):
         super().__init__(owner)
 
 
-    def icap2sql_datatype_name(self, icap_datatype_name: str) -> str:
+    def native2sql_datatype_name(self, native_datatype_name: str) -> str:
 
         dt_map = {
             datatypes.DTN_UUID:         "uuid", 
@@ -35,7 +35,7 @@ class PostgresSqlBuilder(sql_builders.SqlBuilder):
             datatypes.DTN_JSON:         "json"
         }
 
-        return dt_map.get(icap_datatype_name, "varchar")
+        return dt_map.get(native_datatype_name, "varchar")
 
 
     def looks_like_string(self, dbms_datatype_name: str) -> bool:
