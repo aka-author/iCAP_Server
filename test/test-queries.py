@@ -32,10 +32,14 @@ q_select = dbms.new_select()\
     .FROM(("pets", "icap"),)\
     .INNER_JOIN(("cities", "icap"),)\
     .ON("{0}={1}", ("city_uuid", 0), ("uuid", 1))\
+    .INNER_JOIN(("countries", "icap"),)\
+    .ON("{0}={1}", ("country_uuid", 1), ("uuid", 2))\
     .WHERE("{0}={1}", ("pet_name", 0), "Tuzik")\
-    .SELECT_field("pet_name", "{0}", ("pet_name", 0))\
-    .SELECT_field("k_losev", "1/{0}", ("weight", 0))\
-    .SELECT_field("today", "{0}", datetime.datetime.now())
+    .SELECT_field(("pet_name", 0))\
+    .SELECT_expression("k_losev", "1/{0}", ("weight", 0))\
+    .SELECT_expression("today", "{0}", datetime.datetime.now())\
+    .SELECT_field(("city_name", 1))\
+    .SELECT_field(("country_name", 2))
 
 print(q_select.get_snippet())
 

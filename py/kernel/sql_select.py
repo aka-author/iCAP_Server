@@ -73,8 +73,12 @@ class SelectClause(sql_queries.Clause):
 
         expr_snippet = \
             field_def["expr"].format(*operand_snippets)
+        
+        snippet = \
+            self.sql.as_subst(expr_snippet, field_def["alias"]) \
+                if field_def["alias"] is not None else expr_snippet
 
-        return self.sql.as_subst(expr_snippet, field_def["alias"])
+        return snippet
 
 
     def assemble_snippet(self) -> str:
@@ -211,7 +215,14 @@ class Select(sql_queries.SelectiveQuery):
         return self
 
 
-    def SELECT_field(self, alias: str, expr: str, *operands) -> 'Select':
+    def SELECT_field(self, field_def, alias: str=None) -> 'Select':
+
+        self.clauses_by_names["SELECT"].add_field(alias, "{0}", *[field_def]).turn_on()
+        
+        return self
+
+
+    def SELECT_expression(self, alias: str, expr: str, *operands) -> 'Select':
 
         self.clauses_by_names["SELECT"].add_field(alias, expr, *operands).turn_on()
         
