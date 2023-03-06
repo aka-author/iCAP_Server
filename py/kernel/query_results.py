@@ -6,10 +6,10 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict
-import fields, ramtables, workers, query_runners
+import fields, ramtables, db_recordsets
 
 
-class QueryResult(workers.Worker):
+class QueryResult(db_recordsets.Recordset):
 
     def __init__(self, chief, fk: fields.FieldKeeper, cursor: object):
 
@@ -34,13 +34,22 @@ class QueryResult(workers.Worker):
         return self
 
 
+    def repair_value(self, raw_value, varname) -> any:
+
+        datatype_name = self.get_field_manager().get_field(varname).get_datatype_name()
+        
+        return self.sql.repair_value(raw_value, datatype_name)
+
+
     def fetch_one(self) -> 'QueryResult':
 
         row = self.get_cursor().fetchone()
 
+        fm = self.get_field_manager()
+
         if row is not None:
-            for field_idx, varname in enumerate(self.fk.get_varnames()):
-                self.fk.set_field_value(varname, row[field_idx]) 
+            for idx, varname in enumerate(fm.get_varnames()):   
+                fm.set_field_value(varname, self.repair_value(row[idx]), varname) 
         else:
             self.set_eof_flag()
 
@@ -49,7 +58,7 @@ class QueryResult(workers.Worker):
 
     def get_current_row(self) -> Dict:
 
-        return self.fk.get_field_values()
+        return self.fm.get_field_values()
 
 
     def eof(self) -> bool:

@@ -7,6 +7,7 @@
 
 from typing import Dict
 import psycopg2
+from datetime import datetime
 import utils, status, datatypes, controllers
 import dbms_instances, db_instances, query_runners 
 import sql_workers, sql_builders, sql_queries
@@ -55,6 +56,20 @@ class PostgresSqlBuilder(sql_builders.SqlBuilder):
                      datatypes.DTN_STRING)
 
         return icap_datatype_name in sql_ducks
+    
+
+    def repair_value(self, raw_value, native_datatype_name) -> any:
+
+        if isinstance(raw_value, str):
+            if datatypes.is_datetime_datatype(native_datatype_name):
+                format = self.get_format_for_datatype(native_datatype_name)
+                native_value = utils.str2timestamp(raw_value, format)
+            else:
+                native_value = raw_value
+        else:
+            native_value = raw_value
+
+        return native_value
 
 
 class PostgresSubqueries(sql_queries.Subqueries):

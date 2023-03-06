@@ -154,24 +154,27 @@ def get_default_timestamp_format():
     return "%Y-%m-%d %H:%M:%S.%f"
 
 
-def timestamp2str(timestamp, custom_format=None):
-
-    format = safeval(custom_format, get_default_timestamp_format())
-
-    return datetime.strftime(timestamp, format) if timestamp is not None else None
-
-
 class TimestampFormat():
 
-    def __init__(self, fname=None, fstring=None):
+    def __init__(self, format_name=None, format_string=None):
 
-        self.fname = fname
-        self.fstring = fstring
+        self.format_name = format_name
+        self.format_string = format_string
 
+
+    def get_format_name(self):
+
+        return self.format_name
+
+
+    def get_format_string(self):
+
+        return self.format_string
+    
 
     def is_defined(self):
 
-        return self.get_fname() is not None
+        return self.get_format_name() is not None
 
 
     def get_formats(self):
@@ -192,39 +195,39 @@ class TimestampFormat():
         }
 
 
-    def get_fstring_by_fname(self, fname):
+    def get_format_string_by_name(self, format_name):
 
-        return safedic(safedic(self.get_formats(), fname), "fstring")
+        format_info = self.get_formats().get(format_name)
+
+        return format_info.get("fstring") if format_info is not None else "" 
 
 
     def detect(self, s):
 
         formats = self.get_formats()
 
-        for fname in formats:
-            if re.search(formats[fname]["regexp"], s) is not None:
-                self.fname, self.fstring = fname, formats[fname]["fstring"]
+        for format_name in formats:
+            if re.search(formats[format_name]["regexp"], s) is not None:
+                self.format_name = format_name
+                self.format_string = formats[format_name]["fstring"]
                 break
 
         return self
 
 
-    def get_fname(self):
+def timestamp2str(timestamp, format=None):
 
-        return self.fname
+    actual_format = safeval(format, get_default_timestamp_format())
 
-
-    def get_fstring(self):
-
-        return self.fstring
+    return datetime.strftime(timestamp, actual_format) if timestamp is not None else None    
 
 
-def str2timestamp(src_s, custom_fstring=None):
+def str2timestamp(src_s, format_string=None):
 
     ts = None
 
-    if custom_fstring is not None:
-        ts = datetime.strptime(s, custom_fstring)
+    if format_string is not None:
+        ts = datetime.strptime(s, format_string)
     else:
         format = TimestampFormat().detect(src_s)
 

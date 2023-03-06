@@ -180,33 +180,7 @@ class Select(sql_queries.SelectiveQuery):
             .add_clause(OrderByClause(self))
         
         return self
-
-
-    def DISTINCT(self) -> 'Select':
-
-        self.clauses_by_names["DISTINCT"].turn_on()
-
-        return self
-
-
-    def get_SELECT(self) -> SelectClause:
-
-        return self.clauses_by_names["SELECT"]
-
-
-    def SELECT_field(self, field_def, alias: str=None) -> 'Select':
-
-        self.get_SELECT().add_field(alias, "{0}", *[field_def]).turn_on()
-        
-        return self
-
-
-    def SELECT_expression(self, alias: str, expr: str, *operands) -> 'Select':
-
-        self.get_SELECT().add_field(alias, expr, *operands).turn_on()
-        
-        return self
-    
+       
 
     def get_FROM(self) -> SelectClause:
 
@@ -277,6 +251,32 @@ class Select(sql_queries.SelectiveQuery):
         return self
 
 
+    def DISTINCT(self) -> 'Select':
+
+        self.clauses_by_names["DISTINCT"].turn_on()
+
+        return self
+
+
+    def get_SELECT(self) -> SelectClause:
+
+        return self.clauses_by_names["SELECT"]
+
+
+    def SELECT_field(self, field_def, alias: str=None) -> 'Select':
+
+        self.get_SELECT().add_field(alias, "{0}", *[field_def]).turn_on()
+        
+        return self
+
+
+    def SELECT_expression(self, alias: str, expr: str, *operands) -> 'Select':
+
+        self.get_SELECT().add_field(alias, expr, *operands).turn_on()
+        
+        return self
+
+
     def GROUP_BY(self) -> 'Select':
 
 
@@ -297,11 +297,13 @@ class Select(sql_queries.SelectiveQuery):
             self.SELECT_field((varname, 0))
 
         if expr is not None: 
-            print(expr, *operands)
             self.WHERE(expr, *operands)
         else:
             surrogate_key_name = fm.get_surrogate_key_name()
             surrogate_key_value = fm.get_field_value(surrogate_key_name)
             self.WHERE("{0}={1}", (surrogate_key_name, 0), surrogate_key_value)
+
+        if not self.has_field_manager():
+            self.set_field_manager(fm)
 
         return self

@@ -119,7 +119,7 @@ class SqlBuilder(workers.Worker):
 
     def looks_like_string(self, dbms_datatype_name: str) -> bool:
 
-        # Should we put a value into фзщыекщзруы in SQL queries?
+        # Should we put a value into apostrophes in SQL queries?
         # It depends on a particular DBMS.
 
         return True
@@ -132,6 +132,11 @@ class SqlBuilder(workers.Worker):
         # It depends on a particular DBMS.
 
         return False
+    
+
+    def repair_value(self, raw_value, native_datatype_name) -> any:
+
+        return raw_value
     
 
     def sqlized_value(self, native_value: any) -> str:

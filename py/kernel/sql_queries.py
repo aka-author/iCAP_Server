@@ -8,7 +8,7 @@
 
 from typing import List
 import utils
-import sql_workers, dbms_instances, db_recordsets
+import fields, sql_workers, dbms_instances, db_recordsets
 
 
 class Subqueries(sql_workers.SqlWorker):
