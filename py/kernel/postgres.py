@@ -61,7 +61,9 @@ class PostgresSqlBuilder(sql_builders.SqlBuilder):
     def repair_value(self, raw_value, native_datatype_name) -> any:
 
         if isinstance(raw_value, str):
-            if datatypes.is_datetime_datatype(native_datatype_name):
+            if native_datatype_name == datatypes.DTN_UUID:
+                native_value = utils.str2uuid(raw_value)
+            elif datatypes.is_datetime_datatype(native_datatype_name):
                 format = self.get_format_for_datatype(native_datatype_name)
                 native_value = utils.str2timestamp(raw_value, format)
             else:
@@ -76,7 +78,7 @@ class PostgresSubqueries(sql_queries.Subqueries):
      
     def get_subquery_def(self, query: sql_queries.Query) -> str:
 
-        return self.sql.as_subst(query.get_query_name(), utils.pars(query.get_snippet()))
+        return self.sql.AS(query.get_query_name(), utils.pars(query.get_snippet()))
      
 
     def get_snippet(self) -> str:
@@ -93,13 +95,14 @@ class PostgresQueryRunner(query_runners.QueryRunner):
     def connect(self, db: db_instances.Db) -> query_runners.QueryRunner:
 
         status_code = status.OK
-
+        
         try:
             self.connection = psycopg2.connect(\
                 host=self.get_chief().get_access_param("host"),
                 dbname=db.get_connection_param("database"),
                 user=db.get_connection_param("user"),
                 password=db.get_connection_param("password"))
+            self.set_connected_flag()
         except:
             status_code = status.ERR_DB_CONNECTION_FAILED
 
@@ -123,6 +126,6 @@ class Postgres(dbms_instances.Dbms):
         return PostgresSubqueries(chief_query)
 
 
-    def new_query_runner(self) -> query_runners.QueryRunner:
+    def new_query_runner(self, db: db_instances.Db) -> query_runners.QueryRunner:
 
-        return PostgresQueryRunner(self)    
+        return PostgresQueryRunner(self, db)    

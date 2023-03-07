@@ -91,12 +91,12 @@ class Update(sql_queries.Query):
         return self
 
 
-    def build_of_field_manager(self, fm: fields.FieldManager, db_scheme_name: str=None) -> 'Update':
+    def build_of_field_manager(self, fm: fields.FieldManager, db_table_name: str, db_scheme_name: str=None) -> 'Update':
 
         surrogate_key_name = fm.get_surrogate_key_name()
 
         if surrogate_key_name is not None:
-            self.UPDATE(fm.get_recordset_name(), db_scheme_name)\
+            self.UPDATE(db_table_name, db_scheme_name)\
                 .SET(fm.get_insertable_field_values())\
                 .WHERE("{0} = {1}", 
                        (surrogate_key_name, None), 

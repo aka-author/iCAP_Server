@@ -226,7 +226,9 @@ class Query(db_recordsets.Recordset):
 
     def __init__(self, chief: 'dbms_instances.Dbms', operator_name: str, query_name: str=None):
 
-        super().__init__(chief, utils.safeval(query_name, self.assemble_unique_query_name()))
+        super().__init__(chief)
+
+        self.set_query_name(utils.safeval(query_name, self.assemble_unique_query_name()))
 
         self.operator_name = operator_name
 
@@ -250,6 +252,17 @@ class Query(db_recordsets.Recordset):
     def assemble_unique_query_name(self) -> str:
 
         return utils.unique_name("q")
+    
+
+    def set_query_name(self, query_name) -> 'Query':
+
+        return super().set_recordset_name(query_name)
+    
+
+    def get_query_name(self) -> str:
+
+        return super().get_recordset_name()
+
 
 
     def add_clause(self, clause: Clause) -> 'Query':

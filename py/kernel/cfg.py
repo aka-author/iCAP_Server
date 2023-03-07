@@ -87,6 +87,11 @@ class Cfg:
         return username, passhash
 
 
+    def get_default_db_scheme_name(self) -> str:
+
+        return self.get_param_value("DATABASE", "default_scheme")    
+
+
     def is_debug_mode(self, app_name=None):
         
         return self.get_app_param_value(app_name, "debug_mode").lower() == "on"

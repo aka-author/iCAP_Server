@@ -368,9 +368,7 @@ class DateField(TimestampField):
 
 class FieldKeeper:
 
-    def __init__(self, recordset_name: str=None):
-
-        self.recordset_name = recordset_name
+    def __init__(self):
 
         self.fields = []
         self.fields_by_varnames = {}
@@ -379,18 +377,6 @@ class FieldKeeper:
         self.subkey_varnames = []
         self.mandatory_varnames = []
         self.autoins_varnames = []
-
-
-    def set_recordset_name(self, recordset_name: str) -> 'FieldKeeper':
-
-        self.recordset_name = recordset_name
-
-        return self
-
-
-    def get_recordset_name(self) -> str:
-
-        return self.recordset_name
 
 
     def define_subkey(self, varname: str) -> 'FieldKeeper':
@@ -508,18 +494,6 @@ class FieldManager:
     def get_field_keeper(self) -> FieldKeeper:
 
         return self.fk
-
-
-    def set_recordset_name(self, recordset_name: str) -> 'FieldManager':
-
-        self.get_field_keeper().set_recordset_name(recordset_name)
-
-        return self
-
-
-    def get_recordset_name(self) -> str:
-
-        return self.get_field_keeper().get_recordset_name()
 
 
     def define_subkey(self, varname: str) -> object:

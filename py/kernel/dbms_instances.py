@@ -83,9 +83,9 @@ class Dbms(workers.Worker):
 
     def new_result(self, qres, fk: fields.FieldKeeper, cursor) -> query_results.QueryResult:
 
-        return query_results.Result(qres, fk, cursor)
+        return query_results.QueryResult(qres, fk, cursor)
     
 
-    def new_query_runner(self) -> 'query_runners.QueryRunner':
+    def new_query_runner(self, db: db_instances.Db) -> 'query_runners.QueryRunner':
 
-        return query_runners.QueryRunner(self)
+        return query_runners.QueryRunner(self, db)

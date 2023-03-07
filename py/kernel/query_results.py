@@ -11,20 +11,30 @@ import fields, ramtables, db_recordsets
 
 class QueryResult(db_recordsets.Recordset):
 
-    def __init__(self, chief, fk: fields.FieldKeeper, cursor: object):
+    def __init__(self, chief, fm: fields.FieldManager, cursor: object):
 
         super().__init__(chief)
 
-        self.fk = fk
-        self.fm = fields.FieldManager(fk)
+        self.set_field_manager(fm)
         self.cursor = cursor
 
+        self.curr_row_index = 0
         self.eof_flag = False
 
 
     def get_cursor(self) -> object:
 
         return self.cursor
+
+
+    def count_rows(self) -> int:
+
+        return self.get_cursor().rowcount
+    
+
+    def is_useful(self) -> bool:
+
+        return self.count_rows() > 0
 
 
     def set_eof_flag(self, state: bool=True) -> 'QueryResult':
@@ -43,13 +53,18 @@ class QueryResult(db_recordsets.Recordset):
 
     def fetch_one(self) -> 'QueryResult':
 
-        row = self.get_cursor().fetchone()
+        print(self.get_cursor().rowcount)
 
-        fm = self.get_field_manager()
+        if self.curr_row_index < self.count_rows():
 
-        if row is not None:
+            row = self.get_cursor().fetchone()
+
+            fm = self.get_field_manager()
+
             for idx, varname in enumerate(fm.get_varnames()):   
-                fm.set_field_value(varname, self.repair_value(row[idx]), varname) 
+                fm.set_field_value(varname, self.repair_value(row[idx], varname))
+
+            self.curr_row_index += 1
         else:
             self.set_eof_flag()
 

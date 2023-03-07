@@ -12,14 +12,21 @@ import dbms_instances, db_instances, sql_queries, sql_scripts, query_results
 
 class QueryRunner(workers.Worker):
 
-    def __init__(self, chief):
+    def __init__(self, chief, db: db_instances.Db):
 
         super().__init__(chief)
     
+        self.db = db
+
         self.connection = None
         self.connected_flag = False
 
         self.query_result = None
+
+
+    def get_dbms(self) -> 'dbms_instances.Dbms':
+
+        return self.get_chief()
 
 
     def set_connected_flag(self, state: bool=True) -> 'QueryRunner':
@@ -67,9 +74,9 @@ class QueryRunner(workers.Worker):
 
         cursor = self.execute_sql(script.get_snippet())
 
-        fk = script.get_selective_query().get_field_keeper()
+        fm = script.get_selective_query().get_field_manager()
 
-        self.query_result = self.get_dbms().new_result(self, fk, cursor)
+        self.query_result = self.get_chief().new_result(self, fm, cursor)
 
         return self
 

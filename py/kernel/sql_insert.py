@@ -90,7 +90,7 @@ class Insert(sql_queries.Query):
         return self
 
 
-    def INTO(self, db_scheme_name, table_name, *varnames) -> 'Insert':
+    def INTO(self, table_name, db_scheme_name, *varnames) -> 'Insert':
 
         self.clauses_by_names["INTO"]\
             .set_table_name(table_name)\
@@ -107,7 +107,7 @@ class Insert(sql_queries.Query):
         return self
 
 
-    def build_of_field_manager(self, fm: fields.FieldManager, db_scheme_name: str=None) -> 'Insert':
+    def build_of_field_manager(self, fm: fields.FieldManager, db_table_name: str, db_scheme_name: str=None) -> 'Insert':
 
         varnames = []
         values = []
@@ -116,7 +116,7 @@ class Insert(sql_queries.Query):
             varnames.append(varname)
             values.append(native_value)
 
-        self.INTO(db_scheme_name, fm.get_recordset_name(), *varnames)\
+        self.INTO(db_table_name, db_scheme_name, *varnames)\
             .VALUES(*values)
 
         return self

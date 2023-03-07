@@ -10,17 +10,24 @@ import fields, sql_workers
 
 class Recordset(sql_workers.SqlWorker):
 
-    def __init__(self, chief: sql_workers.SqlWorker):
+    def __init__(self, chief: sql_workers.SqlWorker, recordset_name: str=None):
 
         super().__init__(chief)
+
+        self.recordset_name = recordset_name
 
         self.fm = None
         self.fk = None
         
        
+    def set_recordset_name(self, recordset_name: str) -> 'Recordset':
+
+        self.recordset_name = recordset_name
+
+
     def get_recordset_name(self) -> str:
 
-        return self.fk.get_recordset_name()
+        return self.get_recordset_name
     
 
     def set_field_manager(self, fm: fields.FieldManager) -> 'Recordset':

@@ -3,7 +3,7 @@
 # Layer:   Kernel
 # Module:  models.py                                  
 # Func:    Processing subject area entities         (\(\     
-# Usage:   The class is abstract                    (^.^)
+# Usage:   Define your models based on Model        (^.^)
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict, List
@@ -19,7 +19,7 @@ class Model(workers.Worker):
 
         self.model_name = "model"
 
-        self.fk = self.create_field_keeper().set_recordset_name("models")
+        self.fk = self.create_field_keeper()
         self.fm = self.create_field_manager(self.fk)
         self.define_fields()
         self.fm.reset_field_values()
@@ -134,54 +134,63 @@ class Model(workers.Worker):
 
         return dto
 
+    # Working with a database
+
+    def get_db_scheme_name(self) -> str:
+
+        return self.get_cfg().get_default_db_scheme_name()
+    
 
     # Loading models from a database
 
     def get_load_query(self, db: db_instances.Db, target_varname: str, target_value: any) -> sql_queries.SelectiveQuery:
 
-        recordset_name = self.get_field_keeper().get_recordset_name()
-
-        load_query = db.get_dbms().new_select().build_of_field_manager(self.get_field_manager())
-
-        load_query.WHERE("{0}={1}", 
-                   {"recordset_name": recordset_name, "varname": target_varname}, 
-                   {"value": target_value})
-
+        load_query = db.get_dbms().new_select()\
+            .build_of_field_manager(\
+                self.get_field_manager(), self.get_plural(), self.get_db_scheme_name(), \
+                "{0}={1}", (target_varname, 0), target_value)       
+    
         return load_query
 
 
-    def load_siblings_and_self(self, db: db_instances.Db) -> List:
+    def load_all_siblings(self, db: db_instances.Db, parent_id_varname: str, parent_id: any) -> List:
 
-        siblings_and_self = []
+        all_siblings = []
 
-        query_runner = db.get_dbms().new_query_runner()
+        runner = db.get_dbms().new_query_runner()
 
-        query_result = query_runner.execute_query(self.get_load_query(db)).get_query_result()
+        load_all_siblings_query = self.get_load_query(db, parent_id_varname, parent_id)
+
+        query_result = runner.execute_query(load_all_siblings_query).get_query_result()
         fm = query_result.get_field_manager()
 
         while not query_result.fetch().eof():
             sibling = type(self)(self.get_chief()) \
                         if query_result.rownumber() < query_result.rowcount() - 1 \
                         else self
-            siblings_and_self.append(sibling.set_field_values_from_field_manager(fm))
+            all_siblings.append(sibling.set_field_values_from_field_manager(fm))
 
-        return siblings_and_self
+        runner.close()
+
+        return all_siblings
 
 
     def load_submodels(self, db: db_instances.Db) -> 'Model':
 
         # my_uuid = self.get_field_value("uuid")
-        # self.Cows = Cow(self).set_field_value("farm_uuid", my_uuid).load_siblings_and_self(db)
-        # self.Hens = Hen(self).set_field_value("farm_uuid", my_uuid).load_siblings_and_self(db)
+        # self.Cows = Cow(self).load_all_siblings(db, "farm_uuid", my_uuid)
+        # self.Hens = Hen(self).load_all_siblings(db, "farm_uuid", my_uuid)
         
         return self
 
 
     def load(self, db: db_instances.Db, target_varname: str, target_value: any) -> 'Model':
 
-        query_runner = db.get_dbms().new_query_runner()
+        runner = db.get_dbms().new_query_runner()
 
-        query_runner.execute(self.get_load_query(db, target_varname, target_value)).fetch_one()
+        load_query = self.get_load_query(db, target_varname, target_value)
+
+        runner.execute_query(load_query).fetch_one().close()
 
         self.load_submodels(db)
 

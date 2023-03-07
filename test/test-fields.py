@@ -16,10 +16,6 @@ def get_pet_Barsik():
 
 def check_fm(fm):
 
-    recordset_name = fm.get_recordset_name()
-    print(recordset_name)
-    assert recordset_name == "pets"
-
     count_fields = fm.count_fields()    
     print(count_fields)
     assert count_fields == 5
@@ -57,8 +53,7 @@ def check_module():
         .add_field(fields.StringField("pet_name"))\
         .add_field(fields.StringField("species"))\
         .add_field(fields.BigintField("weight"))\
-        .add_field(fields.DateField("date_of_birth"), "mandatory")\
-        .reset_field_values().set_recordset_name("pets")
+        .add_field(fields.DateField("date_of_birth"), "mandatory")
 
     check_fm(fm)
 

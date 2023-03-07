@@ -289,14 +289,15 @@ class Select(sql_queries.SelectiveQuery):
         return self 
 
 
-    def build_of_field_manager(self, fm: fields.FieldManager, expr: str=None, *operands) -> 'Select':
+    def build_of_field_manager(self, fm: fields.FieldManager, db_recordset_name: str, db_scheme_name: str=None, expr: str=None, *operands) -> 'Select':
 
-        self.FROM((fm.get_recordset_name(),))
+        self.FROM((db_recordset_name, db_scheme_name))
 
         for varname in fm.get_varnames():
             self.SELECT_field((varname, 0))
 
         if expr is not None: 
+            print(expr, *operands)
             self.WHERE(expr, *operands)
         else:
             surrogate_key_name = fm.get_surrogate_key_name()
