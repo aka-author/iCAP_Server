@@ -74,9 +74,11 @@ class QueryRunner(workers.Worker):
 
         cursor = self.execute_sql(script.get_snippet())
 
-        fm = script.get_selective_query().get_field_manager()
+        sel_query = script.get_selective_query()
 
-        self.query_result = self.get_chief().new_result(self, fm, cursor)
+        fm = sel_query.get_field_manager()
+
+        self.query_result = self.get_chief().new_result(sel_query, fm, cursor)
 
         return self
 

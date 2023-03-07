@@ -329,7 +329,7 @@ class TimestampField(Field):
 
         fmt = utils.safeval(format, self.get_serialize_format())
         
-        return native_value.strftime(fmt) if native_value is not None else None
+        return utils.timestamp2str(native_value, fmt) if native_value is not None else ""
 
 
     def parse_to_native_value(self, serialized_value: str, format: str=None) -> datetime:

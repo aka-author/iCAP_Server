@@ -12,7 +12,7 @@ fm = fields.FieldManager()\
         .add_field(fields.StringField("username"))\
         .add_field(fields.StringField("password_hash"))\
         .add_field(fields.BooleanField("auth_required"))\
-        .add_field(fields.DateField("created_at"), "mandatory")\
+        .add_field(fields.TimestampField("created_at"), "mandatory")\
         .reset_field_values()
 
 
@@ -76,6 +76,10 @@ res = query_runner.get_query_result()
 res.fetch_one()
 
 print(fm.field_values)
+
+rt = query_runner.execute_query(load_query).get_query_result().dump()
+
+print(rt)
 
 
 

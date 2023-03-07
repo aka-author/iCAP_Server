@@ -216,7 +216,7 @@ class TimestampFormat():
 
 
 def timestamp2str(timestamp, format=None):
-
+    
     actual_format = safeval(format, get_default_timestamp_format())
 
     return datetime.strftime(timestamp, actual_format) if timestamp is not None else None    

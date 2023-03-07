@@ -5,21 +5,26 @@
 # Func:    Fetching and iterating query results      (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import Dict
-import fields, ramtables, db_recordsets
+import fields, ramtables, db_recordsets, sql_queries
 
 
 class QueryResult(db_recordsets.Recordset):
 
-    def __init__(self, chief, fm: fields.FieldManager, cursor: object):
+    def __init__(self, chief: sql_queries.SelectiveQuery, fm: fields.FieldManager, cursor: object):
 
         super().__init__(chief)
 
         self.set_field_manager(fm)
+
         self.cursor = cursor
 
         self.curr_row_index = 0
         self.eof_flag = False
+
+
+    def get_query(self) -> sql_queries.SelectiveQuery:
+
+        return self.get_chief()
 
 
     def get_cursor(self) -> object:
@@ -53,8 +58,6 @@ class QueryResult(db_recordsets.Recordset):
 
     def fetch_one(self) -> 'QueryResult':
 
-        print(self.get_cursor().rowcount)
-
         if self.curr_row_index < self.count_rows():
 
             row = self.get_cursor().fetchone()
@@ -71,11 +74,6 @@ class QueryResult(db_recordsets.Recordset):
         return self
 
 
-    def get_current_row(self) -> Dict:
-
-        return self.fm.get_field_values()
-
-
     def eof(self) -> bool:
 
         return self.eof_flag
@@ -83,7 +81,9 @@ class QueryResult(db_recordsets.Recordset):
 
     def dump(self) -> ramtables.Table:
 
-        rt_dump = ramtables.Table()
+        q = self.get_query()
+
+        rt_dump = ramtables.Table(q.get_query_name(), q.get_field_manager().get_field_keeper())
 
         query_dump = self.get_cursor().fetchall() 
 
@@ -91,8 +91,8 @@ class QueryResult(db_recordsets.Recordset):
 
         for row in query_dump:
 
-            for field_idx, varname in enumerate(rt_dump.fk.get_varnames()):
-                buffer[varname] = row[field_idx]
+            for idx, varname in enumerate(rt_dump.fk.get_varnames()):
+                buffer[varname] = self.repair_value(row[idx], varname)
 
             rt_dump.insert(buffer)
 

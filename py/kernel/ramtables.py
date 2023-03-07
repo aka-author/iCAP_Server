@@ -17,9 +17,7 @@ class Row:
         
         self.table = table
 
-        self.fm = fields.FieldManager(self, table.get_field_keeper()).reset_field_values()
-
-        print(self.fm.count_fields())
+        self.fm = fields.FieldManager(table.get_field_keeper()).reset_field_values()
 
     
     def get_id(self):
@@ -40,19 +38,17 @@ class Row:
 
     def __str__(self):
 
-        t = self.get_table()
-
-        return " ".join([t.fm.get_field(vn).get_serialized_value(self.fm.get_field_value(vn)) \
-                         for vn in t.fm.fields_by_varnames])
+        return " ".join([self.fm.get_serialized_field_value(fn) \
+                            for fn, _ in self.fm.field_values.items()])
 
 
 class Table:
 
-    def __init__(self, table_name):
+    def __init__(self, table_name=None, fk: fields.FieldKeeper=None, ):
 
-        self.table_name = table_name
+        self.table_name = table_name if table_name is not None else utils.unique_name("t")
 
-        self.fm = fields.FieldManager(self)
+        self.fk = fk if fk is not None else fields.FieldKeeper()
 
         self.rows = []
         self.rows_by_ids = {}
@@ -65,7 +61,7 @@ class Table:
 
     def get_field_keeper(self):
 
-        return self.fm.fk
+        return self.fk
 
 
     def count_rows(self):
@@ -81,11 +77,9 @@ class Table:
     def insert(self, field_values={}):
 
         row = self.create_blank_row()
-        print(row.fm.get_field("weight"))
+       
         self.rows.append(row)
         row.fm.set_field_values(field_values)
-        print(field_values)
-        #self.rows.append(row)
         self.rows_by_ids[row.get_id()] = row
 
         return self
@@ -129,4 +123,4 @@ class Table:
 
     def __str__(self):
 
-        return " ".join([fn for fn in self.fields]) + "\n" + "\n".join([row.__str__() for row in self.rows])
+        return " ".join([fn.get_varname() for fn in self.fk.fields]) + "\n" + "\n".join([row.__str__() for row in self.rows])

@@ -297,7 +297,6 @@ class Select(sql_queries.SelectiveQuery):
             self.SELECT_field((varname, 0))
 
         if expr is not None: 
-            print(expr, *operands)
             self.WHERE(expr, *operands)
         else:
             surrogate_key_name = fm.get_surrogate_key_name()
