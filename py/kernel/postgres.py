@@ -92,7 +92,9 @@ class PostgresSubqueries(sql_queries.Subqueries):
 
 class PostgresQueryRunner(query_runners.QueryRunner):
 
-    def connect(self, db: db_instances.Db) -> query_runners.QueryRunner:
+    def connect(self) -> query_runners.QueryRunner:
+
+        db = self.get_db()
 
         status_code = status.OK
         
@@ -126,6 +128,6 @@ class Postgres(dbms_instances.Dbms):
         return PostgresSubqueries(chief_query)
 
 
-    def new_query_runner(self, db: db_instances.Db) -> query_runners.QueryRunner:
+    def new_query_runner(self, db: db_instances.Db=None) -> query_runners.QueryRunner:
 
         return PostgresQueryRunner(self, db)    

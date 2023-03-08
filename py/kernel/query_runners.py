@@ -12,7 +12,7 @@ import dbms_instances, db_instances, sql_queries, sql_scripts, query_results
 
 class QueryRunner(workers.Worker):
 
-    def __init__(self, chief, db: db_instances.Db):
+    def __init__(self, chief, db: db_instances.Db=None):
 
         super().__init__(chief)
     
@@ -27,6 +27,17 @@ class QueryRunner(workers.Worker):
     def get_dbms(self) -> 'dbms_instances.Dbms':
 
         return self.get_chief()
+    
+
+    def set_db(self, db: db_instances.Db) -> 'QueryRunner':
+
+        self.db = db
+
+        return self
+
+    def get_db(self) -> db_instances.Db:
+
+        return self.db
 
 
     def set_connected_flag(self, state: bool=True) -> 'QueryRunner':
@@ -41,7 +52,7 @@ class QueryRunner(workers.Worker):
         return self.connected_flag
 
 
-    def connect(self, db: db_instances.Db) -> 'QueryRunner':
+    def connect(self) -> 'QueryRunner':
 
         return self 
 

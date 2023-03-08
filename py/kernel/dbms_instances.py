@@ -46,9 +46,9 @@ class Dbms(workers.Worker):
         return db_objects.Scheme(db, scheme_name)
     
 
-    def new_db(self) -> db_instances.Db:
+    def new_db(self, connection_params: Dict) -> db_instances.Db:
 
-        return db_instances.Db(self)
+        return db_instances.Db(self, connection_params)
 
 
     def new_subqueries(self, chief_query: sql_queries.Query) -> sql_queries.Subqueries:

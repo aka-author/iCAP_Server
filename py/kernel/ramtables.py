@@ -1,8 +1,9 @@
 # # ## ### ##### ######## ############# #####################
-# Product: iCAP platform
-# Layer:   Kernel
-# Module:  ramtable.py                              (\(\
-# Func:    Simulating database tables in memory     (^.^)
+# Product:  iCAP platform
+# Layer:    Kernel
+# Module:   ramtable.py                              
+# Func:     Simulating database tables in memory      (\(\
+# Usage:    Use ramtables.Table directly              (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import uuid
@@ -39,7 +40,7 @@ class Row:
     def __str__(self):
 
         return " ".join([self.fm.get_serialized_field_value(fn) \
-                            for fn, _ in self.fm.field_values.items()])
+                         for fn, _ in self.fm.field_values.items()])
 
 
 class Table:
@@ -123,4 +124,5 @@ class Table:
 
     def __str__(self):
 
-        return " ".join([fn.get_varname() for fn in self.fk.fields]) + "\n" + "\n".join([row.__str__() for row in self.rows])
+        return " ".join([fn.get_varname() for fn in self.fk.fields]) + "\n" \
+                            + "\n".join([row.__str__() for row in self.rows])
