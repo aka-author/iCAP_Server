@@ -14,14 +14,14 @@ class DirectoryDesk(desks.Desk):
 
         super().__init__(chief)
 
-        self.sensors, self.sensors_by_ids = self.fetch_sensors()
-        self.variables, self.variables_by_names = self.fetch_variables()
+        self.sensors, self.sensors_by_ids = self.load_sensors()
+        self.variables, self.variables_by_names = self.load_variables()
         
 
     # Sensors
 
-    def fetch_sensors(self) -> 'DirectoryDesk':
-        print("default db", self.get_default_db())
+    def load_sensors(self) -> 'DirectoryDesk':
+        
         loaded_sensors = sensors.Sensor(self).load_all(self.get_default_db()) 
 
         sensors_by_ids = {}
@@ -39,14 +39,13 @@ class DirectoryDesk(desks.Desk):
 
     # Variables
 
-    def fetch_variables(self) -> 'DirectoryDesk':
+    def load_variables(self) -> 'DirectoryDesk':
 
         loaded_variables = variables.Variable(self).load_all(self.get_default_db())
 
         variables_by_names = {}
 
         for variable in loaded_variables:
-            print(variable.get_field_value("varname"))
             variables_by_names[variable.get_field_value("varname")] = variable
 
         return loaded_variables, variables_by_names

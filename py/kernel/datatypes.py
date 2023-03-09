@@ -12,8 +12,8 @@ import uuid, re
 
 # Defining iCAP datatypes and special values
 
-DTN_GENERIC      = "generic",
-DTN_NULL         = "null",
+DTN_GENERIC      = "generic"
+DTN_NULL         = "null"
 DTN_UUID         = "uuid" 
 DTN_BOOLEAN      = "boolean"
 DTN_NUMERIC      = "numeric"
@@ -140,7 +140,7 @@ def get_datetime_datatype_names() -> List:
 
 
 def is_datetime_datatype(datatype_name: str) -> bool:
-
+    
     return datatype_name.lower() in get_datetime_datatype_names()
 
 

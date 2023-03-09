@@ -39,7 +39,6 @@ class Application (controllers.Controller):
         self.directory_desk = dirdesk.DirectoryDesk(self).set_db(self.default_db)
         
 
-
     def get_app_name(self) -> str:
 
         return self.app_name
@@ -152,6 +151,11 @@ class Application (controllers.Controller):
     def get_directory_desk(self) -> dirdesk.DirectoryDesk:
 
         return self.directory_desk
+
+
+    def get_user_desk(self): 
+
+        return self.user_desk
 
 
     def quit(self) -> 'Application':

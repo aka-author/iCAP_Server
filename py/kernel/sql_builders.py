@@ -141,10 +141,12 @@ class SqlBuilder(workers.Worker):
 
     def sqlized_value(self, native_value: any) -> str:
 
-        sql_datatype_name = self.sql_datatype_name(native_value)
-        ser_val = self.serialized_value(native_value)
-
-        return utils.apos(self.esc(ser_val)) if self.looks_like_string(sql_datatype_name) else ser_val
+        if native_value is not None:
+            sql_datatype_name = self.sql_datatype_name(native_value)
+            ser_val = self.serialized_value(native_value)
+            return utils.apos(self.esc(ser_val)) if self.looks_like_string(sql_datatype_name) else ser_val
+        else:
+            return "null"
     
 
     def typed_value(self, native_value: any, options: str="duck_type") -> str:
@@ -154,8 +156,8 @@ class SqlBuilder(workers.Worker):
 
         typed_value = sqlized_value
 
-        if (not self.is_sql_duck_typed(native_value)) or ("explicit_type" in options):
-            typed_value += "::" + db_datatype_name
+        if ((not self.is_sql_duck_typed(native_value)) or ("explicit_type" in options)) and (native_value is not None):
+            typed_value += "::" + db_datatype_name 
 
         return typed_value
 

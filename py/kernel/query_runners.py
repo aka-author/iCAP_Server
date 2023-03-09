@@ -67,8 +67,6 @@ class QueryRunner(workers.Worker):
         cursor = None
 
         if not self.is_connected():
-            print("Connecting...")
-            print(self.db.connetion_params)
             self.connect()
 
         if self.isOK():
@@ -87,11 +85,10 @@ class QueryRunner(workers.Worker):
         print(script.get_snippet())
         cursor = self.execute_sql(script.get_snippet())
 
-        sel_query = script.get_selective_query()
-       
-        fm = sel_query.get_field_manager()
-
-        self.query_result = self.get_chief().new_result(sel_query, fm, cursor)
+        if script.is_selective():
+            sel_query = script.get_selective_query()
+            fm = sel_query.get_field_manager()
+            self.query_result = self.get_chief().new_result(sel_query, fm, cursor)
 
         return self
 

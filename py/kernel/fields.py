@@ -381,7 +381,7 @@ class FieldKeeper:
 
     def define_subkey(self, varname: str) -> 'FieldKeeper':
 
-        self.masubkey_varnames.append(varname)
+        self.subkey_varnames.append(varname)
 
         return self
 

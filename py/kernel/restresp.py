@@ -70,7 +70,7 @@ class RestResponse:
 
     def get_header(self, header_name):
 
-        return utils.safedic(self.headers, header_name)
+        return self.headers.get(header_name)
 
 
     def serialize_header(self, header_name):

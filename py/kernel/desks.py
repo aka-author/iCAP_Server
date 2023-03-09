@@ -15,9 +15,11 @@ class Desk(workers.Worker):
         super().__init__(chief)
 
 
-    def set_db(self, db: db_instances.Db):
+    def set_db(self, db: db_instances.Db) -> 'Desk':
 
         self.db = db
+
+        return self
 
 
     def get_db(self) -> db_instances.Db:

@@ -140,12 +140,19 @@ class Model(workers.Worker):
         return self
 
 
+    def set_export_dto_filter(self, dto: dtos.Dto) -> 'Model':
+
+        return self
+
+
     def export_dto(self) -> dtos.Dto:
 
         dto = dtos.Dto()
 
+        self.set_export_dto_filter(dto)
+
         for varname in self.fm.get_varnames():
-            dto.set_prop_value(self.export_field_value_for_dto(varname))
+            dto.set_prop_value(varname, self.export_field_value_for_dto(varname))
 
         self.export_submodels_to_dto(dto)
 
@@ -241,18 +248,19 @@ class Model(workers.Worker):
 
         query_result = runner.execute_query(load_all_query).get_query_result()
 
-        instances = self.create_instances_of_query_result(query_result)
+        model_instances = self.create_instances_of_query_result(query_result)
 
         runner.close()
 
-        return instances
+        return model_instances
         
 
     # Inserting/updating models to/in a database
 
     def get_insert_query(self, db: db_instances.Db) -> sql_insert.Insert:
 
-        return db.get_dbms().new_insert().build_of_field_manager(self.get_field_manager())
+        return db.get_dbms().new_insert()\
+            .build_of_field_manager(self.get_field_manager(), self.get_plural(), self.get_db_scheme_name())
 
 
     def get_update_query(self, db: db_instances.Db) -> sql_update.Update:
@@ -263,21 +271,21 @@ class Model(workers.Worker):
     def get_save_query(self, db: db_instances.Db, options: Dict) -> sql_queries.Query: 
 
         if options["mode"] == "insert":
-            save_query = self.get_insert_query(self, db)
+            save_query = self.get_insert_query(db)
         elif options["mode"] == "update":
-            return self.get_update_query(self, db)
+            return self.get_update_query(db)
         
         return save_query
 
 
-    def get_submodel_save_queries(self, options: Dict) -> List:
+    def get_submodel_save_queries(self, db: db_instances.Db, options: Dict) -> List:
 
         return []
 
 
     def get_save_script(self, db: db_instances.Db, options: Dict) -> sql_scripts.Script:
 
-        save_script = db.get_dbms().new_script().add(self.get_save_query(db, options))
+        save_script = db.get_dbms().new_script().add_query(self.get_save_query(db, options))
 
         for save_query in self.get_submodel_save_queries(db, options): 
             save_script.add(save_query)
@@ -287,7 +295,7 @@ class Model(workers.Worker):
 
     def save(self, db: db_instances.Db, options: Dict) -> 'Model':
         
-        query_runner = db.get_dbms().new_query_runner()
+        query_runner = db.get_dbms().new_query_runner(db)
 
         save_script = self.get_save_script(db, options)
 

@@ -7,7 +7,7 @@
 
 from datetime import datetime, timedelta
 import uuid
-import fields, models, auth
+import fields, models, dtos
 
 
 class UserSession(models.Model): 
@@ -17,6 +17,8 @@ class UserSession(models.Model):
         super().__init__(chief)
 
         self.set_model_name("user_session")
+
+        self.set_field_value("closed_at", None)
         
         if uuid is not None:
             self.set_id(uuid)
@@ -33,6 +35,13 @@ class UserSession(models.Model):
             .add_field(fields.TimestampField("expire_at"))\
             .add_field(fields.BigintField("duration"))\
             .add_field(fields.TimestampField("closed_at"))
+
+        return self
+
+
+    def set_export_dto_filter(self, dto: dtos.Dto) -> 'models.Model':
+        
+        dto.add_to_black_list("user_uuid", "username_deb", "closed_at")
 
         return self
 

@@ -38,7 +38,7 @@ class Login(restserver.RestServer):
         is_authorized = False
         
         username, password = req.get_credentials()
-        self.user = self.get_userdesk().get_user_by_username(username)
+        self.user = self.get_user_desk().get_user_by_name(username)
 
         if self.user is not None:
             is_authorized = self.auth_agent.check_user_credentials(self.user, password) 
@@ -58,7 +58,7 @@ class Login(restserver.RestServer):
 
         user_session = self.auth_agent.open_user_session(self.user, host, duration)
         
-        return restresp.RestResponse().set_body(user_session.export_dto())
+        return restresp.RestResponse().set_body(user_session.export_dto().export_payload())
 
 
 Login("../cfg/fserv.ini").process_request()

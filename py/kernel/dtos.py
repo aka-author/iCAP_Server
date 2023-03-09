@@ -17,15 +17,38 @@ class Dto():
 
         self.payload = payload if payload is not None else {}
 
+        self.black_list = None
+        self.white_list = None
+
+
+    def add_to_black_list(self, *prop_names) -> 'Dto':
+
+        if self.black_list is None:
+            self.black_list = []
+
+        self.black_list.extend(prop_names)
+
+        return self
+
+
+    def add_to_white_list(self, *prop_names) -> 'Dto':
+
+        if self.white_list is None:
+            self.white_list = []
+
+        self.white_list.extend(prop_names)
+
+        return self
+
         
     # Converting properties from JSON datatypes to iCAP datatypes 
 
-    def detect_value_datatype(self, dto_value: any) -> str:
+    def detect_value_datatype(self, any_value: any) -> str:
 
-        if datatypes.is_string(dto_value):
-            return datatypes.detect_serialized_value_datatype(dto_value)
+        if datatypes.is_string(any_value):
+            return datatypes.detect_serialized_value_datatype(any_value)
         else:   
-            return datatypes.detect_native_value_datatype(dto_value)
+            return datatypes.detect_native_value_datatype(any_value)
                      
 
     def repair_value_datatype(self, dto_value: any) -> any:
@@ -80,6 +103,16 @@ class Dto():
 
     # Exporting a DTO for serialization
 
+    def filter_prop(self, prop_name: str) -> bool:
+
+        if self.black_list is not None:
+            return prop_name not in self.black_list
+        elif self.white_list is not None:
+            return prop_name in self.white_list
+        else:
+            return True
+
+
     def dto_varname(self, icap_varname: str) -> str:
 
         return icap_varname
@@ -117,19 +150,29 @@ class Dto():
 
     def prepare_prop_datatypes(self, native_dict) -> any:
 
-        for (prop_name, prop_value) in native_dict.items():
-            if isinstance(prop_value, list):
-                self.prepare_listitem_datatypes(prop_value)
-            elif isinstance(prop_value, dict):
-                self.prepare_prop_datatypes(prop_value)
+        tmp_black_list = []
+
+        for prop_name, prop_value in native_dict.items():
+            if self.filter_prop(prop_name):
+                if isinstance(prop_value, list):
+                    self.prepare_listitem_datatypes(prop_value)
+                elif isinstance(prop_value, dict):
+                    self.prepare_prop_datatypes(prop_value)
+                elif prop_value is not None:
+                    native_dict[prop_name] = self.prepare_value_datatype(prop_value)
+                else:
+                    native_dict[prop_name] = None
             else:
-                native_dict[prop_name] = self.prepare_value_datatype(prop_value)
+                tmp_black_list.append(prop_name) 
+
+        for prop_name in tmp_black_list:
+            del native_dict[prop_name]
 
         return native_dict
 
 
     def export_payload(self) -> Dict:
-
+        
         return self.prepare_prop_datatypes(copy.deepcopy(self.payload))
 
 

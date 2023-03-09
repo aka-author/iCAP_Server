@@ -9,7 +9,7 @@ def get_content_type():
 
 def get_body():
 
-    return "username=ditatoo111&password=haveYouReadUlysses?"
+    return "username=ditatoo&password=haveYouReadUlysses?"
 
 
 def mock_cgi_input():

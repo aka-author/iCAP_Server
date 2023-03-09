@@ -16,13 +16,6 @@ class RestServer (apps.Application):
 
         super().__init__(app_name, rel_cfg_file_path)
 
-        self.userdesk = userdesk.UserDesk(self)
-
-
-    def get_userdesk(self): 
-
-        return self.userdesk
-
 
     def mock_cgi_input(self):
 
@@ -37,7 +30,7 @@ class RestServer (apps.Application):
         cgi_body = ""
         cgi_form_fields = {}
 
-        c_type = utils.safedic(os.environ, "CONTENT_TYPE", "Not provided")
+        c_type = os.environ.get("CONTENT_TYPE", "Not provided")
 
         if c_type == "application/json":
             cgi_body = sys.stdin.read(int(os.environ.get("CONTENT_LENGTH", "0")))

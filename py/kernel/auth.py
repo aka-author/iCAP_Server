@@ -19,15 +19,15 @@ class Auth(controllers.Controller):
 
     def check_user_credentials(self, user: users.User, password: str) -> bool:
 
-        return user.get_password_hash() == utils.md5(password)
+        return user.get_field_value("password_hash") == utils.md5(password)
 
 
     def open_user_session(self, user: users.User, host: str, duration: int) -> object:
 
         user_session = user_sessions.UserSession(self)\
             .set_uuid()\
-            .set_field_value("user_uuid", user.get_uuid())\
-            .set_field_value("username_deb", user.get_username())\
+            .set_field_value("user_uuid", user.get_field_value("uuid"))\
+            .set_field_value("username_deb", user.get_field_value("username"))\
             .set_field_value("host", host)\
             .set_field_value("opened_at", datetime.now())\
             .set_field_value("duration", duration)\

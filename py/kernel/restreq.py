@@ -51,7 +51,7 @@ class RestRequest:
 
     def get_content_type(self):
 
-        ct_raw = utils.safedic(self.environ, "CONTENT_TYPE")
+        ct_raw = self.environ.get("CONTENT_TYPE")
 
         return None if ct_raw == None else (ct_raw.split(";")[0] if ";" in ct_raw else ct_raw)
 
