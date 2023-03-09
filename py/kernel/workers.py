@@ -23,6 +23,7 @@ class Worker:
         self.app = None
         self.cfg = None
         self.default_dbms = None
+        self.default_db = None
         self.req = None
 
 
@@ -86,11 +87,20 @@ class Worker:
                else None)     
 
 
-    def get_default_dbms(self) -> 'Worker':
+    def get_default_dbms(self) -> object:
 
-        return self.get_chief().get_default_dbms() if self.has_chief() else None
+        return self.default_dbms if self.default_dbms is not None \
+                else (self.get_chief().get_default_dbms() if self.has_chief() \
+                else None)
 
     
+    def get_default_db(self) -> object:
+
+        return self.default_db if self.default_db is not None \
+                else (self.get_chief().get_default_db() if self.has_chief() \
+                else None)
+
+
     def set_req(self, req: object) -> object:
 
         self.req = req

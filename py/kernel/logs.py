@@ -5,7 +5,7 @@
 # Func:    Writing to logs                        (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import utils, bureaucrat, ramtable, fields
+import utils, workers, ramtables, fields
 
 
 LOG_INFO    = "INFO"
@@ -13,7 +13,7 @@ LOG_WARNING = "WARNING"
 LOG_ERROR   = "ERROR"
 LOG_DEBUG   = "DEBUG"
 
-class Logger(bureaucrat.Bureaucrat):
+class Logger(workers.Worker):
 
     def __init__(self, chief=None):
         
@@ -39,7 +39,7 @@ class Logger(bureaucrat.Bureaucrat):
 
     def assemble_log_ramtable(self, record_type, wording, details=""):
 
-        return ramtable.Table("log_records")\
+        return ramtables.Table("log_records")\
                 .add_field(fields.StringField("session_id"))\
                 .add_field(fields.StringField("writer_name"))\
                 .add_field(fields.StringField("record_type"))\
@@ -59,10 +59,10 @@ class Logger(bureaucrat.Bureaucrat):
             if self.get_app().is_log_to_file_mode():
                 self.log_file.write(self.assemble_log_record(record_type, wording, details).replace("\n", '\\n') + "\n")
 
-            if self.get_app().is_log_to_db_mode():
-                rt_rec = self.assemble_log_ramtable(record_type, wording, details)
-                dbl = self.get_dbl()
-                dbl.execute(dbl.new_script("logs", "icap").import_source_ramtable(rt_rec)).commit()
+            # if self.get_app().is_log_to_db_mode():
+            #    rt_rec = self.assemble_log_ramtable(record_type, wording, details)
+            #    dbl = self.get_dbl()
+            #    dbl.execute(dbl.new_script("logs", "icap").import_source_ramtable(rt_rec)).commit()
 
         return self
 

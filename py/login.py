@@ -10,13 +10,13 @@
 
 import os, sys, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import restresp, auth, restserver
+from kernel import restreq, restresp, auth, restserver
 from debug import deb_login
 
 
 class Login(restserver.RestServer):
 
-    def __init__(self, rel_cfg_file_path):
+    def __init__(self, rel_cfg_file_path: str):
 
         super().__init__("Login", rel_cfg_file_path)
 
@@ -33,7 +33,7 @@ class Login(restserver.RestServer):
         return self
 
 
-    def auth_client(self, req):
+    def auth_client(self, req: restreq.RestRequest) -> bool:
 
         is_authorized = False
         
@@ -51,14 +51,14 @@ class Login(restserver.RestServer):
         return self.get_cfg().get_default_cms_session_duration()
 
 
-    def do_the_job(self, req):
+    def do_the_job(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
         host = req.get_host()
         duration = self.get_session_duration()
 
-        session = self.auth_agent.open_session(self.user, host, duration)
+        user_session = self.auth_agent.open_user_session(self.user, host, duration)
         
-        return restresp.RestResponse().set_body(session.export_dto())
+        return restresp.RestResponse().set_body(user_session.export_dto())
 
 
 Login("../cfg/fserv.ini").process_request()

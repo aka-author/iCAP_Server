@@ -44,7 +44,11 @@ class Cfg:
 
     def get_param_value(self, sect_name, param_name):
 
-        return utils.safedic(utils.safedic(self.parser, sect_name.upper()), param_name, "")
+        # section = self.parser.get(sect_name.upper(), "")
+
+        # section.get(param_name) if section is not None else ""
+
+        return self.parser.get(sect_name.upper(), param_name) 
 
 
     def get_app_param_value(self, app_name, param_name):
@@ -66,11 +70,20 @@ class Cfg:
         return int(utils.safeval(duration, 60))     
 
 
+    def get_dbms_connection_params(self):
+
+        dbms_connection_params = {
+            "software": self.get_param_value("DBMS", "software"),
+            "host": self.get_param_value("DBMS", "host"),
+            "port": self.get_param_value("DBMS", "port")
+        }
+
+        return dbms_connection_params
+    
+
     def get_db_connection_params(self):
 
         db_connection_params = { 
-            "host":     self.get_param_value("DATABASE", "host"),
-            "port":     self.get_param_value("DATABASE", "port"),
             "database": self.get_param_value("DATABASE", "database"),
             "user":     self.get_param_value("DATABASE", "user"),
             "password": self.get_param_value("DATABASE", "password")

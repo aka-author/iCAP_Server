@@ -5,10 +5,10 @@
 # Func:    Managing source data              (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import bureaucrat, fields, ramtable
+import workers, fields, ramtables
 
 
-class SourceDesk(bureaucrat.Bureaucrat):
+class SourceDesk(workers.Worker):
 
     def __init__(self, chief):
 
@@ -19,7 +19,7 @@ class SourceDesk(bureaucrat.Bureaucrat):
 
         measurement_exists = False
 
-        rt_cc = ramtable.Table("measurements")\
+        rt_cc = ramtables.Table("measurements")\
             .add_field(fields.BigintField("count_competitors").set_sql_agg_expr("count(uuid)"))
 
         dbl = self.get_dbl()

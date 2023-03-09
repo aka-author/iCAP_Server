@@ -307,3 +307,16 @@ class Select(sql_queries.SelectiveQuery):
             self.set_field_manager(fm)
 
         return self
+    
+
+    def build_dump(self, fk: fields.FieldKeeper, db_recordset_name: str, db_scheme_name: str=None) -> 'Select':
+
+        self.FROM((db_recordset_name, db_scheme_name))
+
+        for varname in fk.get_varnames():
+            self.SELECT_field((varname, 0))
+
+        if not self.has_field_manager():
+            self.set_field_manager(fields.FieldManager(fk))
+
+        return self

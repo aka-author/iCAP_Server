@@ -496,6 +496,18 @@ class FieldManager:
         return self.fk
 
 
+    def define_surrogate_key(self, varname: str) -> 'FieldManager':
+
+        self.get_field_keeper().define_surrogate_key(varname)
+
+        return self
+    
+
+    def get_surrogate_key_name(self) -> str:
+
+        return self.get_field_keeper().get_surrogate_key_name()
+
+
     def define_subkey(self, varname: str) -> object:
 
         self.get_field_keeper().define_subkey(varname)

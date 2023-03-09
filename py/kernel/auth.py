@@ -6,24 +6,25 @@
 # # ## ### ##### ######## ############# #####################
 
 from datetime import datetime
-import utils, controller, sessions
+import uuid
+import utils, controllers, apps, users, user_sessions
 
 
-class Auth(controller.Controller):
+class Auth(controllers.Controller):
 
-    def __init__(self, chief):
+    def __init__(self, chief: apps.Application):
 
         super().__init__(chief)
 
 
-    def check_user_credentials(self, user, password):
+    def check_user_credentials(self, user: users.User, password: str) -> bool:
 
         return user.get_password_hash() == utils.md5(password)
 
 
-    def open_session(self, user, host, duration):
+    def open_user_session(self, user: users.User, host: str, duration: int) -> object:
 
-        session = sessions.UserSession(self)\
+        user_session = user_sessions.UserSession(self)\
             .set_uuid()\
             .set_field_value("user_uuid", user.get_uuid())\
             .set_field_value("username_deb", user.get_username())\
@@ -32,32 +33,22 @@ class Auth(controller.Controller):
             .set_field_value("duration", duration)\
             .set_expire_at(duration)
     
-        session.direct_save()
+        user_session.insert(self.get_default_db())
             
-        return session
+        return user_session
 
 
-    def check_session(self, session_uuid):
+    def check_user_session(self, user_session_uuid: uuid.UUID) -> bool:
 
-        return sessions.UserSession(self).direct_load("uuid", session_uuid).is_valid()
+        user_session = user_session.UserSession(self)
+        
+        user_session.load(self.get_default_db(), "uuid", user_session_uuid)
 
-
-    def close_session(self, session):
-
-        dbl = self.get_dbl()
-
-        # upd_q = dbl.new_update()\
-        #    .TABLE.sql.set("icap.user_sessions").q\
-        #    .SET.sql.set("closed_at = '{0}'".format(utils.timestamp2str(datetime.now()))).q\
-        #    .WHERE.sql.set("uuid = '{0}'".format(str(session_uuid))).q
+        return user_session.is_valid()
 
 
-        upd_q = dbl.new_update()\
-            .TABLE.sql.set("{scheme}.user_session").q\
-            .SET.sql.set(session.fm.sql_equal("closed_at", datetime.now())).q\
-            .WHERE.sql.set(session.fm.sql_equal("uuid")).q
+    def close_user_session(self, user_session: object) -> 'Auth':
 
-
-        dbl.execute(upd_q).commit()
+        user_session.close()
 
         return self

@@ -32,6 +32,11 @@ class QueryResult(db_recordsets.Recordset):
         return self.cursor
 
 
+    def current_row_index(self):
+
+        return self.curr_row_index
+    
+
     def count_rows(self) -> int:
 
         return self.get_cursor().rowcount

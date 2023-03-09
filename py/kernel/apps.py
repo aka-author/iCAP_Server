@@ -3,11 +3,13 @@
 # Layer:   Kernel
 # Module:  apps.py                                     
 # Func:    Providing a prototype for each iCAP script   (\(\
-# Usage:   The class is abstract                        (^.^)
+# Usage:   The base class for application types         (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import os, pathlib, uuid
-import controllers, cfg, dbms_instances, logs, dirdesk, srcdesk
+import controllers, cfg, logs
+import postgres
+import userdesk, dirdesk, srcdesk
 
 
 GLOBAL_APP = None
@@ -27,12 +29,15 @@ class Application (controllers.Controller):
 
         GLOBAL_APP = self
         
-        self.default_dbms = self.new_default_dbms(self)
+        self.default_dbms = self.new_default_dbms()
+        self.default_db = self.new_default_db()
                 
         self.logger = logs.Logger(self)
 
         self.source_desk = srcdesk.SourceDesk(self)
-        self.directory_desk = dirdesk.DirectoryDesk(self)
+        self.user_desk = userdesk.UserDesk(self).set_db(self.default_db)
+        self.directory_desk = dirdesk.DirectoryDesk(self).set_db(self.default_db)
+        
 
 
     def get_app_name(self) -> str:
@@ -84,11 +89,25 @@ class Application (controllers.Controller):
         return self.get_cfg().is_batch_mode()
 
 
-    def new_default_dbms(self) -> dbms_instances.Dbms:
+    def new_default_dbms(self) -> object:
 
-        # This method is almost useless. Redefine it in a subclass.
+        dbms_connection_params = self.get_cfg().get_dbms_connection_params()
 
-        return dbms_instances.Dbms(self)
+        if dbms_connection_params.get("software") == "postgres":
+            dbms = postgres.Postgres(self, dbms_connection_params)
+        else:
+            dbms = None
+
+        return dbms
+    
+
+    def new_default_db(self) -> object:
+
+        db_connection_params = self.get_cfg().get_db_connection_params()
+
+        db = self.get_default_dbms().new_db(db_connection_params)
+        
+        return db
 
 
     def get_log_file_name(self) -> str:

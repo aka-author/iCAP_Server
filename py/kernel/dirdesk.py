@@ -5,70 +5,53 @@
 # Func:    Managing system directories               (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import bureaucrat, fields, ramtable, variable, sensor
+import desks, sensors, variables
 
 
-class DirectoryDesk(bureaucrat.Bureaucrat):
+class DirectoryDesk(desks.Desk):
 
     def __init__(self, chief):
 
         super().__init__(chief)
 
-        self.rt_sensors = self.fetch_sensors()
-        self.rt_variables = self.fetch_variables()
-
+        self.sensors, self.sensors_by_ids = self.fetch_sensors()
+        self.variables, self.variables_by_names = self.fetch_variables()
+        
 
     # Sensors
 
-    def fetch_sensors(self):
+    def fetch_sensors(self) -> 'DirectoryDesk':
+        print("default db", self.get_default_db())
+        loaded_sensors = sensors.Sensor(self).load_all(self.get_default_db()) 
 
-        rt_sensors = ramtable.Table("icap.sensors")\
-            .add_field(fields.UuidField("uuid"))\
-            .add_field(fields.StringField("sensor_id"))
+        sensors_by_ids = {}
 
-        dbl = self.get_dbl()
+        for sensor in loaded_sensors:
+            sensors_by_ids[sensor.get_field_value("sensor_id")] = sensor
 
-        dbl.execute(dbl.new_select().set_output_ramtable(rt_sensors))
-        
-        return rt_sensors
+        return loaded_sensors, sensors_by_ids
 
 
-    def get_sensor_by_id(self, sensor_id):
+    def get_sensor_by_id(self, sensor_id: str) -> sensors.Sensor:
 
-        sn = None
-
-        rows = self.rt_sensors.select_by_field_value("sensor_id", sensor_id)
-        
-        if len(rows) > 0:
-            sn = sensor.Sensor(self).load_from_ramtable_row(rows[0])
-
-        return sn 
+        return self.sensors_by_ids.get(sensor_id)
 
 
     # Variables
 
-    def fetch_variables(self):
+    def fetch_variables(self) -> 'DirectoryDesk':
 
-        rt_variables = ramtable.Table("icap.variables")\
-            .add_field(fields.UuidField("uuid"))\
-            .add_field(variable.VarnameField("varname"))\
-            .add_field(fields.StringField("datatype_name"))\
-            .add_field(fields.StringField("shortcut"))
+        loaded_variables = variables.Variable(self).load_all(self.get_default_db())
 
-        dbl = self.get_dbl()
-        q = dbl.new_select().set_output_ramtable(rt_variables)
-        dbl.execute(q) 
+        variables_by_names = {}
 
-        return rt_variables
+        for variable in loaded_variables:
+            print(variable.get_field_value("varname"))
+            variables_by_names[variable.get_field_value("varname")] = variable
+
+        return loaded_variables, variables_by_names
 
     
-    def get_variable_by_name(self, varname):
+    def get_variable_by_name(self, varname: str) -> variables.Variable:
 
-        var = None
-
-        rows = self.rt_variables.select_by_field_value("varname", varname)
-        
-        if len(rows) > 0:
-            var = variable.Variable(self).load_from_ramtable_row(rows[0])
-
-        return var 
+        return self.variables_by_names.get(varname)

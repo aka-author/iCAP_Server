@@ -1,18 +1,18 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  session.py                                  (\(\
-# Func:    Modeling user sessions                 (^.^)                                                                                                                                            
+# Module:  user_session.py                         (\(\
+# Func:    Managing a user session                 (^.^)                                                                                                                                            
 # # ## ### ##### ######## ############# #####################
 
 from datetime import datetime, timedelta
 import uuid
-import utils, fields, models
+import fields, models, auth
 
 
 class UserSession(models.Model): 
 
-    def __init__(self, chief, uuid=None):
+    def __init__(self, chief: object, uuid: uuid.UUID=None):
 
         super().__init__(chief)
 
@@ -48,7 +48,7 @@ class UserSession(models.Model):
 
         fm = self.get_field_manager()
 
-        expire_at = fm.get_field_value("opened_at") + timedelta(seconds=duration)
+        expire_at = self.fm.get_field_value("opened_at") + timedelta(seconds=duration)
         fm.set_field_value("expire_at", expire_at)
 
         return self
@@ -57,3 +57,12 @@ class UserSession(models.Model):
     def is_valid(self):
         
         return self.get_field_manager().get_field_value("uuid") is not None
+    
+
+    def close(self) -> 'UserSession':
+
+        self.get_field_manager().set_field_value("closed_at", datetime.now())
+
+        self.update()
+
+        return self

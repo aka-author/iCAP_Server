@@ -5,12 +5,12 @@
 # Func:    Modeling a user of a system              (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import fields, models
+import fields, models, userdesk
 
 
 class User(models.Model):
 
-    def __init__(self, chief):
+    def __init__(self, chief: object):
 
         super().__init__(chief)
                          
@@ -33,34 +33,34 @@ class User(models.Model):
 
     def get_uuid(self):
 
-        return self.get_field_manager().get_field_value("uuid")
+        return self.get_field_value("uuid")
 
 
     def get_username(self):
 
-        return self.get_field_manager().get_field_value("username")
+        return self.get_field_value("username")
 
 
     def get_password_hash(self):
 
-        return self.get_field_manager().get_field_value("password_hash")
+        return self.get_field_value("password_hash")
 
 
     def is_auth_required(self):
 
-        return self.get_field_manager().get_field_value("auth_required")
+        return self.get_field_value("auth_required")
 
 
     def may_configure_system(self):
 
-        return self.get_field_manager().get_field_value("configuring_system")
+        return self.get_field_value("configuring_system")
 
 
     def may_save_measurements(self):
 
-        return self.get_field_manager().get_field_value("saving_measurements")
+        return self.get_field_value("saving_measurements")
 
     
     def may_fetch_reports(self):
 
-        return self.get_field_manager().get_field_value("fetching_reports")
+        return self.get_field_value("fetching_reports")

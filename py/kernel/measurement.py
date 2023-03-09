@@ -6,10 +6,10 @@
 # # ## ### ##### ######## ############# #####################
 
 import uuid, datetime
-import utils, fields, model, ramtable, dirdesk
+import utils, fields, models, ramtables
 
 
-class VarValue(model.Model):
+class VarValue(models.Model):
 
     def __init__(self, measurement):
 
@@ -51,7 +51,7 @@ class VarValue(model.Model):
         return self.get_variable_uuid() is not None
 
 
-class Measurement(model.Model):
+class Measurement(models.Model):
 
     def __init__(self, script):
 
@@ -158,7 +158,7 @@ class Measurement(model.Model):
 
     def get_measurement_ramtable(self):
 
-        rt_m = ramtable.Table("measurements")\
+        rt_m = ramtables.Table("measurements")\
             .add_field(fields.UuidField("uuid"))\
             .add_field(fields.TimestampField("accepted_at"))\
             .add_field(fields.UuidField("sensor_uuid"))\
@@ -180,7 +180,7 @@ class Measurement(model.Model):
 
     def get_varvalues_ramtable(self):
 
-        rt_vv = ramtable.Table("varvalues")\
+        rt_vv = ramtables.Table("varvalues")\
             .add_field(fields.UuidField("measurement_uuid"))\
             .add_field(fields.UuidField("variable_uuid"))\
             .add_field(fields.StringField("varname_deb"))\

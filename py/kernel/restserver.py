@@ -1,15 +1,16 @@
 # # ## ### ##### ######## ############# #####################
-# Product: iCAP platform
-# Layer:   Kernel
-# Module:  restserver.py                             (\(\
-# Func:    Providing a prototype for a REST server   (^.^)
+# Product:  iCAP platform
+# Layer:    Kernel
+# Module:   restserver.py                             
+# Func:     Providing a prototype for a REST server    (\(\
+# Usage:    Derive your application from RestServer    (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys
-import utils, status, logs, restreq, restresp, userdesk, app
+import utils, status, logs, restreq, restresp, userdesk, apps
 
 
-class RestServer (app.Application):
+class RestServer (apps.Application):
 
     def __init__(self, app_name, rel_cfg_file_path):
 
