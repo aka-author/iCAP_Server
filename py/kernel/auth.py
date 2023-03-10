@@ -49,6 +49,6 @@ class Auth(controllers.Controller):
 
         user_session = user_sessions.UserSession(self)
         
-        user_session.load("uuid", user_session_uuid).close()
+        user_session.load(self.get_default_db(), "uuid", user_session_uuid).close()
 
         return self

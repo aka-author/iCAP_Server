@@ -219,12 +219,14 @@ class Model(workers.Worker):
 
     def load(self, db: db_instances.Db, target_varname: str, target_value: any) -> 'Model':
 
-        runner = db.get_dbms().new_query_runner()
+        runner = db.get_dbms().new_query_runner(db)
 
         load_query = self.get_load_query(db, target_varname, target_value)
 
-        runner.execute_query(load_query).fetch_one().close()
+        runner.execute_query(load_query).get_query_result().fetch_one()
 
+        runner.close()
+        
         self.load_submodels(db)
 
         return self
@@ -265,7 +267,7 @@ class Model(workers.Worker):
 
     def get_update_query(self, db: db_instances.Db) -> sql_update.Update:
 
-        return db.get_dbms().new_update().build_of_field_manager(self.get_field_manager()) 
+        return db.get_dbms().new_update().build_of_field_manager(self.get_field_manager(), self.get_plural(), "icap") 
 
 
     def get_save_query(self, db: db_instances.Db, options: Dict) -> sql_queries.Query: 

@@ -94,6 +94,6 @@ class UserSession(models.Model):
 
         self.get_field_manager().set_field_value("closed_at", datetime.now())
 
-        self.update()
+        self.update(self.get_default_db())
 
         return self
