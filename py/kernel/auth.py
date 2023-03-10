@@ -40,15 +40,15 @@ class Auth(controllers.Controller):
 
     def check_user_session(self, user_session_uuid: uuid.UUID) -> bool:
 
-        user_session = user_session.UserSession(self)
+        user_session = user_sessions.UserSession(self)
+
+        return user_session.is_valid(user_session_uuid)
+
+
+    def close_user_session(self, user_session_uuid: uuid.UUID) -> 'Auth':
+
+        user_session = user_sessions.UserSession(self)
         
-        user_session.load(self.get_default_db(), "uuid", user_session_uuid)
-
-        return user_session.is_valid()
-
-
-    def close_user_session(self, user_session: object) -> 'Auth':
-
-        user_session.close()
+        user_session.load("uuid", user_session_uuid).close()
 
         return self

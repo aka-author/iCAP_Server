@@ -63,10 +63,32 @@ class UserSession(models.Model):
         return self
 
 
-    def is_valid(self):
+    def is_valid(self, user_session_uuid: uuid.UUID) -> bool:
+
+        dbms = self.get_default_dbms()
+        db = self.get_default_db()
+
+        runner = dbms.new_query_runner(db)
+
+        out_fm = fields.FieldManager()\
+            .add_field(fields.BigintField("count_valid"))
+
+        count_query = dbms.new_select(db)\
+            .FROM((self.get_plural(), "icap"))\
+            .WHERE("{0}={1} AND {2}>{3} AND {4} IS null", 
+                   ("uuid", 0), user_session_uuid, 
+                   ("expire_at", 0), datetime.now(),
+                   ("closed_at", 0))\
+            .SELECT_expression("count_valid", "count(*)")\
+            .set_field_manager(out_fm)
         
-        return self.get_field_manager().get_field_value("uuid") is not None
-    
+        count_result = runner.execute_query(count_query).get_query_result().fetch_one()
+
+        runner.close()
+        print(count_result.fm.get_field_value("count_valid"))
+
+        return count_result.fm.get_field_value("count_valid") == 1
+        
 
     def close(self) -> 'UserSession':
 

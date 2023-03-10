@@ -34,14 +34,16 @@ class Logout(restserver.RestServer):
 
     def auth_client(self, req):
         print(req.get_cookie())
-        self.session_uuid = utils.str2uuid(req.get_cookie())
+        user_session_uuid = utils.str2uuid(req.get_cookie())
         
-        return self.auth_agent.check_session(self.session_uuid)
+        return self.auth_agent.check_user_session(user_session_uuid)
 
 
     def do_the_job(self, req):
 
-        self.auth_agent.close_session(self.session_uuid)
+        user_session_uuid = utils.str2uuid(req.get_cookie())
+
+        self.auth_agent.close_user_session(user_session_uuid)
         
         return restresp.RestResponse()
 
