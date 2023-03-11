@@ -39,12 +39,14 @@ class Logger(workers.Worker):
 
     def assemble_log_ramtable(self, record_type, wording, details=""):
 
-        return ramtables.Table("log_records")\
+        fk = fields.FieldKeeper()\
                 .add_field(fields.StringField("session_id"))\
                 .add_field(fields.StringField("writer_name"))\
                 .add_field(fields.StringField("record_type"))\
                 .add_field(fields.StringField("wording"))\
-                .add_field(fields.StringField("details"))\
+                .add_field(fields.StringField("details"))
+
+        return ramtables.Table("log_records", fk)\
                     .insert({"session_id": self.get_app().get_session_id(),
                              "writer_name": self.get_app().get_app_name(), 
                              "record_type": record_type, 
@@ -59,11 +61,13 @@ class Logger(workers.Worker):
             if self.get_app().is_log_to_file_mode():
                 self.log_file.write(self.assemble_log_record(record_type, wording, details).replace("\n", '\\n') + "\n")
 
-            # if self.get_app().is_log_to_db_mode():
-            #    rt_rec = self.assemble_log_ramtable(record_type, wording, details)
-            #    dbl = self.get_dbl()
-            #    dbl.execute(dbl.new_script("logs", "icap").import_source_ramtable(rt_rec)).commit()
-
+            if self.get_app().is_log_to_db_mode():
+                rt_rec = self.assemble_log_ramtable(record_type, wording, details)
+                dbms = self.get_default_dbms()
+                qr = dbms.new_query_runner(self.get_default_db())
+                qi = dbms.new_insert().build_of_field_manager(rt_rec.select_by_index(0).fm, "log_records", self.get_default_db_scheme_name())
+                qr.execute_query(qi).commit().close()
+            
         return self
 
 

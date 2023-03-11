@@ -45,7 +45,7 @@ class Row:
 
 class Table:
 
-    def __init__(self, table_name=None, fk: fields.FieldKeeper=None, ):
+    def __init__(self, table_name=None, fk: fields.FieldKeeper=None):
 
         self.table_name = table_name if table_name is not None else utils.unique_name("t")
 
