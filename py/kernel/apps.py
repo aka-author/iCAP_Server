@@ -16,7 +16,7 @@ GLOBAL_APP = None
 
 class Application (controllers.Controller):
 
-    def __init__(self, app_name, rel_cfg_file_path):
+    def __init__(self, app_name, rel_cfg_file_path: str):
 
         super().__init__()
 
@@ -31,12 +31,13 @@ class Application (controllers.Controller):
         
         self.default_dbms = self.new_default_dbms()
         self.default_db = self.new_default_db()
+        self.default_db_scheme_name = self.get_cfg().get_default_db_scheme_name()
                 
         self.logger = logs.Logger(self)
 
         self.source_desk = srcdesk.SourceDesk(self)
-        self.user_desk = userdesk.UserDesk(self).set_db(self.default_db)
-        self.directory_desk = dirdesk.DirectoryDesk(self).set_db(self.default_db)
+        self.user_desk = userdesk.UserDesk(self)
+        self.directory_desk = dirdesk.DirectoryDesk(self)
         
 
     def get_app_name(self) -> str:

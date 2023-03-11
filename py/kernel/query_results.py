@@ -14,7 +14,8 @@ class QueryResult(db_recordsets.Recordset):
 
         super().__init__(chief)
 
-        self.set_field_manager(fm)
+        if fm is not None:
+            self.set_field_manager(fm)
 
         self.cursor = cursor
 
@@ -67,7 +68,11 @@ class QueryResult(db_recordsets.Recordset):
 
             row = self.get_cursor().fetchone()
 
-            fm = self.get_field_manager()
+            if self.has_field_manager():
+                fm = self.get_field_manager()
+            else:
+                fm = fields.FieldManager(self.get_query().autocreate_field_keeper(row))
+                self.set_field_manager(fm)
 
             for idx, varname in enumerate(fm.get_varnames()):   
                 fm.set_field_value(varname, self.repair_value(row[idx], varname))

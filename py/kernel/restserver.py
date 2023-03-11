@@ -7,14 +7,16 @@
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys
-import utils, status, logs, restreq, restresp, userdesk, apps
+import utils, status, logs, restreq, restresp, auth, apps
 
 
 class RestServer (apps.Application):
 
-    def __init__(self, app_name, rel_cfg_file_path):
+    def __init__(self, app_name: str, rel_cfg_file_path: str):
 
         super().__init__(app_name, rel_cfg_file_path)
+
+        self.auth_agent = auth.Auth(self)
 
 
     def mock_cgi_input(self):
@@ -46,27 +48,31 @@ class RestServer (apps.Application):
         return req
 
 
-    def auth_client(self, req):
-  
+    def auth_client(self, req: restreq.RestRequest) -> bool:
+        
+        user_session_uuid = utils.str2uuid(req.get_cookie())
+        
+        return self.auth_agent.check_user_session(user_session_uuid)
+
+
+    def validate_request(self, req: restreq.RestRequest) -> bool:
+
         return True
 
 
-    def validate_request(self, req):
+    def type_response(self, resp: restresp.RestResponse) -> 'RestServer':
 
-        return True
+        print(resp.serialize())
 
-
-    def type_response(self, resp):
-
-        print(resp.serialize()) 
+        return self
 
 
-    def do_the_job(self, req):
+    def do_the_job(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
         return restresp.RestResponse()
 
 
-    def process_request(self):
+    def process_request(self) -> apps.Application:
 
         req = self.parse_cgi_data()
         self.log(logs.LOG_INFO, status.MSG_REQUEST, req.serialize())

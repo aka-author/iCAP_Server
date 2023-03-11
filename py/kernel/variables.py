@@ -5,12 +5,12 @@
 # Func:    Managing an iCAP variable                 (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import fields, models, dirdesk
+import fields, workers, models
 
 
 class Variable(models.Model):
 
-    def __init__(self, chief: 'dirdesk.DirectoryDesk'):
+    def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
 

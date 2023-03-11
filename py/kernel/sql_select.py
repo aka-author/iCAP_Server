@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict, List
-import utils, fields, sql_queries
+import utils, datatypes, fields, sql_queries
 
 
 class DistinctClause(sql_queries.Clause):
@@ -61,6 +61,41 @@ class SelectClause(sql_queries.Clause):
 
         return self.sql.list(defs)
     
+
+    def autocreate_field_keeper(self, field_values: Dict) -> fields.FieldKeeper:
+
+        fk = fields.FieldKeeper()
+
+        for idx, field_def in enumerate(self.field_defs):
+            
+            native_value = field_values[idx]
+            varname = field_def["alias"]
+
+            native_datatype_name = datatypes.detect_native_value_datatype(native_value)
+
+            if native_datatype_name == datatypes.DTN_UUID:
+                field = fields.UuidField(varname)
+            elif native_datatype_name == datatypes.DTN_BOOLEAN:
+                field = fields.BooleanField(varname)
+            elif native_datatype_name == datatypes.DTN_BIGINT:
+                field = fields.BigintField(varname)
+            elif native_datatype_name == datatypes.DTN_DOUBLE:
+                field = fields.DoubleField(varname)
+            elif native_datatype_name == datatypes.DTN_TIMESTAMP:
+                field = fields.TimestampField(varname)
+            elif native_datatype_name == datatypes.DTN_TIMESTAMP_TZ:
+                field = fields.TimestampTzField(varname)
+            elif native_datatype_name == datatypes.DTN_DATE:
+                field = fields.DateField(varname)
+            elif native_datatype_name == datatypes.DTN_TIME:
+                field = fields.TimeField(varname)
+            else:
+                field = fields.StringField(varname)
+
+            fk.add_field(field)
+
+        return fk
+
 
 class FromClause(sql_queries.Clause):
 
@@ -287,6 +322,11 @@ class Select(sql_queries.SelectiveQuery):
 
 
         return self 
+
+
+    def autocreate_field_keeper(self, row: Dict) -> fields.FieldKeeper:
+
+        return self.get_SELECT().autocreate_field_keeper(row)
 
 
     def build_of_field_manager(self, fm: fields.FieldManager, db_recordset_name: str, db_scheme_name: str=None, expr: str=None, *operands) -> 'Select':

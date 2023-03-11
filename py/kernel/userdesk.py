@@ -6,12 +6,12 @@
 # # ## ### ##### ######## ############# #####################
 
 import uuid
-import controllers, desks, users 
+import workers, desks, users 
 
 
 class UserDesk(desks.Desk):
 
-    def __init__(self, chief: controllers.Controller):
+    def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
 
@@ -25,7 +25,7 @@ class UserDesk(desks.Desk):
 
     def load_users(self) -> 'UserDesk':
 
-        loaded_users = users.User(self).load_all(self.get_default_db()) 
+        loaded_users = users.User(self).load_all() 
 
         users_by_uuids = {}
         users_by_names = {}
@@ -37,9 +37,9 @@ class UserDesk(desks.Desk):
         return loaded_users, users_by_uuids, users_by_names
     
 
-    def get_user_by_uuid(self, uuid: uuid.UUID) -> users.User:
+    def get_user_by_uuid(self, user_uuid: uuid.UUID) -> users.User:
 
-        return self.users_by_uuids.get(uuid)
+        return self.users_by_uuids.get(user_uuid)
 
 
     def get_user_by_name(self, username: str) -> users.User:

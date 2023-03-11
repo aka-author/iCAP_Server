@@ -24,6 +24,7 @@ class Worker:
         self.cfg = None
         self.default_dbms = None
         self.default_db = None
+        self.default_db_scheme_name = None
         self.req = None
 
 
@@ -98,6 +99,13 @@ class Worker:
 
         return self.default_db if self.default_db is not None \
                 else (self.get_chief().get_default_db() if self.has_chief() \
+                else None)
+
+
+    def get_default_db_scheme_name(self) -> str:
+
+        return self.default_db_scheme_name if self.default_db_scheme_name is not None \
+                else (self.get_chief().get_default_db_scheme_name() if self.has_chief() \
                 else None)
 
 

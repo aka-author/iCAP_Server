@@ -5,12 +5,12 @@
 # Func:    Managing system directories               (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import desks, sensors, variables
+import workers, desks, sensors, variables
 
 
 class DirectoryDesk(desks.Desk):
 
-    def __init__(self, chief):
+    def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
 
@@ -22,7 +22,7 @@ class DirectoryDesk(desks.Desk):
 
     def load_sensors(self) -> 'DirectoryDesk':
         
-        loaded_sensors = sensors.Sensor(self).load_all(self.get_default_db()) 
+        loaded_sensors = sensors.Sensor(self).load_all() 
 
         sensors_by_ids = {}
 
@@ -41,7 +41,7 @@ class DirectoryDesk(desks.Desk):
 
     def load_variables(self) -> 'DirectoryDesk':
 
-        loaded_variables = variables.Variable(self).load_all(self.get_default_db())
+        loaded_variables = variables.Variable(self).load_all()
 
         variables_by_names = {}
 

@@ -374,3 +374,7 @@ class SelectiveQuery(Query):
         super().__init__(chief, operator_name, query_name)
 
         self.selective_flag = True
+
+
+
+        

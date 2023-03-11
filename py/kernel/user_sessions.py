@@ -7,24 +7,22 @@
 
 from datetime import datetime, timedelta
 import uuid
-import fields, models, dtos
+import fields, workers, models, dtos
 
 
 class UserSession(models.Model): 
 
-    def __init__(self, chief: object, uuid: uuid.UUID=None):
+    def __init__(self, chief: workers.Worker, user_session_uuid: uuid.UUID=None):
 
         super().__init__(chief)
 
         self.set_model_name("user_session")
 
+        self.set_field_value("uuid", user_session_uuid if user_session_uuid is not None else uuid.uuid4())
         self.set_field_value("closed_at", None)
-        
-        if uuid is not None:
-            self.set_id(uuid)
 
 
-    def define_fields(self):
+    def define_fields(self) -> 'UserSession':
         
         self.get_field_manager()\
             .add_field(fields.UuidField("uuid"))\
@@ -39,6 +37,14 @@ class UserSession(models.Model):
         return self
 
 
+    def is_valid(self) -> bool:
+
+        is_expired = self.get_field_value("expire_at") <= datetime.now()
+        is_closed = self.get_field_value("closed_at") is not None
+
+        return not is_expired and not is_closed
+
+
     def set_export_dto_filter(self, dto: dtos.Dto) -> 'models.Model':
         
         dto.add_to_black_list("user_uuid", "username_deb", "closed_at")
@@ -46,54 +52,48 @@ class UserSession(models.Model):
         return self
 
 
-    def set_uuid(self):
+    def set_expire_at(self, duration: int) -> 'UserSession':
 
-        self.get_field_manager().set_field_value("uuid", uuid.uuid4())
-
-        return self
-
-
-    def set_expire_at(self, duration):
-
-        fm = self.get_field_manager()
-
-        expire_at = self.fm.get_field_value("opened_at") + timedelta(seconds=duration)
-        fm.set_field_value("expire_at", expire_at)
+        expire_at = self.get_field_value("opened_at") + timedelta(seconds=duration)
+        
+        self.set_field_value("expire_at", expire_at)
 
         return self
 
 
-    def is_valid(self, user_session_uuid: uuid.UUID) -> bool:
+    def fast_check(self) -> bool:
 
-        dbms = self.get_default_dbms()
-        db = self.get_default_db()
+        dbms, db = self.get_default_dbms(), self.get_default_db()        
+
+        db_table_name = self.get_plural()
+        db_scheme_name = self.get_default_db_scheme_name()
 
         runner = dbms.new_query_runner(db)
 
-        out_fm = fields.FieldManager()\
-            .add_field(fields.BigintField("count_valid"))
-
         count_query = dbms.new_select(db)\
-            .FROM((self.get_plural(), "icap"))\
+            .FROM((db_table_name, db_scheme_name))\
             .WHERE("{0}={1} AND {2}>{3} AND {4} IS null", 
-                   ("uuid", 0), user_session_uuid, 
+                   ("uuid", 0), self.get_field_value("uuid") , 
                    ("expire_at", 0), datetime.now(),
                    ("closed_at", 0))\
-            .SELECT_expression("count_valid", "count(*)")\
-            .set_field_manager(out_fm)
+            .SELECT_expression("count_valid", "count(*)")
         
         count_result = runner.execute_query(count_query).get_query_result().fetch_one()
 
         runner.close()
-        print(count_result.fm.get_field_value("count_valid"))
 
         return count_result.fm.get_field_value("count_valid") == 1
         
+
+    def load_by_uuid(self, user_session_uuid: uuid.UUID) -> 'UserSession':
+
+        return self.load("uuid", user_session_uuid)
+
 
     def close(self) -> 'UserSession':
 
         self.get_field_manager().set_field_value("closed_at", datetime.now())
 
-        self.update(self.get_default_db())
+        self.update()
 
         return self

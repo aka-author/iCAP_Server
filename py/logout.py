@@ -2,10 +2,11 @@
 #encoding: utf-8
 
 # # ## ### ##### ######## ############# #####################
-# Product: iCAP platform
-# Layer:   Application
-# Module:  logout.py                                (\(\
-# Func:    Terminating a user session               (^.^)
+# Product:  iCAP platform
+# Layer:    Application 
+# Module:   logout.py                                
+# Func:     Terminating a user session             (\(\    
+# Usage:    REST server                            (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import os, sys, pathlib
@@ -16,11 +17,9 @@ from debug import deb_logout
 
 class Logout(restserver.RestServer):
 
-    def __init__(self, rel_cfg_file_path):
+    def __init__(self, rel_cfg_file_path: str):
 
         super().__init__("Logout", rel_cfg_file_path)
-
-        self.auth_agent = auth.Auth(self)
 
 
     def mock_cgi_input(self):
@@ -30,13 +29,6 @@ class Logout(restserver.RestServer):
         deb_logout.mock_cgi_input()
 
         return self
-
-
-    def auth_client(self, req):
-        print(req.get_cookie())
-        user_session_uuid = utils.str2uuid(req.get_cookie())
-        
-        return self.auth_agent.check_user_session(user_session_uuid)
 
 
     def do_the_job(self, req):

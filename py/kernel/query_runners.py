@@ -82,7 +82,7 @@ class QueryRunner(workers.Worker):
 
 
     def execute_script(self, script: sql_scripts.Script) -> 'QueryRunner':
-        print(script.get_snippet())
+        
         cursor = self.execute_sql(script.get_snippet())
 
         if script.is_selective():

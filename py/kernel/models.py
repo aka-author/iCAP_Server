@@ -6,9 +6,9 @@
 # Usage:   Define your models based on Model        (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import Dict, List
+from typing import List
 import dtos, workers, fields
-import db_instances, sql_scripts, sql_queries, sql_insert, sql_update, query_results
+import query_runners, sql_scripts, sql_queries, sql_insert, sql_update, query_results
 
 
 class Model(workers.Worker):
@@ -106,7 +106,7 @@ class Model(workers.Worker):
         return True
 
 
-    # Working with a DTO
+    # Importing and exporting a DTO
 
     def import_field_value_from_dto(self, varname: str, native_value: any) -> 'Model':
 
@@ -115,7 +115,7 @@ class Model(workers.Worker):
         return self
 
 
-    def import_submodels_from_dto(self, dto: object) -> 'Model':
+    def import_submodels_from_dto(self, dto: dtos.Dto) -> 'Model':
 
         return self
 
@@ -157,16 +157,9 @@ class Model(workers.Worker):
         self.export_submodels_to_dto(dto)
 
         return dto
-
-
-    # Working with a database
-
-    def get_db_scheme_name(self) -> str:
-
-        return self.get_cfg().get_default_db_scheme_name()
     
 
-    # Loading models from a database
+    # Loading instances of a model from a database
 
     def create_instances_of_query_result(self, query_result: query_results.QueryResult) -> List:
 
@@ -185,21 +178,28 @@ class Model(workers.Worker):
         return instances
 
 
-    def get_load_query(self, db: db_instances.Db, target_varname: str=None, target_value: any=None) -> sql_queries.SelectiveQuery:
+    def get_load_query(self, target_varname: str, target_value: any) -> sql_queries.SelectiveQuery:
 
-        load_query = db.get_dbms().new_select()\
-            .build_of_field_manager(\
-                self.get_field_manager(), self.get_plural(), self.get_db_scheme_name(), \
-                "{0}={1}", (target_varname, 0), target_value)     
+        instance_fm = self.get_field_manager()
+        model_table_name = self.get_plural()
+        db_scheme_name = self.get_default_db_scheme_name()
+
+        load_query = self.get_default_dbms().new_select()
+                        
+        load_query.build_of_field_manager(\
+                    instance_fm, model_table_name, db_scheme_name, \
+                    "{0}={1}", (target_varname, 0), target_value)     
     
         return load_query
 
 
-    def load_all_siblings(self, db: db_instances.Db, parent_id_varname: str=None, parent_id: any=None) -> List:
+    def load_all_siblings(self, parent_id_varname: str, parent_id: any) -> List:
 
-        runner = db.get_dbms().new_query_runner()
+        dbms, db = self.get_default_dbms(), self.get_default_db()
 
-        load_all_siblings_query = self.get_load_query(db, parent_id_varname, parent_id)
+        runner = dbms.new_query_runner(db)
+
+        load_all_siblings_query = self.get_load_query(parent_id_varname, parent_id)
 
         query_result = runner.execute_query(load_all_siblings_query).get_query_result()
 
@@ -208,45 +208,52 @@ class Model(workers.Worker):
         return self.create_instances_of_query_result(query_result)
 
 
-    def load_submodels(self, db: db_instances.Db) -> 'Model':
+    def load_submodels(self) -> 'Model':
 
         # my_uuid = self.get_field_value("uuid")
-        # self.Cows = Cow(self).load_all_siblings(db, "farm_uuid", my_uuid)
-        # self.Hens = Hen(self).load_all_siblings(db, "farm_uuid", my_uuid)
+        # self.Cows = Cow(self).load_all_siblings("farm_uuid", my_uuid)
+        # self.Hens = Hen(self).load_all_siblings("farm_uuid", my_uuid)
         
         return self
 
 
-    def load(self, db: db_instances.Db, target_varname: str, target_value: any) -> 'Model':
+    def load(self, target_varname: str, target_value: any) -> 'Model':
 
-        runner = db.get_dbms().new_query_runner(db)
+        dbms, db = self.get_default_dbms(), self.get_default_db()
 
-        load_query = self.get_load_query(db, target_varname, target_value)
+        runner = dbms.new_query_runner(db)
+
+        load_query = self.get_load_query(target_varname, target_value)
 
         runner.execute_query(load_query).get_query_result().fetch_one()
 
         runner.close()
         
-        self.load_submodels(db)
+        self.load_submodels()
 
         return self
 
 
-    def get_load_all_query(self, db: db_instances.Db) -> sql_queries.SelectiveQuery:
+    def get_load_all_query(self) -> sql_queries.SelectiveQuery:
+
+        load_all_query = self.get_default_dbms().new_select()
+
+        model_fk = self.get_field_keeper()
+        model_table_name = self.get_plural()
+        db_scheme_name = self.get_default_db_scheme_name()
     
-        load_all_query = db.get_dbms().new_select()\
-            .build_dump(self.get_field_keeper(), \
-                        self.get_plural(), \
-                        self.get_db_scheme_name())
-    
+        load_all_query.build_dump(model_fk, model_table_name, db_scheme_name)
+                        
         return load_all_query
 
 
-    def load_all(self, db: db_instances.Db) -> List:
+    def load_all(self) -> List:
 
-        runner = db.get_dbms().new_query_runner(db)
+        dbms, db = self.get_default_dbms(), self.get_default_db()
 
-        load_all_query = self.get_load_all_query(db)
+        runner = dbms.new_query_runner(db)
+
+        load_all_query = self.get_load_all_query()
 
         query_result = runner.execute_query(load_all_query).get_query_result()
 
@@ -257,64 +264,95 @@ class Model(workers.Worker):
         return model_instances
         
 
-    # Inserting/updating models to/in a database
+    # Inserting an instance of a model
 
-    def get_insert_query(self, db: db_instances.Db) -> sql_insert.Insert:
+    def get_insert_query(self) -> sql_insert.Insert:
 
-        return db.get_dbms().new_insert()\
-            .build_of_field_manager(self.get_field_manager(), self.get_plural(), self.get_db_scheme_name())
+        insert_query = self.get_default_dbms().new_insert()
 
+        instance_fm = self.get_field_manager()
+        model_table_name = self.get_plural()
+        db_scheme_name = self.get_default_db_scheme_name()
 
-    def get_update_query(self, db: db_instances.Db) -> sql_update.Update:
+        insert_query.build_of_field_manager(instance_fm, model_table_name, db_scheme_name)
 
-        return db.get_dbms().new_update().build_of_field_manager(self.get_field_manager(), self.get_plural(), "icap") 
-
-
-    def get_save_query(self, db: db_instances.Db, options: Dict) -> sql_queries.Query: 
-
-        if options["mode"] == "insert":
-            save_query = self.get_insert_query(db)
-        elif options["mode"] == "update":
-            return self.get_update_query(db)
-        
-        return save_query
+        return insert_query
 
 
-    def get_submodel_save_queries(self, db: db_instances.Db, options: Dict) -> List:
+    def get_insert_submodel_queries(self) -> List:
 
         return []
+    
 
+    def get_insert_script(self) -> sql_scripts.Script:
 
-    def get_save_script(self, db: db_instances.Db, options: Dict) -> sql_scripts.Script:
-
-        save_script = db.get_dbms().new_script().add_query(self.get_save_query(db, options))
-
-        for save_query in self.get_submodel_save_queries(db, options): 
-            save_script.add(save_query)
-
-        return save_script
-
-
-    def save(self, db: db_instances.Db, options: Dict) -> 'Model':
+        insert_script = self.get_default_dbms().new_script()
         
-        query_runner = db.get_dbms().new_query_runner(db)
+        insert_script.add_query(self.get_insert_query())
 
-        save_script = self.get_save_script(db, options)
+        for insert_submodel_query in self.get_insert_submodel_queries(): 
+            insert_script.add(insert_submodel_query)
 
-        query_runner.execute_script(save_script).commit().close()
+        return insert_script
+    
+
+    def insert(self, chief_query_runner: query_runners.QueryRunner=None) -> 'Model':
+
+        query_runner = chief_query_runner if chief_query_runner is not None \
+            else self.get_default_dbms().new_query_runner(self.get_default_db())
+
+        query_runner.execute_script(self.get_insert_script())
+
+        if chief_query_runner is None:
+            query_runner.commit().close()
 
         return self
     
 
-    def insert(self, db):
+    # Updating an instance of a model
 
-        return self.save(db, {"mode": "insert"})
+    def get_update_query(self) -> sql_update.Update:
+
+        update_query = self.get_default_dbms().new_update()
+
+        instance_fm = self.get_field_manager()
+        model_table_name = self.get_plural()
+        db_scheme_name = self.get_default_db_scheme_name()
+
+        update_query.build_of_field_manager(instance_fm, model_table_name, db_scheme_name)
+
+        return update_query
+
+
+    def get_update_submodel_queries(self) -> List:
+
+        return []
     
 
-    def update(self, db):
+    def get_update_script(self) -> sql_scripts.Script:
 
-        return self.save(db, {"mode": "update"})
+        update_script = self.get_default_dbms().new_script()
+        
+        update_script.add_query(self.get_update_query())
 
+        for update_submodel_query in self.get_update_submodel_queries(): 
+            update_script.add(update_submodel_query)
+
+        return update_script
+
+
+    def update(self, chief_query_runner: query_runners.QueryRunner=None) -> 'Model':
+
+        query_runner = chief_query_runner if chief_query_runner is not None \
+            else self.get_default_dbms().new_query_runner(self.get_default_db())
+
+        query_runner.execute_script(self.get_update_script())
+
+        if chief_query_runner is None:
+            query_runner.commit().close()
+
+        return self
+    
 
     # Debugging
 
@@ -322,6 +360,3 @@ class Model(workers.Worker):
 
         return "\n".join([varname + ": " + str(self.fm.get_serialized_field_value(varname)) \
                             for varname in self.fm.get_varnames()])
-
-            
-            

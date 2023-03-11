@@ -2,10 +2,11 @@
 #encoding: utf-8
 
 # # ## ### ##### ######## ############# #####################
-# Product: iCAP platform
-# Layer:   Application
-# Module:  login.py                                  (\(\
-# Func:    Authorizing iCAP users                    (^.^)                                                                                                                                                                  
+# Product:  iCAP platform
+# Layer:    Application
+# Module:   login.py                                  
+# Func:     Authentifying iCAP users                  (\(\  
+# Usage     REST server                               (^.^)                                                                                                                                 
 # # ## ### ##### ######## ############# #####################
 
 import os, sys, pathlib
@@ -20,7 +21,6 @@ class Login(restserver.RestServer):
 
         super().__init__("Login", rel_cfg_file_path)
 
-        self.auth_agent = auth.Auth(self)
         self.user = None
 
 

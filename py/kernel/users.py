@@ -5,12 +5,12 @@
 # Func:    Managing a user of a system               (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import fields, models, userdesk
+import fields, models, workers
 
 
 class User(models.Model):
 
-    def __init__(self, chief: 'userdesk.User'):
+    def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
                          

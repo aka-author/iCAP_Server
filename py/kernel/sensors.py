@@ -5,12 +5,12 @@
 # Func:    Managing a sensor                  (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import fields, models, dirdesk
+import fields, workers, models, dirdesk
 
 
 class Sensor(models.Model):
 
-    def __init__(self, chief: 'dirdesk.DirectoryDesk'):
+    def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
 
