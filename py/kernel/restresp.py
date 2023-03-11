@@ -42,6 +42,13 @@ class RestResponse:
         self.set_result_code(404, "Not found")
 
         return self
+    
+
+    def set_result_500(self):
+
+        self.set_result_code(500, "Internal server error")
+
+        return self
 
 
     def get_result_code(self):

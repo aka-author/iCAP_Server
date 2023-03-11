@@ -7,7 +7,7 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import List
-import dtos, workers, fields
+import status, dtos, workers, fields
 import query_runners, sql_scripts, sql_queries, sql_insert, sql_update, query_results
 
 
@@ -255,11 +255,12 @@ class Model(workers.Worker):
 
         load_all_query = self.get_load_all_query()
 
-        query_result = runner.execute_query(load_all_query).get_query_result()
-
-        model_instances = self.create_instances_of_query_result(query_result)
-
-        runner.close()
+        if runner.execute_query(load_all_query).isOK():
+            query_result = runner.get_query_result()
+            model_instances = self.create_instances_of_query_result(query_result)
+            runner.close()
+        else:
+            raise Exception(status.MSG_DATABASE_ERROR)
 
         return model_instances
         

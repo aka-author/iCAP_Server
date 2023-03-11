@@ -7,7 +7,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import os, pathlib, uuid
-import controllers, cfg, logs
+import status, controllers, cfg, logs
 import postgres
 import userdesk, dirdesk, srcdesk
 
@@ -35,9 +35,12 @@ class Application (controllers.Controller):
                 
         self.logger = logs.Logger(self)
 
-        self.source_desk = srcdesk.SourceDesk(self)
-        self.user_desk = userdesk.UserDesk(self)
-        self.directory_desk = dirdesk.DirectoryDesk(self)
+        try:
+            self.source_desk = srcdesk.SourceDesk(self)
+            self.user_desk = userdesk.UserDesk(self)
+            self.directory_desk = dirdesk.DirectoryDesk(self)
+        except:
+            self.set_status_code(status.ERR_APP_INIT_FAILED)
         
 
     def get_app_name(self) -> str:

@@ -108,7 +108,9 @@ class PostgresQueryRunner(query_runners.QueryRunner):
         except:
             status_code = status.ERR_DB_CONNECTION_FAILED
 
-        return status_code 
+        self.set_status_code(status_code)
+
+        return self 
 
 
 class Postgres(dbms_instances.Dbms):

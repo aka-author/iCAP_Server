@@ -66,7 +66,10 @@ class Logger(workers.Worker):
                 dbms = self.get_default_dbms()
                 qr = dbms.new_query_runner(self.get_default_db())
                 qi = dbms.new_insert().build_of_field_manager(rt_rec.select_by_index(0).fm, "log_records", self.get_default_db_scheme_name())
-                qr.execute_query(qi).commit().close()
+                try:
+                    qr.execute_query(qi).commit().close()
+                except:
+                    pass
             
         return self
 

@@ -78,10 +78,12 @@ class UserSession(models.Model):
                    ("closed_at", 0))\
             .SELECT_expression("count_valid", "count(*)")
         
-        count_result = runner.execute_query(count_query).get_query_result().fetch_one()
-
-        runner.close()
-
+        if runner.isOK():
+            count_result = runner.execute_query(count_query).get_query_result().fetch_one()
+            runner.close()
+        else:
+            raise Exception("Database error")
+        
         return count_result.fm.get_field_value("count_valid") == 1
         
 
