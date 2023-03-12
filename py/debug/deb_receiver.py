@@ -13,7 +13,7 @@ def get_body():
         """{"measurements": [
                 {
                     "id": "bff2b5eb-9601-43a2-b3cb-1068c8deaeba", 
-                    "accepted_at": "2023-01-17 11:39:24.434 +2200", 
+                    "accepted_at": "2023-01-17 11:39:24.434 +0200", 
                     "sensor_id": "default-webhelp-sensor", 
                     "args": [
                         {"varname": "icap.pagereadId", "parsable_value": "2ce2a741-919a-47a1-9a3a-c05719bde44b"}

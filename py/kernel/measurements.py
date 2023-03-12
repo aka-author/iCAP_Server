@@ -44,6 +44,11 @@ class VarValue(models.Model):
     def get_parsable_value(self):
 
         return self.get_field_value("parsable_value")
+    
+
+    def get_serialized_value(self) -> str:
+
+        return self.get_field_value("serialized_value")
 
 
     def rebuild(self, measurement: 'Measurement', partition: str) -> 'VarValue':
@@ -86,6 +91,8 @@ class Measurement(models.Model):
             .add_field(fields.TimestampTzField("accepted_at"))\
             .add_field(fields.UuidField("sensor_uuid"))\
             .add_field(fields.StringField("sensor_id"))\
+            .add_field(fields.StringField("argprof"))\
+            .add_field(fields.StringField("outprof"))\
             .add_field(fields.StringField("hashkey"))
             
 
@@ -118,27 +125,32 @@ class Measurement(models.Model):
         return self.varvals_by_names[varname].get_parsable_value()
     
 
-    def get_hashkey(self):
+    def get_argprof(self) -> str:
 
         dd = self.get_app().get_directory_desk()
 
         arg_names = [arg.get_varname() for arg in self.args]
         arg_names.sort()
 
+        return "+".join([dd.get_variable_by_name(arg_name).get_shortcut() for arg_name in arg_names])
+                
+
+    def get_outprof(self) -> str:
+
+        dd = self.get_app().get_directory_desk()
+
         out_names = [out.get_varname() for out in self.outs]
         out_names.sort()
 
-        args_hashkey = "#".join([utils.safeval(dd.get_variable_by_name(arg_name).get_shortcut(), arg_name)\
-                     + ":"\
-                     + str(self.get_parsable_value(arg_name)) \
-                                 for arg_name in arg_names])
+        return "+".join([dd.get_variable_by_name(out_name).get_shortcut() for out_name in out_names])                
 
-        outs_hashkey = "#".join([utils.safeval(dd.get_variable_by_name(out_name).get_shortcut(), out_name) \
-                                 for out_name in out_names])
 
-        hashkey = args_hashkey + "$" + outs_hashkey
+    def get_hashkey(self):
 
-        return hashkey
+        arg_names = [arg.get_varname() for arg in self.args]
+        arg_names.sort()
+
+        return "+".join([str(self.varvals_by_names[arg_name].get_parsable_value()).replace("+", "++") for arg_name in arg_names])
 
 
     def count_args(self):
@@ -169,6 +181,8 @@ class Measurement(models.Model):
 
         self.set_field_value("uuid", uuid.uuid4())\
             .set_field_value("sensor_uuid", self.get_sensor_uuid())\
+            .set_field_value("argprof", self.get_argprof())\
+            .set_field_value("outprof", self.get_outprof())\
             .set_field_value("hashkey", self.get_hashkey())
 
         for varvalue in self.args:
@@ -216,7 +230,10 @@ class Measurement(models.Model):
 
         count_query = dbms.new_select()\
             .FROM((db_table_name, db_scheme_name))\
-            .WHERE("{0}={1}", ("hashkey", 0), self.get_hashkey())\
+            .WHERE("{0}={1} AND {2}={3} AND {4}={5}", 
+                   ("argprof", 0), self.get_argprof(),
+                   ("outprof", 0), self.get_outprof(),
+                   ("hashkey", 0), self.get_hashkey())\
             .SELECT_expression("count_valid", "count(*)")
         
         runner.execute_query(count_query)
