@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import List
-import uuid, datetime
+import uuid
 import utils, dtos, workers, fields, models, variables
 
 
@@ -24,8 +24,9 @@ class VarValue(models.Model):
         self.get_field_manager()\
             .add_field(fields.UuidField("uuid"), "autoins")\
             .add_field(fields.UuidField("measurement_uuid"))\
+            .add_field(fields.UuidField("variable_uuid"))\
             .add_field(fields.StringField("varname"))\
-            .add_field(fields.StringField("value_subset"))\
+            .add_field(fields.StringField("partition"))\
             .add_field(fields.StringField("parsable_value"), "autoins")\
             .add_field(fields.StringField("serialized_value"))
 
@@ -33,32 +34,34 @@ class VarValue(models.Model):
     def get_varname(self):
 
         return self.get_field_value("varname")
-
-
-    def get_parsable_value(self):
-
-        return self.get_field_value("parsable_value")
  
-
-    def is_valid(self) -> bool: 
-
-        return self.get_app().get_directory_desk().check_varname(self.get_varname())
-    
 
     def get_variable(self) -> variables.Variable:
 
         return self.get_app().get_directory_desk().get_variable_by_name(self.get_varname())
     
 
-    def rebuild(self, measurement: 'Measurement', subset: str) -> 'VarValue':
+    def get_parsable_value(self):
 
+        return self.get_field_value("parsable_value")
+
+
+    def rebuild(self, measurement: 'Measurement', partition: str) -> 'VarValue':
+
+        variable_uuid = self.get_variable().get_uuid()
         serialized_value = str(self.get_field_value("parsable_value"))
 
         self.set_field_value("measurement_uuid", measurement.get_uuid())\
-            .set_field_value("value_subset", subset)\
+            .set_field_value("variable_uuid", variable_uuid)\
+            .set_field_value("partition", partition)\
             .set_field_value("serialized_value", serialized_value)
         
         return self
+    
+
+    def is_valid(self) -> bool: 
+
+        return self.get_app().get_directory_desk().check_varname(self.get_varname())
 
 
 class Measurement(models.Model):
@@ -224,4 +227,4 @@ class Measurement(models.Model):
         else:
             raise Exception("Database error")
         
-        return count_result.fm.get_field_value("count_valid") == 1
+        return count_result.fm.get_field_value("count_valid") == 0

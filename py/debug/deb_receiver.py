@@ -13,7 +13,7 @@ def get_body():
         """{"measurements": [
                 {
                     "id": "bff2b5eb-9601-43a2-b3cb-1068c8deaeba", 
-                    "accepted_at": "2023-01-17 11:39:24.434 +2000", 
+                    "accepted_at": "2023-01-17 11:39:24.434 +2200", 
                     "sensor_id": "default-webhelp-sensor", 
                     "args": [
                         {"varname": "icap.pagereadId", "parsable_value": "2ce2a741-919a-47a1-9a3a-c05719bde44b"}
@@ -32,7 +32,7 @@ def get_body():
                 }, 
                 {
                     "id": "dd4d626c-a209-43a7-a346-63632734bed4", 
-                    "accepted_at": "2023-01-17 11:39:24.436 +2000", 
+                    "accepted_at": "2023-01-17 11:39:24.436 +0200", 
                     "sensor_id": "default-webhelp-sensor", 
                     "args": [
                         {"varname": "icap.cms.doc.uid", "parsable_value": "193"}, 
@@ -46,7 +46,7 @@ def get_body():
                 }, 
                 {
                     "id": "577bfbde-7987-4a59-8782-f5dcef05d9e2", 
-                    "accepted_at": "2023-01-17 11:39:24.437 +2000", 
+                    "accepted_at": "2023-01-17 11:39:24.437 +0200", 
                     "sensor_id": "default-webhelp-sensor", 
                     "args": [
                         {"varname": "icap.pagereadId", "parsable_value": "2ce2a741-919a-47a1-9a3a-c05719bde44b"}, 

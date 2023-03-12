@@ -102,7 +102,7 @@ class QueryRunner(workers.Worker):
 
     def commit(self) -> 'QueryRunner':
 
-        if self.is_connected():
+        if self.isOK and self.is_connected():
             self.get_connection().commit()
 
         return self
@@ -115,6 +115,9 @@ class QueryRunner(workers.Worker):
 
     def close(self) -> 'QueryRunner':
 
-        self.connection.close()
+        connection = self.get_connection()
+
+        if connection is not None:
+            connection.close()
 
         return self

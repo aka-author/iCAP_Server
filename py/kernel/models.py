@@ -304,8 +304,6 @@ class Model(workers.Worker):
 
         query_runner.execute_script(self.get_insert_script())
 
-        print(self.get_insert_script().get_snippet())
-
         if chief_query_runner is None:
             query_runner.commit().close()
 

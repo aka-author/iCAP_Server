@@ -77,6 +77,27 @@ class RestServer (apps.Application):
         self.type_response(restresp.RestResponse().set_result_500())
 
 
+    def cope(self, req: restreq.RestRequest) -> apps.Application:
+
+        if self.auth_client(req):
+
+            if self.validate_request(req):
+                resp = self.do_the_job(req)
+                self.type_response(resp)
+                self.log(logs.LOG_INFO, status.MSG_RESPONSE, resp.serialize())
+            else:
+                self.set_status_code(status.ERR_INCORRECT_REQUEST)
+                self.log(logs.LOG_ERROR, status.MSG_INCORRECT_REQUEST, self.req.get_serialized_payload())
+                self.type_response(restresp.RestResponse().set_result_404())
+
+        else:
+            self.set_status_code(status.ERR_NOT_AUTHORIZED)
+            self.log(logs.LOG_ERROR, status.MSG_NOT_AUTHORIZED, self.req.get_serialized_payload())
+            self.type_response(restresp.RestResponse().set_result_401())
+
+        return self
+
+
     def process_request(self) -> apps.Application:
 
         if self.isOK():
@@ -84,25 +105,13 @@ class RestServer (apps.Application):
             req = self.parse_cgi_data()
             self.log(logs.LOG_INFO, status.MSG_REQUEST, req.serialize())
 
-            if True: #try:
-                if self.auth_client(req):
-
-                    if self.validate_request(req):
-                        resp = self.do_the_job(req)
-                        self.type_response(resp)
-                        self.log(logs.LOG_INFO, status.MSG_RESPONSE, resp.serialize())
-                    else:
-                        self.set_status_code(status.ERR_INCORRECT_REQUEST)
-                        self.log(logs.LOG_ERROR, status.MSG_INCORRECT_REQUEST, self.req.get_serialized_payload())
-                        self.type_response(restresp.RestResponse().set_result_404())
-
-                else:
-                    self.set_status_code(status.ERR_NOT_AUTHORIZED)
-                    self.log(logs.LOG_ERROR, status.MSG_NOT_AUTHORIZED, self.req.get_serialized_payload())
-                    self.type_response(restresp.RestResponse().set_result_401())
-
-            # except Exception as internal_fail_reasons:
-            #    self.fail(internal_fail_reasons.args[0])
+            if self.is_debug_mode():
+                self.cope(req)
+            else:
+                try:
+                    self.cope(req)
+                except Exception as internal_fail_reasons:
+                    self.fail(internal_fail_reasons.args[0])
         else:
             self.fail(status.MSG_APP_INIT_FAILED)
 
