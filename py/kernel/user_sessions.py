@@ -70,7 +70,7 @@ class UserSession(models.Model):
 
         runner = dbms.new_query_runner(db)
 
-        count_query = dbms.new_select(db)\
+        count_query = dbms.new_select()\
             .FROM((db_table_name, db_scheme_name))\
             .WHERE("{0}={1} AND {2}>{3} AND {4} IS null", 
                    ("uuid", 0), self.get_field_value("uuid") , 
@@ -78,8 +78,10 @@ class UserSession(models.Model):
                    ("closed_at", 0))\
             .SELECT_expression("count_valid", "count(*)")
         
+        runner.execute_query(count_query)
+
         if runner.isOK():
-            count_result = runner.execute_query(count_query).get_query_result().fetch_one()
+            count_result = runner.get_query_result().fetch_one()
             runner.close()
         else:
             raise Exception("Database error")

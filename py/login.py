@@ -24,7 +24,7 @@ class Login(restserver.RestServer):
         self.user = None
 
 
-    def mock_cgi_input(self):
+    def mock_cgi_input(self) -> restserver.RestServer:
 
         super().mock_cgi_input()
      

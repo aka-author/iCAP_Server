@@ -51,6 +51,11 @@ class DirectoryDesk(desks.Desk):
         return loaded_variables, variables_by_names
 
     
+    def check_varname(self, varname: str) -> bool:
+
+        return varname in self.variables_by_names
+    
+
     def get_variable_by_name(self, varname: str) -> variables.Variable:
 
         return self.variables_by_names.get(varname)

@@ -11,7 +11,7 @@
 
 import os, sys, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import utils, restresp, auth, restserver
+from kernel import utils, restresp, auth, restserver, restreq
 from debug import deb_logout
 
 
@@ -22,7 +22,7 @@ class Logout(restserver.RestServer):
         super().__init__("Logout", rel_cfg_file_path)
 
 
-    def mock_cgi_input(self):
+    def mock_cgi_input(self) -> restserver.RestServer:
 
         super().mock_cgi_input()
      
@@ -31,7 +31,7 @@ class Logout(restserver.RestServer):
         return self
 
 
-    def do_the_job(self, req):
+    def do_the_job(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
         user_session_uuid = utils.str2uuid(req.get_cookie())
 

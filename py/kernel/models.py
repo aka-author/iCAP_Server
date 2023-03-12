@@ -123,7 +123,7 @@ class Model(workers.Worker):
     def import_dto(self, dto: dtos.Dto) -> 'Model':
 
         for varname in self.fm.get_varnames():
-            self.import_field_value_from_dto(varname, dto.get(varname))
+            self.import_field_value_from_dto(varname, dto.get_prop_value(varname))
 
         self.import_submodels_from_dto(dto)
 
@@ -292,7 +292,7 @@ class Model(workers.Worker):
         insert_script.add_query(self.get_insert_query())
 
         for insert_submodel_query in self.get_insert_submodel_queries(): 
-            insert_script.add(insert_submodel_query)
+            insert_script.add_query(insert_submodel_query)
 
         return insert_script
     
@@ -303,6 +303,8 @@ class Model(workers.Worker):
             else self.get_default_dbms().new_query_runner(self.get_default_db())
 
         query_runner.execute_script(self.get_insert_script())
+
+        print(self.get_insert_script().get_snippet())
 
         if chief_query_runner is None:
             query_runner.commit().close()

@@ -84,7 +84,7 @@ class RestServer (apps.Application):
             req = self.parse_cgi_data()
             self.log(logs.LOG_INFO, status.MSG_REQUEST, req.serialize())
 
-            try:
+            if True: #try:
                 if self.auth_client(req):
 
                     if self.validate_request(req):
@@ -101,8 +101,8 @@ class RestServer (apps.Application):
                     self.log(logs.LOG_ERROR, status.MSG_NOT_AUTHORIZED, self.req.get_serialized_payload())
                     self.type_response(restresp.RestResponse().set_result_401())
 
-            except Exception as internal_fail_reasons:
-                self.fail(internal_fail_reasons.args[0])
+            # except Exception as internal_fail_reasons:
+            #    self.fail(internal_fail_reasons.args[0])
         else:
             self.fail(status.MSG_APP_INIT_FAILED)
 

@@ -5,6 +5,7 @@
 # Func:    Managing an iCAP variable                 (^.^)
 # # ## ### ##### ######## ############# #####################
 
+import uuid
 import fields, workers, models
 
 
@@ -26,3 +27,13 @@ class Variable(models.Model):
             .add_field(fields.StringField("shortcut"))
 
         return self
+    
+
+    def get_uuid(self) -> uuid.UUID:
+
+        return self.get_field_value("uuid")
+    
+
+    def get_shortcut(self) -> str:
+
+        return self.get_field_value("shortcut")

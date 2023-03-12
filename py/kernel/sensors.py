@@ -5,6 +5,7 @@
 # Func:    Managing a sensor                  (^.^)
 # # ## ### ##### ######## ############# #####################
 
+import uuid
 import fields, workers, models, dirdesk
 
 
@@ -24,3 +25,8 @@ class Sensor(models.Model):
             .add_field(fields.StringField("sensor_id"))
 
         return self
+    
+
+    def get_uuid(self) -> uuid.UUID:
+
+        return self.get_field_value("uuid") 

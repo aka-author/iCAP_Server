@@ -8,21 +8,22 @@
 # Func:    Saving measurements to a database         (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
+from typing import Dict
 import os, sys, pathlib
 
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import restserver, logs, measurement, httpresp
+from kernel import dtos, restserver, restreq, restresp, measurements
 from debug import deb_receiver
 
 
 class Receiver(restserver.RestServer):
 
-    def __init__(self, rel_cfg_file_path):
+    def __init__(self, rel_cfg_file_path: str):
 
         super().__init__("Receiver", rel_cfg_file_path)
 
 
-    def mock_cgi_input(self):
+    def mock_cgi_input(self) -> restserver.RestServer:
 
         super().mock_cgi_input()
      
@@ -31,53 +32,35 @@ class Receiver(restserver.RestServer):
         return self
 
 
-    def validate_request(self, request):
+    def auth_client(self, req: restreq.RestRequest) -> bool:
+
+        return True
+    
+
+    def validate_request(self, req: restreq.RestRequest) -> bool:
         
-        return "measurements" in request.get_payload()
+        return "measurements" in req.get_payload()
 
 
-    def do_the_job(self, request):
+    def new_measurement_dto(self, measurement_dict: Dict) -> dtos.Dto:
 
-        sd = self.get_source_desk()
-        q = sd.get_measurements_query(["icap.action.code", "icap.action.timeOffset"], \
-            ["icap.cms.taxonomy.Customer types", "icap.cms.taxonomy.Product scales"])
-        self.deb(q.get_snippet())
+        return dtos.Dto(measurement_dict).repair_datatypes()
+    
 
-        q = sd.get_measurements_query(["icap.cms.topic.uid"], \
-            ["icap.cms.taxonomy.Customer types", "icap.cms.taxonomy.Product scales"])
-        self.deb(q.get_snippet())
-        
-        payload = request.get_payload()
-        
-        measurements_dtos = payload["measurements"]
+    def do_the_job(self, req: restreq.RestRequest) -> restresp.RestResponse:
+                        
+        for measurement_dict in req.get_payload().get("measurements"): 
 
-        rt_measurements = rt_varvalues = None 
-        
-        for dto in measurements_dtos: 
+            measurement_dto = self.new_measurement_dto(measurement_dict)
             
-            m = measurement.Measurement(self).import_dto(dto)
-            
-            if m.is_valid() and not self.get_source_desk().check_measurement(m.get_hashkey()):
+            measurement = measurements.Measurement(self)\
+                            .import_dto(measurement_dto)\
+                            .rebuild()
 
-                rt_m = m.get_measurement_ramtable()
-                rt_measurements = rt_m if rt_measurements is None else rt_measurements.union(rt_m) 
+            if measurement.is_valid() and measurement.is_unique():
+                measurement.insert()
 
-                rt_v = m.get_varvalues_ramtable()
-                rt_varvalues = rt_v if rt_varvalues is None else rt_varvalues.union(rt_v)
-        
-        if rt_measurements is not None and rt_varvalues is not None:
-
-            dbl = self.get_dbl() 
-
-            scr = dbl.new_script("insert_measurements", "icap")
-            scr.import_source_ramtable(rt_measurements).import_source_ramtable(rt_varvalues)
-        
-            dbl.execute(scr).commit()
-
-            self.deb(rt_measurements)
-            self.deb(scr.get_snippet())
-
-        return httpresp.HttpResponse()
+        return restresp.RestResponse()
 
 
 Receiver("../cfg/fserv.ini").process_request()
