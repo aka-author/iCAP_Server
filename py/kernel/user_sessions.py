@@ -37,6 +37,11 @@ class UserSession(models.Model):
         return self
 
 
+    def get_user_uuid(self) -> uuid.UUID:
+
+        return self.get_field_value("user_uuid")
+    
+
     def is_valid(self) -> bool:
 
         is_expired = self.get_field_value("expire_at") <= datetime.now()

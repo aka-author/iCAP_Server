@@ -31,7 +31,7 @@ class Logger(workers.Worker):
 
     def assemble_log_record(self, logrec_type, wording, details=""):
 
-        return "\t".join([self.get_app().get_session_id(), 
+        return "\t".join([self.get_app().get_launch_id(), 
                          utils.strnow(), 
                          self.get_app().get_app_name(), 
                          logrec_type, wording, details])
@@ -40,14 +40,14 @@ class Logger(workers.Worker):
     def assemble_log_ramtable(self, record_type, wording, details=""):
 
         fk = fields.FieldKeeper()\
-                .add_field(fields.StringField("session_id"))\
+                .add_field(fields.StringField("launch_id"))\
                 .add_field(fields.StringField("writer_name"))\
                 .add_field(fields.StringField("record_type"))\
                 .add_field(fields.StringField("wording"))\
                 .add_field(fields.StringField("details"))
 
         return ramtables.Table("log_records", fk)\
-                    .insert({"session_id": self.get_app().get_session_id(),
+                    .insert({"session_id": self.get_app().get_launch_id(),
                              "writer_name": self.get_app().get_app_name(), 
                              "record_type": record_type, 
                              "wording": wording,

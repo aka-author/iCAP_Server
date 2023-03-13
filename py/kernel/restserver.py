@@ -6,8 +6,8 @@
 # Usage:    Derive your application from RestServer    (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import cgi, os, sys
-import utils, status, logs, restreq, restresp, auth, apps
+import cgi, os, sys, uuid
+import utils, status, logs, restreq, restresp, users, auth, apps
 
 
 class RestServer (apps.Application):
@@ -17,12 +17,38 @@ class RestServer (apps.Application):
         super().__init__(app_name, rel_cfg_file_path)
 
         self.auth_agent = auth.Auth(self)
+        self.user_session_uuid = None
+        self.current_user = None
 
 
     def mock_cgi_input(self):
 
        return self
 
+
+    def set_user_session_uuid(self, user_session_uuid: uuid.UUID) -> 'RestServer':
+
+        self.user_session_uuid = user_session_uuid
+
+        return self
+    
+
+    def get_user_session_uuid(self) -> uuid.UUID:
+
+        return self.user_session_uuid
+
+
+    def set_current_user(self, user: users.User) -> 'RestServer':
+
+        self.current_user = user
+
+        return self
+    
+
+    def get_current_user(self) -> users.User:
+
+        return self.current_user
+    
 
     def parse_cgi_data(self):
         
@@ -48,11 +74,39 @@ class RestServer (apps.Application):
         return req
 
 
-    def auth_client(self, req: restreq.RestRequest) -> bool:
+    def get_auth_agent(self) -> auth.Auth:
+
+        return self.auth_agent
+    
+
+    def get_guest_username(self) -> str:
+
+        return self.get_cfg().get_guest_username(self.get_app_name())
+
+
+    def check_user_permissions(self, user: users.User) -> bool:
+
+        return False
+
+
+    def authorize_user(self, req: restreq.RestRequest) -> bool:
         
-        user_session_uuid = utils.str2uuid(req.get_cookie())
+        passed_user_session_uuid = utils.str2uuid(req.get_cookie())
         
-        return self.auth_agent.check_user_session(user_session_uuid)
+        auth_agent = self.get_auth_agent()
+
+        if auth_agent.check_user_session(passed_user_session_uuid):
+            user_session_uuid = passed_user_session_uuid
+            user_uuid = auth_agent.get_user_uuid_by_session_uuid(user_session_uuid)
+            user = self.get_user_desk().get_user_by_uuid(user_uuid)
+        else:
+            user_session_uuid = uuid.uuid4()
+            user = self.get_user_desk().get_user_by_name(self.get_guest_username())
+
+        self.set_user_session_uuid(user_session_uuid)
+        self.set_current_user(user)
+
+        return self.check_user_permissions(user) if user is not None else False
 
 
     def validate_request(self, req: restreq.RestRequest) -> bool:
@@ -67,22 +121,17 @@ class RestServer (apps.Application):
         return self
 
 
-    def do_the_job(self, req: restreq.RestRequest) -> restresp.RestResponse:
+    def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
         return restresp.RestResponse()
 
 
-    def fail(self, errmsg):
-        self.log(logs.LOG_ERROR, status.MSG_FATAL, errmsg)
-        self.type_response(restresp.RestResponse().set_result_500())
-
-
     def cope(self, req: restreq.RestRequest) -> apps.Application:
 
-        if self.auth_client(req):
+        if self.authorize_user(req):
 
             if self.validate_request(req):
-                resp = self.do_the_job(req)
+                resp = self.produce_response(req)
                 self.type_response(resp)
                 self.log(logs.LOG_INFO, status.MSG_RESPONSE, resp.serialize())
             else:
@@ -96,6 +145,11 @@ class RestServer (apps.Application):
             self.type_response(restresp.RestResponse().set_result_401())
 
         return self
+    
+
+    def fail(self, errmsg):
+        self.log(logs.LOG_ERROR, status.MSG_FATAL, errmsg)
+        self.type_response(restresp.RestResponse().set_result_500())
 
 
     def process_request(self) -> apps.Application:

@@ -3,4 +3,4 @@ import os
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "18a34b48-72fd-4c57-8d7f-a06a70863339"
+    os.environ["HTTP_COOKIE"] = "e4b827f5-2719-4980-b75e-0757351007ab"

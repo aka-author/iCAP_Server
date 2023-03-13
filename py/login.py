@@ -11,7 +11,7 @@
 
 import os, sys, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import restreq, restresp, auth, restserver
+from kernel import restreq, restresp, users, restserver
 from debug import deb_login
 
 
@@ -20,8 +20,6 @@ class Login(restserver.RestServer):
     def __init__(self, rel_cfg_file_path: str):
 
         super().__init__("Login", rel_cfg_file_path)
-
-        self.user = None
 
 
     def mock_cgi_input(self) -> restserver.RestServer:
@@ -33,15 +31,16 @@ class Login(restserver.RestServer):
         return self
 
 
-    def auth_client(self, req: restreq.RestRequest) -> bool:
+    def authorize_user(self, req: restreq.RestRequest) -> bool:
 
         is_authorized = False
         
         username, password = req.get_credentials()
-        self.user = self.get_user_desk().get_user_by_name(username)
+        user = self.get_user_desk().get_user_by_name(username)
 
-        if self.user is not None:
-            is_authorized = self.auth_agent.check_user_credentials(self.user, password) 
+        if user is not None:
+            is_authorized = self.get_auth_agent().check_user_credentials(user, password) 
+            self.set_current_user(user)
 
         return is_authorized
 
@@ -51,12 +50,12 @@ class Login(restserver.RestServer):
         return self.get_cfg().get_default_cms_session_duration()
 
 
-    def do_the_job(self, req: restreq.RestRequest) -> restresp.RestResponse:
+    def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
         host = req.get_host()
         duration = self.get_session_duration()
 
-        user_session = self.auth_agent.open_user_session(self.user, host, duration)
+        user_session = self.get_auth_agent().open_user_session(self.get_current_user(), host, duration)
         
         return restresp.RestResponse().set_body(user_session.export_dto().export_payload())
 

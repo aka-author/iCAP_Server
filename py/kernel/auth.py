@@ -44,6 +44,13 @@ class Auth(controllers.Controller):
         us = user_sessions.UserSession(self).set_field_value("uuid", user_session_uuid)
 
         return us.fast_check()
+    
+
+    def get_user_uuid_by_session_uuid(self, user_session_uuid: uuid.UUID) -> uuid.UUID:
+
+        session = user_sessions.UserSession(self).load_by_uuid(user_session_uuid)
+
+        return session.get_user_uuid() if session is not None else None
 
 
     def close_user_session(self, user_session_uuid: uuid.UUID) -> 'Auth':

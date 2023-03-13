@@ -98,6 +98,11 @@ class Cfg:
         passhash = self.get_param_value("DEFAULT_ADMIN_USER", "passhash")    
 
         return username, passhash
+    
+
+    def get_guest_username(self, app_name: str) -> str:
+
+        return self.get_param_value(app_name, "guest_username")
 
 
     def get_default_db_scheme_name(self) -> str:

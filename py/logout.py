@@ -11,7 +11,7 @@
 
 import os, sys, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import utils, restresp, auth, restserver, restreq
+from kernel import utils, restresp, users, restserver, restreq
 from debug import deb_logout
 
 
@@ -31,7 +31,12 @@ class Logout(restserver.RestServer):
         return self
 
 
-    def do_the_job(self, req: restreq.RestRequest) -> restresp.RestResponse:
+    def check_user_permissions(self, user: users.User) -> bool:
+
+        return True
+
+
+    def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
         user_session_uuid = utils.str2uuid(req.get_cookie())
 

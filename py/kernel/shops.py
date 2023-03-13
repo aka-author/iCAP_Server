@@ -5,13 +5,18 @@
 # Func:    Giving a portotype for each analytical shop  (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import workers
+import workers, models
 
-class Shop(workers.Worker):
+class Shop(models.Model):
 
-    def __init__(self, chief: workers.Worker, shop_name: str):
+    def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
+
+        self.model_name = "shop"
+
+
+    def set_shop_name(self, shop_name: str) -> workers.Worker:
 
         self.shop_name = shop_name
 

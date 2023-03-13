@@ -22,7 +22,7 @@ class Application (controllers.Controller):
 
         self.app = self
         self.app_name = app_name
-        self.session_id = str(uuid.uuid4())
+        self.launch_id = str(uuid.uuid4())
         
         self.set_cfg_file_path(rel_cfg_file_path)
         self.cfg = cfg.Cfg(self.get_app_name()).load(self.get_cfg_file_path())
@@ -48,9 +48,9 @@ class Application (controllers.Controller):
         return self.app_name
 
 
-    def get_session_id(self) -> uuid.UUID:
+    def get_launch_id(self) -> uuid.UUID:
 
-        return self.session_id
+        return self.launch_id
 
 
     def assemble_component_path(self, rel_path: str) -> str:

@@ -5,10 +5,10 @@
 # Func:    Managing source data              (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import workers, fields, ramtables
+import workers, fields, ramtables, desks
 
 
-class SourceDesk(workers.Worker):
+class SourceDesk(desks.Desk):
 
     def __init__(self, chief):
 

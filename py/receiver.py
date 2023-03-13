@@ -12,7 +12,7 @@ from typing import Dict
 import os, sys, pathlib
 
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import dtos, restserver, restreq, restresp, measurements
+from kernel import dtos, restserver, users, restreq, restresp, measurements
 from debug import deb_receiver
 
 
@@ -32,9 +32,9 @@ class Receiver(restserver.RestServer):
         return self
 
 
-    def auth_client(self, req: restreq.RestRequest) -> bool:
+    def check_user_permissions(self, user: users.User) -> bool:
 
-        return True
+        return user.may_save_measurements()
     
 
     def validate_request(self, req: restreq.RestRequest) -> bool:
@@ -47,7 +47,7 @@ class Receiver(restserver.RestServer):
         return dtos.Dto(measurement_dict).repair_datatypes()
     
 
-    def do_the_job(self, req: restreq.RestRequest) -> restresp.RestResponse:
+    def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
                         
         for measurement_dict in req.get_payload().get("measurements"): 
 

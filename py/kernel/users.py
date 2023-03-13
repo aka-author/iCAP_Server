@@ -29,3 +29,18 @@ class User(models.Model):
             .add_field(fields.BooleanField("fetching_reports"))
 
         return self
+    
+
+    def may_configure_system(self) -> bool:
+
+        return self.get_field_value("configuring_system") 
+    
+
+    def may_save_measurements(self) -> bool:
+
+        return self.get_field_value("saving_measurements") 
+    
+
+    def may_fetch_reports(self) -> bool:
+
+        return self.get_field_value("fetching_reports") 
