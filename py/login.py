@@ -5,8 +5,8 @@
 # Product:  iCAP platform
 # Layer:    Application
 # Module:   login.py                                  
-# Func:     Authentifying iCAP users                  (\(\  
-# Usage     REST server                               (^.^)                                                                                                                                 
+# Func:     Authorizing users who send REST requests   (\(\  
+# Usage     REST server, CGI script                    (^.^)                                                                                                                                 
 # # ## ### ##### ######## ############# #####################
 
 import os, sys, pathlib

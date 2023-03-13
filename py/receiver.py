@@ -2,10 +2,11 @@
 #encoding: utf-8
 
 # # ## ### ##### ######## ############# #####################
-# Product: iCAP platform
-# Level:   Application
-# Module:  receiver.py                                 (\(\
-# Func:    Receiving and writing measurements to a DB  (^.^)
+# Product:  iCAP platform
+# Level:    Application
+# Module:   receiver.py                                 
+# Func:     Receiving and writing measurements to a DB  (\(\
+# Usage:    REST server, CGI script                     (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
 from typing import Dict

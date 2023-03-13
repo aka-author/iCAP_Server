@@ -1,17 +1,18 @@
 # # ## ### ##### ######## ############# #####################
-# Product: iCAP platform
-# Layer:   Kernel
-# Module:  cfg.py                                  (\(\
-# Func:    Reading configuration parameters        (^.^)                                                                                                                                                                        
+# Product:  iCAP platform
+# Layer:    Kernel
+# Module:   cfg.py                                  (\(\
+# Func:     Reading configuration parameters        (^.^)                                                                                                                                                                        
 # # ## ### ##### ######## ############# #####################
 
+from typing import Dict, Tuple
 import configparser
 import utils
 
 
 class Cfg:
 
-    def __init__(self, default_app_name="Default"):
+    def __init__(self, default_app_name: str="Default"):
 
         self.parser = configparser.ConfigParser()
 
@@ -19,7 +20,7 @@ class Cfg:
         self.default_app_name = default_app_name
         
 
-    def load(self, cfg_file_path):
+    def load(self, cfg_file_path: str) -> 'Cfg':
         
         self.cfg_file_path = cfg_file_path
 
@@ -28,30 +29,32 @@ class Cfg:
         return self
 
     
-    def get_cfg_file_path(self):
+    def get_cfg_file_path(self) -> str:
         
         return self.cfg_file_path
 
 
-    def get_default_app_name(self):
+    def get_default_app_name(self) -> str:
 
         return self.default_app_name.upper()
 
-    def is_useful(self, value):
+
+    def is_useful(self, value: any) -> bool:
 
         return not (value == "" or value is None)
 
 
-    def get_param_value(self, sect_name, param_name):
+    def get_param_value(self, sect_name: str, param_name: str) -> str:
 
-        # section = self.parser.get(sect_name.upper(), "")
+        try:
+            optvalue = self.parser.get(sect_name.upper(), param_name)
+        except:
+            optvalue = None
 
-        # section.get(param_name) if section is not None else ""
-
-        return self.parser.get(sect_name.upper(), param_name) 
+        return optvalue 
 
 
-    def get_app_param_value(self, app_name, param_name):
+    def get_app_param_value(self, app_name: str, param_name: str) -> str:
 
         actual_app_name = utils.safeval(app_name, self.get_default_app_name())
 
@@ -63,14 +66,14 @@ class Cfg:
         return winner.upper()
 
 
-    def get_default_cms_session_duration(self):
+    def get_default_cms_session_duration(self) -> int:
 
         duration = self.get_param_value("CMS_SESSION", "default_duration")
 
         return int(utils.safeval(duration, 60))     
 
 
-    def get_dbms_connection_params(self):
+    def get_dbms_connection_params(self) -> Dict:
 
         dbms_connection_params = {
             "software": self.get_param_value("DBMS", "software"),
@@ -81,7 +84,7 @@ class Cfg:
         return dbms_connection_params
     
 
-    def get_db_connection_params(self):
+    def get_db_connection_params(self) -> Dict:
 
         db_connection_params = { 
             "database": self.get_param_value("DATABASE", "database"),
@@ -92,7 +95,7 @@ class Cfg:
         return db_connection_params
 
 
-    def get_default_admin_credentials(self):
+    def get_default_admin_credentials(self) -> Tuple[str, str]:
 
         username = self.get_param_value("DEFAULT_ADMIN_USER", "username")
         passhash = self.get_param_value("DEFAULT_ADMIN_USER", "passhash")    
@@ -110,49 +113,46 @@ class Cfg:
         return self.get_param_value("DATABASE", "default_scheme")    
 
 
-    def is_debug_mode(self, app_name=None):
+    def is_debug_mode(self, app_name: str=None) -> str:
         
         return self.get_app_param_value(app_name, "debug_mode").lower() == "on"
 
 
-    def get_run_mode(self, app_name=None):
+    def get_run_mode(self, app_name: str=None) -> str:
 
         return self.get_app_param_value(app_name, "run_mode").lower()
         
 
-    def is_console_mode(self, app_name=None):
+    def is_console_mode(self, app_name: str=None) -> str:
 
         return "console" in self.get_run_mode(app_name)
 
 
-    def is_cgi_mode(self, app_name=None):
+    def is_cgi_mode(self, app_name: str=None) -> str:
 
         return "cgi" in self.get_run_mode(app_name)
 
 
-    def is_batch_mode(self, app_name=None):
+    def is_batch_mode(self, app_name: str=None) -> str:
 
         return "batch" in self.get_run_mode(app_name)
 
 
-    def get_log_folder_path(self):
+    def get_log_folder_path(self) -> str:
 
         return self.get_param_value("LOGGING", "log_folder_path")
 
 
-    def get_logs(self, app_name=None):
+    def get_logs(self, app_name: str=None) -> str:
 
         return self.get_app_param_value(app_name, "logs").lower()
 
 
-    def is_log_to_file_mode(self, app_name=None):
+    def is_log_to_file_mode(self, app_name: str=None) -> str:
 
         return "file" in self.get_logs(app_name)
 
 
-    def is_log_to_db_mode(self, app_name=None):
+    def is_log_to_db_mode(self, app_name: str=None) -> str:
 
         return "db" in self.get_logs(app_name)
-
-
-    

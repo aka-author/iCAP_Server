@@ -6,7 +6,7 @@
 # Level:    Application
 # Module:   reporter.py                              
 # Func:     Requesting and delivering reports         (\(\
-# Usage     REST server                               (^.^)
+# Usage     REST server, CGI script                   (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
 import os, sys, pathlib

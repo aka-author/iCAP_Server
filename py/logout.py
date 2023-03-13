@@ -6,7 +6,7 @@
 # Layer:    Application 
 # Module:   logout.py                                
 # Func:     Terminating a user session             (\(\    
-# Usage:    REST server                            (^.^)
+# Usage:    REST server, CGI script                (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import os, sys, pathlib
