@@ -5,12 +5,12 @@
 # Func:    Managing source data              (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import desks, measurements
+import workers, desks, measurements
 
 
 class SourceDesk(desks.Desk):
 
-    def __init__(self, chief):
+    def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
 

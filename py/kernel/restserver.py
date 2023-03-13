@@ -2,8 +2,8 @@
 # Product:  iCAP platform
 # Layer:    Kernel
 # Module:   restserver.py                             
-# Func:     Providing a prototype for a REST server    (\(\
-# Usage:    Derive your application from RestServer    (^.^)
+# Func:     Responding on REST requests                (\(\
+# Usage:    Derive a REST CGI script from RestServer   (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys, uuid
@@ -114,16 +114,16 @@ class RestServer (apps.Application):
         return True
 
 
+    def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
+
+        return restresp.RestResponse()
+
+
     def type_response(self, resp: restresp.RestResponse) -> 'RestServer':
 
         print(resp.serialize())
 
         return self
-
-
-    def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
-
-        return restresp.RestResponse()
 
 
     def cope(self, req: restreq.RestRequest) -> apps.Application:
