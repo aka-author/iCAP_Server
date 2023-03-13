@@ -4,8 +4,8 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Level:   Application
-# Module:  receiver.py                               (\(\
-# Func:    Saving measurements to a database         (^.^)
+# Module:  receiver.py                                 (\(\
+# Func:    Receiving and writing measurements to a DB  (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
 from typing import Dict
@@ -51,14 +51,11 @@ class Receiver(restserver.RestServer):
                         
         for measurement_dict in req.get_payload().get("measurements"): 
 
-            measurement_dto = self.new_measurement_dto(measurement_dict)
-            
-            measurement = measurements.Measurement(self)\
-                            .import_dto(measurement_dto)\
-                            .rebuild()
+            source_desk = self.get_source_desk()
 
-            if measurement.is_valid() and measurement.is_unique():
-                measurement.insert()
+            source_desk.insert_measurement(source_desk.new_measurement()\
+                            .import_dto(self.new_measurement_dto(measurement_dict))\
+                            .rebuild())
 
         return restresp.RestResponse()
 

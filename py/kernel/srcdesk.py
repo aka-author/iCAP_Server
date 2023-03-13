@@ -5,7 +5,7 @@
 # Func:    Managing source data              (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import workers, fields, ramtables, desks
+import desks, measurements
 
 
 class SourceDesk(desks.Desk):
@@ -15,24 +15,17 @@ class SourceDesk(desks.Desk):
         super().__init__(chief)
 
 
-    def check_measurement(self, hashkey):
+    def new_measurement(self) -> measurements.Measurement:
 
-        measurement_exists = False
+        return measurements.Measurement(self)
 
-        rt_cc = ramtables.Table("measurements")\
-            .add_field(fields.BigintField("count_competitors").set_sql_agg_expr("count(uuid)"))
 
-        dbl = self.get_dbl()
+    def insert_measurement(self, measurement: measurements.Measurement) -> 'SourceDesk':
 
-        q_cc = dbl.new_select("count_competitors", "icap").set_output_ramtable(rt_cc)\
-            .WHERE.sql.set("hashkey='" + hashkey + "'").q
+        if measurement.is_valid() and measurement.is_unique():
+            measurement.insert()
 
-        dbl = self.get_dbl().execute(q_cc)
-
-        if rt_cc.count_rows() == 1: 
-            measurement_exists = rt_cc.select_by_index(0).get_field_value("count_competitors") > 0
-
-        return measurement_exists
+        return self
 
 
     def get_measurements_query(self, mandatory_varnames, optional_varnames=[]):
