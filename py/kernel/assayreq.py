@@ -42,6 +42,6 @@ class AssayRequest(models.Model):
         return self.get_field_value("report_name")
 
 
-    def get_assay_query_content(self) -> Dict:
+    def get_payload(self) -> Dict:
 
         return self.get_field_value("payload")

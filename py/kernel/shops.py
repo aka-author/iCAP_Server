@@ -19,4 +19,4 @@ class Shop(controllers.Controller):
     def build_report(self, report_name: str, assay_query_data: Dict) -> Dict:
 
 
-        return {}
+        return {"version": 1, "wording": "test"}

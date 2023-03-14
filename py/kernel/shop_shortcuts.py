@@ -5,6 +5,7 @@
 # Func:    Accessing an analytical shop metadata      (^.^)
 # # ## ### ##### ######## ############# #####################
 
+import sys, os, pathlib
 import fields, workers, models
 
 
@@ -30,3 +31,18 @@ class ShopShortcut(models.Model):
     def get_shop_name(self) -> str:
 
         return self.get_field_value("shop_name")
+    
+
+    def get_package_name(self) -> str:
+
+        return self.get_shop_name()
+
+
+    def get_reporter_module_name(self):
+
+        return "reporter"
+    
+
+    def get_processor_module_name(self):
+
+        return "processor"

@@ -23,6 +23,8 @@ class Reporter(restserver.RestServer):
 
         super().__init__("Reporter", rel_cfg_file_path)
 
+        self.shop_desk = shop_desks.ShopDesk(self)
+
 
     def mock_cgi_input(self):
 
@@ -31,6 +33,11 @@ class Reporter(restserver.RestServer):
         deb_reporter.mock_cgi_input()
 
         return self
+
+
+    def get_shop_desk(self) -> shop_desks.ShopDesk:
+
+        return self.shop_desk
 
 
     def check_user_permissions(self, user: users.User) -> bool:
@@ -52,10 +59,14 @@ class Reporter(restserver.RestServer):
 
         assay_req = assayreq.AssayRequest(self).import_dto(self.new_assay_request_dto(req))
                             
-        shop = self.get_shop_desk().involve_shop(assay_req.get_shop_name())
+        shop_reporter = self.get_shop_desk().involve_shop_reporter(assay_req.get_shop_name())
 
-        if shop is not None:
-            report = shop.build_report(assay_req.get_report_name(), assay_req.get_payload())
+        if shop_reporter is not None:
+            report_name = assay_req.get_report_name()
+            assay_query_data = assay_req.get_payload()
+            
+            report = shop_reporter.build_report(report_name, assay_query_data)
+            
             assay_resp = assayresp.AssayResponse(self).set_payload(report)
         else:
             assay_resp = self.get_shop_desk().get_failure_assay_response()
