@@ -6,13 +6,13 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict, List, Tuple
-
-import workers, apps, desks, shop_shortcuts, shops, assay_responses
+import importlib
+import workers, desks, shop_shortcuts, shops, assayresp
 
 
 class ShopDesk(desks.Desk):
 
-    def __init__(self, chief: apps.Application):
+    def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
 
@@ -21,7 +21,7 @@ class ShopDesk(desks.Desk):
 
     def load_shop_shortcuts(self) -> Tuple[List, Dict]:
 
-        loaded_shop_shortcuts = shops.ShopShortcut(self).load_all() 
+        loaded_shop_shortcuts = shop_shortcuts.ShopShortcut(self).load_all() 
 
         shop_shortcuts_by_names = {}
 
@@ -31,21 +31,16 @@ class ShopDesk(desks.Desk):
         return loaded_shop_shortcuts, shop_shortcuts_by_names
 
 
-    def new_shop(self) -> object:
+    def get_shop_shortcut(self, shop_name: str) -> shop_shortcuts.Shop:
 
-        for shop in self.shops:
-            shop_name = shop.get_shop_name()
-            file_pointer, file_path, description = imp.find_module(shop_name)
-            load_module = imp.load_module(shop_name, file_pointer, file_path, description)
-            
-        return shop
-
-
-    def get_shop(self, shop_name: str) -> shops.Shop:
-
-        return self.shops_by_names.get(shop_name)
+        return self.shop_shortcuts_by_names.get(shop_name)
     
 
-    def get_failure_assay_response(self) -> assay_responses.AssayResponse:
+    def involve_shop(self, shop_name: str) -> shops.Shop:
 
-        return assay_responses.FailureAssayResponse(self)
+        return None
+    
+
+    def get_failure_assay_response(self) -> assayresp.AssayResponse:
+
+        return assayresp.FailureAssayResponse(self)

@@ -1,7 +1,7 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  assay_responses.py                        (\(\
+# Module:  assayresp.py                              (\(\
 # Func:    Managing an analytical response           (^.^)
 # # ## ### ##### ######## ############# #####################
 
@@ -21,21 +21,21 @@ class AssayResponse(models.Model):
     def define_fields(self) -> models.Model:
 
         self.get_field_manager()\
-                .add_field(fields.DictField("assay_response_content"))
+                .add_field(fields.DictField("payload"))
 
         return self
 
 
-    def set_assay_response_content(self, assay_response_content: Dict) -> 'AssayResponse':
+    def set_payload(self, payload: Dict) -> 'AssayResponse':
 
-        self.set_field_value("assay_response_content", assay_response_content)
+        self.set_field_value("payload", payload)
 
         return self
 
 
-    def get_assay_response_content(self) -> Dict:
+    def get_payload(self) -> Dict:
 
-        return self.get_field_value("assay_response_content")
+        return self.get_field_value("payload")
     
 
 class FailureAssayResponse(AssayResponse):
@@ -44,9 +44,9 @@ class FailureAssayResponse(AssayResponse):
 
         super().__init__(chief)
 
-        content = {
-            "status_code": 1,
-            "status_wording": "Failure"
+        failure_info = {
+            "status_code":      1,
+            "status_wording":   "Failure"
         }
 
-        self.set_assay_response_content(content)
+        self.set_payload(failure_info)

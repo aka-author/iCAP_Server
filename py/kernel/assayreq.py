@@ -1,7 +1,7 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  assay_requests.py                        (\(\
+# Module:  assayreq.py                              (\(\
 # Func:    Managing analytical requests             (^.^)
 # # ## ### ##### ######## ############# #####################
 
@@ -19,7 +19,7 @@ class AssayRequest(models.Model):
 
         self.shop_name = None
         self.report_name = None
-        self.conditions = None
+        self.payload = None
 
 
     def define_fields(self) -> models.Model:
@@ -27,7 +27,7 @@ class AssayRequest(models.Model):
         self.get_field_manager()\
                 .add_field(fields.StringField("shop_name"))\
                 .add_field(fields.StringField("report_name"))\
-                .add_field(fields.DictField("assay_query_content"))
+                .add_field(fields.DictField("payload"))
 
         return self
 
@@ -44,4 +44,4 @@ class AssayRequest(models.Model):
 
     def get_assay_query_content(self) -> Dict:
 
-        return self.get_field_value("assay_query_content")
+        return self.get_field_value("payload")
