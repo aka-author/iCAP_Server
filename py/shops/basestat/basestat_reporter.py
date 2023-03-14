@@ -13,7 +13,7 @@ class ShopReporter(shops.Shop):
       super().__init__(chief)
 
 
-def new_shop(chief):
+def new_shop_reporter(chief):
 
    return ShopReporter(chief)
 

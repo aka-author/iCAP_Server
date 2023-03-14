@@ -62,6 +62,7 @@ class Reporter(restserver.RestServer):
         shop_reporter = self.get_shop_desk().involve_shop_reporter(assay_req.get_shop_name())
 
         if shop_reporter is not None:
+            
             report_name = assay_req.get_report_name()
             assay_query_data = assay_req.get_payload()
             

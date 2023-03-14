@@ -5,7 +5,7 @@
 # Func:    Service functions                      (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import hashlib, uuid, re
+import hashlib, uuid, re, urllib.parse
 from datetime import datetime
 
 
@@ -259,7 +259,7 @@ def extract_fields_from_url_encoded_form(form_urlencoded):
     param_pairs = form_urlencoded.split("&")
     for param_pair in param_pairs:
         param_pair_arr = param_pair.split("=")
-        params[param_pair_arr[0]] = param_pair_arr[1]
+        params[param_pair_arr[0]] = urllib.parse.unquote(param_pair_arr[1])
 
     return params
 

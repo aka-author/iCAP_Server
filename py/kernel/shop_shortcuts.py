@@ -40,9 +40,9 @@ class ShopShortcut(models.Model):
 
     def get_reporter_module_name(self):
 
-        return "reporter"
+        return self. get_package_name() + "_reporter"
     
 
     def get_processor_module_name(self):
 
-        return "processor"
+        return self. get_package_name() + "_processor"

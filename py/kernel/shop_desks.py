@@ -43,17 +43,26 @@ class ShopDesk(desks.Desk):
         return self.shop_shortcuts_by_names.get(shop_name)
     
 
+    def get_full_module_name(self, shortcut: shop_shortcuts.ShopShortcut) -> str:
+
+        shop_package_name = shortcut.get_package_name()
+        reporter_module_name = shortcut.get_reporter_module_name()
+
+        return ".".join([shop_package_name, reporter_module_name])
+
+
     def involve_shop_reporter(self, shop_name: str) -> shops.Shop:
 
         if self.has_shop(shop_name):
 
-            shop_shortcut = self.get_shop_shortcut(shop_name)
-            shop_package_name = shop_shortcut.get_package_name()
-            reporter_module_name = shop_shortcut.get_reporter_module_name()
+            shortcut = self.get_shop_shortcut(shop_name)
+            
+            try:
+                shop_module = importlib.import_module(self.get_full_module_name(shortcut))
+                shop_reporter = shop_module.new_shop_reporter(self)
+            except:
+                shop_reporter = None
 
-            shop_module = importlib.import_module(reporter_module_name, shop_package_name)
-
-            shop_reporter = shop_module.new_shop(self)
         else:
             shop_reporter = None
 

@@ -63,7 +63,10 @@ class RestServer (apps.Application):
         if c_type == "application/json":
             cgi_body = sys.stdin.read(int(os.environ.get("CONTENT_LENGTH", "0")))
         elif c_type == "application/x-www-form-urlencoded":
-            cgi_form_fields = utils.extract_fields_from_url_encoded_form(input())
+            try:
+                cgi_form_fields = utils.extract_fields_from_url_encoded_form(input())
+            except:
+                cgi_form_fields = {}
         elif c_type == "multipart/form-data":
             cgi_form_fields = utils.extract_fields_from_storage(cgi.FieldStorage())            
         
