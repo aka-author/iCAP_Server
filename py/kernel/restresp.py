@@ -1,12 +1,11 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  httpresp.py                                (\(\
+# Module:  restresp.py                                (\(\
 # Func:    Assembling text for an HTTP responce       (^.^)                                                                                                                                            
 # # ## ### ##### ######## ############# #####################
 
 import json
-import utils
 
 
 class RestResponse: 
@@ -22,7 +21,7 @@ class RestResponse:
 
     # Result 
 
-    def set_result_code(self, code, wording):
+    def set_result_code(self, code: int, wording: str) -> 'RestResponse':
 
         self.result_code = code
         self.result_wording = wording
@@ -30,81 +29,81 @@ class RestResponse:
         return self
 
 
-    def set_result_401(self):
+    def set_result_401(self) -> 'RestResponse':
 
         self.set_result_code(401, "Unauthorized")
     
         return self
 
 
-    def set_result_404(self):
+    def set_result_404(self) -> 'RestResponse':
 
         self.set_result_code(404, "Not found")
 
         return self
     
 
-    def set_result_500(self):
+    def set_result_500(self) -> 'RestResponse':
 
         self.set_result_code(500, "Internal server error")
 
         return self
 
 
-    def get_result_code(self):
+    def get_result_code(self) -> int:
 
         return self.result_code
 
 
-    def get_result_wording(self):
+    def get_result_wording(self) -> str:
 
         return self.result_wording
     
 
-    def serialize_result(self):
+    def serialize_result(self) -> str:
 
         return "Status: " + str(self.get_result_code()) + " " + self.get_result_wording() + "\n"
 
 
     # HTTP headers
 
-    def set_header(self, header_name, content):
+    def set_header(self, header_name: str, content: str) -> 'RestResponse':
 
         self.headers[header_name] = content
 
         return self
 
 
-    def get_header(self, header_name):
+    def get_header(self, header_name: str) -> str:
 
         return self.headers.get(header_name)
 
 
-    def serialize_header(self, header_name):
+    def serialize_header(self, header_name: str) -> str:
 
         return header_name + ": " + self.headers[header_name] if header_name in self.headers else ""
 
 
     # Body
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
 
         return self.body is None
 
 
-    def set_content_type(self, content_type):
+    def set_content_type(self, content_type: str) -> 'RestResponse':
    
         self.set_header("Content-type", content_type) 
 
         return self
 
 
-    def get_content_type(self):
+    def get_content_type(self) -> str:
 
         return self.get_header("Content-type")
 
 
-    def set_body(self, content, content_type="application/json"):
+    def set_body(self, content: str, content_type: str="application/json") -> 'RestResponse':
 
         self.set_header("Content-type", content_type)
 
@@ -113,12 +112,12 @@ class RestResponse:
         return self
 
 
-    def get_body(self):
+    def get_body(self) -> str:
 
         return self.body
 
 
-    def serialize_body(self):
+    def serialize_body(self) -> str:
 
         content_type = self.get_content_type()
 
@@ -135,7 +134,7 @@ class RestResponse:
 
     # Entire response
 
-    def serialize(self):
+    def serialize(self) -> str:
 
         if self.serialized_text is None:
 

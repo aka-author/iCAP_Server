@@ -5,6 +5,7 @@
 # Func:    Managing system directories               (^.^)
 # # ## ### ##### ######## ############# #####################
 
+from typing import Dict, List, Tuple 
 import workers, desks, sensors, variables
 
 
@@ -20,7 +21,7 @@ class DirectoryDesk(desks.Desk):
 
     # Sensors
 
-    def load_sensors(self) -> 'DirectoryDesk':
+    def load_sensors(self) -> Tuple[List, Dict]:
         
         loaded_sensors = sensors.Sensor(self).load_all() 
 

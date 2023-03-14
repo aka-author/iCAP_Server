@@ -366,6 +366,13 @@ class DateField(TimestampField):
         self.parse_format = datatypes.get_default_date_format()
 
 
+class DictField(Field):
+
+    def __init__(self, varname: str):
+
+        super().__init__(varname, datatypes.DTN_DICT)
+
+
 class FieldKeeper:
 
     def __init__(self):

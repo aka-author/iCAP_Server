@@ -12,7 +12,8 @@
 import os, sys, pathlib
 
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import restserver, restreq, restresp, users
+from kernel import restserver, restreq, restresp, dtos, users, \
+    shop_shortcuts, shop_desks, assay_requests, assay_responses
 from debug import deb_reporter
 
 
@@ -42,15 +43,28 @@ class Reporter(restserver.RestServer):
         return True
 
 
-    def do_the_job(self, req: restreq.RestRequest) -> restresp.RestResponse:
+    
 
-        # shop = self.get_shop_desk(report_name)
 
-        # report = shop.build_report(request)
-        
-        # response =  httpresp.HttpResponse().set_body(report)
+    def build_report(self, areq: assay_requests.AsseyRequest) -> assay_responses.AssayResponse:
 
-        return restresp.HttpResponse().set_body({})
+        return self.import_shop_module().build_report(analytical_query) 
+
+
+    def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
+
+        req_dto = dtos.Dto(req.get_payload())
+        assay_req = assay_requests.AssayRequest(self).import_dto(req_dto)
+                            
+        shop = self.get_shop_desk().get_shop(assay_req.get_shop_name())
+
+        if shop is not None:
+            report = shop.build_report(assay_req.get_assay_query_content())
+            assay_resp = assay_responses.AssayResponse(self).set_assay_response_content(report)
+        else:
+            assay_resp = self.get_shop_desk().get_failure_assay_response()
+
+        return restresp.RestResponse().set_body(assay_resp.export_dto().export_payload())
     
 
 Reporter("../cfg/fserv.ini").process_request()
