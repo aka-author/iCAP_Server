@@ -12,8 +12,7 @@
 import os, sys, pathlib
 
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import assayreq, assayresp, restserver, restreq, restresp, dtos, users, \
-    shop_shortcuts, shop_desks
+from kernel import assayreq, assayresp, restserver, restreq, restresp, dtos, users, shop_desks
 from debug import deb_reporter
 
 
@@ -57,12 +56,11 @@ class Reporter(restserver.RestServer):
 
     def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
-        assay_req = assayreq.AssayRequest(self).import_dto(self.new_assay_request_dto(req))
-                            
+        assay_req = assayreq.AssayRequest(self).import_dto(self.new_assay_request_dto(req))                    
         shop_reporter = self.get_shop_desk().involve_shop_reporter(assay_req.get_shop_name())
 
         if shop_reporter is not None:
-            
+
             report_name = assay_req.get_report_name()
             assay_query_data = assay_req.get_payload()
             

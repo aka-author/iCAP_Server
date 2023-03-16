@@ -9,7 +9,31 @@ from typing import Dict
 import workers, controllers
 
 
-class Shop(controllers.Controller):
+class ShopAdmin(controllers.Controller):
+
+    def __init__(self, chief: workers.Worker):
+
+        super().__init__(chief)
+
+
+    def perform_admin_task(self, task_name: str, admin_task_data) -> Dict:
+
+        return {}
+    
+
+class ShopProcessor(controllers.Controller):
+
+    def __init__(self, chief: workers.Worker):
+
+        super().__init__(chief)
+
+
+    def perform_processing_task(self, task_name: str, processing_task_data) -> Dict:
+
+        return {}
+
+
+class ShopReporter(controllers.Controller):
 
     def __init__(self, chief: workers.Worker):
 
@@ -20,3 +44,5 @@ class Shop(controllers.Controller):
 
 
         return {"version": 1, "wording": "test"}
+    
+

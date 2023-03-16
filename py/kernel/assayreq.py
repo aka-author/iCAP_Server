@@ -25,6 +25,7 @@ class AssayRequest(models.Model):
     def define_fields(self) -> models.Model:
         
         self.get_field_manager()\
+                .add_field(fields.StringField("ver"))\
                 .add_field(fields.StringField("shop_name"))\
                 .add_field(fields.StringField("report_name"))\
                 .add_field(fields.DictField("payload"))
