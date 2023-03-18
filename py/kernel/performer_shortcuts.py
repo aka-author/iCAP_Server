@@ -1,40 +1,52 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  shop_shortcuts.py                          (\(\
-# Func:    Accessing an analytical shop metadata      (^.^)
+# Module:  performer_shortcuts.py                (\(\
+# Func:    Accessing metadata of a performer     (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import fields, workers, models
 
 
-class ShopShortcut(models.Model):
+class PerformerShortcut(models.Model):
 
     def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
 
-        self.set_model_name("shop_shortcut")
+        self.set_model_name("performer_shortcut")
 
 
-    def define_fields(self) -> 'ShopShortcut':
+    def define_fields(self) -> 'PerformerShortcut':
 
         self.get_field_manager()\
                 .add_field(fields.UuidField("uuid"))\
-                .add_field(fields.StringField("shop_name"))\
+                .add_field(fields.StringField("performer_name"))\
+                .add_field(fields.StringField("performer_title"))\
+                .add_field(fields.StringField("master_app_name"))\
                 .add_field(fields.StringField("details"))
 
         return self
 
 
-    def get_shop_name(self) -> str:
+    def get_performer_name(self) -> str:
 
-        return self.get_field_value("shop_name")
+        return self.get_field_value("performer_name")
     
 
     def get_package_name(self) -> str:
 
-        return self.get_shop_name()
+        return self.get_performer_name()
+    
+
+    def get_performer_title(self) -> str:
+
+        return self.get_field_value("performer_title")
+    
+
+    def get_master_app_name(self) -> str:
+
+        return self.get_field_value("master_app_name")
 
 
     def get_module_name(self, local: str) -> str:

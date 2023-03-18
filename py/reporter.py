@@ -10,9 +10,9 @@
 # # ## ### ##### ######## ############# ##################### 
 
 import os, sys, pathlib
-
+from datetime import datetime
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import assayreq, assayresp, restserver, restreq, restresp, dtos, users, shop_desks
+from kernel import utils, performer_desks, perfreq, perfresp, restserver, restreq, restresp, dtos, users
 from debug import deb_reporter
 
 
@@ -22,7 +22,7 @@ class Reporter(restserver.RestServer):
 
         super().__init__("Reporter", rel_cfg_file_path)
 
-        self.shop_desk = shop_desks.ShopDesk(self)
+        self.performer_desk = performer_desks.PerformerDesk(self)
 
 
     def mock_cgi_input(self):
@@ -34,9 +34,9 @@ class Reporter(restserver.RestServer):
         return self
 
 
-    def get_shop_desk(self) -> shop_desks.ShopDesk:
+    def get_performer_desk(self) -> performer_desks.PerformerDesk:
 
-        return self.shop_desk
+        return self.performer_desk
 
 
     def check_user_permissions(self, user: users.User) -> bool:
@@ -44,33 +44,47 @@ class Reporter(restserver.RestServer):
         return user.may_fetch_reports()
 
 
-    def validate_request(self, req: restreq.RestRequest) -> bool:
+    def validate_rest_request(self, rest_req: restreq.RestRequest) -> bool:
         
-        return True
+        return super().validate_rest_request(rest_req)
 
 
-    def new_assay_request_dto(self, req: restreq.RestRequest) -> dtos.Dto:
+    def new_performer_request_dto(self, req: restreq.RestRequest) -> dtos.Dto:
 
         return dtos.Dto(req.get_payload()).repair_datatypes()
 
 
     def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
-        assay_req = assayreq.AssayRequest(self).import_dto(self.new_assay_request_dto(req))                    
-        shop_reporter = self.get_shop_desk().involve_shop_reporter(assay_req.get_shop_name())
+        perf_req = perfreq.PerformerRequest(self).import_dto(self.new_performer_request_dto(req))
+        perf_name = perf_req.get_performer_name()                    
+        perf_reporter = self.get_performer_desk().involve_reporter(perf_name)
+        
+        if self.check_performer_blade(perf_reporter):
 
-        if shop_reporter is not None:
-
-            report_name = assay_req.get_report_name()
-            assay_query_data = assay_req.get_payload()
+            report_name = perf_req.get_task_name()
+            perf_query_data = perf_req.get_payload()
             
-            report = shop_reporter.build_report(report_name, assay_query_data)
+            started_at = datetime.now()
+            report = perf_reporter.build_report(report_name, perf_query_data)
+            finished_at = datetime.now()
+            duration = (finished_at - started_at).microseconds 
             
-            assay_resp = assayresp.AssayResponse(self).set_payload(report)
+            perf_resp = perfresp.PerformerResponse(self)\
+                .set_ver(perf_reporter.get_report_ver())\
+                .set_status_code(perf_reporter.get_status_code())\
+                .set_status_message(perf_reporter.get_status_message())\
+                .set_performer_name(perf_name)\
+                .set_task_name(report_name)\
+                .set_started_at(started_at)\
+                .set_finished_at(finished_at)\
+                .set_duration(duration)\
+                .set_payload(report)
+            
         else:
-            assay_resp = self.get_shop_desk().get_failure_assay_response()
+            perf_resp = self.get_performer_desk().get_failure_performer_response()
 
-        return restresp.RestResponse().set_body(assay_resp.export_dto().export_payload())
+        return restresp.RestResponse().set_body(perf_resp.export_dto().export_payload())
     
 
 Reporter("../cfg/fserv.ini").process_request()

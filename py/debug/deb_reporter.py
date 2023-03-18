@@ -1,4 +1,5 @@
-import os, sys
+from typing import Dict
+import os, sys, json
 from io import StringIO 
 
 
@@ -7,100 +8,252 @@ def get_content_type():
     return "application/json"
 
 
-def get_body():
+def get_body(sample_number: int) -> Dict:
 
-    return """{
-                "ver":          "2",
-                "shop_name":    "basestat",
-                "report_name":  "summaries",
-                "payload": {
-                    "scope": {
-                        "conditions": [
-                            {
-                                "cond_name":    "langScope",
-                                "varname":      "icap.cms.doc.localCode",
-                                "range": {
-                                    "datatype_name":    "string",
-                                    "range_type_name":  "list",
-                                    "values":           ["en", "es"]
-                                }
-                            },
-                            {
-                                "cond_name":    "timeScope",
-                                "varname":      "accepted_at", 
-                                "range": {
-                                    "datatype_name":    "timestamp",
-                                    "range_type_name":  "segment",
-                                    "values": { 
-                                        "min": "2023-01-01", 
-                                        "max": "2023-12-31"
-                                    }
+    sample_requests = [
+        """{
+            "ver": 2,
+            "performer_name": "basestat",
+            "task_name": "summaries",
+            "payload": {
+                "prolog": {
+                    "metadata": [
+                        {"meta_name": "debug_index", "content": 0}
+                    ]
+                },
+                "scope": {
+                    "conditions": [
+                        {
+                            "cond_name": "langScope",
+                            "varname": "icap.cms.doc.localCode",
+                            "range": {
+                                "datatype_name": "string",
+                                "range_type_name": "list",
+                                "values": {
+                                    "items": ["en", "es"]
                                 }
                             }
-                        ],
-                        "expression": "langScope and timeScope"
-                    },
-                    "granularity": {
-                        "dimensions": [
-                            {
-                                "varname": "accepted_at",
-                                "groups": [
-                                    {
-                                        "group_name": "Q1",
-                                        "range": {
-                                            "datatype_name":    "timestamp",
-                                            "range_type_Name":  "segment",
-                                            "values": { 
-                                                "min": "2023-01-01", 
-                                                "max": "2022-03-31"
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "group_name": "Q2",
-                                        "range": {
-                                            "datatype_name":    "timestamp",
-                                            "range_type_name":  "segment",
-                                            "values": { 
-                                                "min": "2023-04-01", 
-                                                "max": "2022-06-30"
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "level_name": "Q3",
-                                        "range": {
-                                            "datatype_name":    "timestamp",
-                                            "range_type_name":  "segment",
-                                            "values": { 
-                                                "min": "2023-07-01", 
-                                                "max": "2022-09-30"
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "level_name": "Q4",
-                                        "range": {
-                                            "datatype_name":    "timestamp",
-                                            "range_type_name":  "segment",
-                                            "values": { 
-                                                "min": "2023-10-01", 
-                                                "max": "2022-12-31"
-                                            }
+                        },
+                        {
+                            "cond_name": "timeScope",
+                            "varname": "accepted_at", 
+                            "range": {
+                                "datatype_name": "timestamp",
+                                "range_type_name": "segment",
+                                "values": { 
+                                    "min": "2022-01-01", 
+                                    "max": "2022-12-31"
+                                }
+                            }
+                        }
+                    ],
+                    "expression": "langScope and timeScope"
+                },
+                "granularity": {
+                    "dimensions": [
+                        {
+                            "varname": "accepted_at",
+                            "groups": [
+                                {
+                                    "group_name": "Q1",
+                                    "range": {
+                                        "datatype_name": "timestamp",
+                                        "range_type_Name": "segment",
+                                        "values": { 
+                                            "min": "2022-01-01", 
+                                            "max": "2022-03-31"
                                         }
                                     }
-                                ]
-                            }    
-                        ]
-                    } 
+                                },
+                                {
+                                    "group_name": "Q2",
+                                    "range": {
+                                        "datatype_name": "timestamp",
+                                        "range_type_name": "segment",
+                                        "values": { 
+                                            "min": "2022-04-01", 
+                                            "max": "2022-06-30"
+                                        }
+                                    }
+                                },
+                                {
+                                    "group_name": "Q3",
+                                    "range": {
+                                        "datatype_name": "timestamp",
+                                        "range_type_name": "segment",
+                                        "values": { 
+                                            "min": "2022-07-01", 
+                                            "max": "2022-09-30"
+                                        }
+                                    }
+                                },
+                                {
+                                    "group_name": "Q4",
+                                    "range": {
+                                        "datatype_name": "timestamp",
+                                        "range_type_name": "segment",
+                                        "values": { 
+                                            "min": "2022-10-01", 
+                                            "max": "2022-12-31"
+                                        }
+                                    }
+                                }
+                            ]
+                        }    
+                    ]
+                } 
+            }
+        }"""
+    ]
+    
+    return sample_requests[sample_number]
+
+
+def get_result(request_number: int) -> Dict:
+
+    sample_reports = [
+        """{
+            "groups": [
+                {
+                    "group_name": "Q1",
+                    "countries": [
+                        {"country_code": "de", "share": 0.10},
+                        {"country_code": "es", "share": 0.10},
+                        {"country_code": "il", "share": 0.10},
+                        {"country_code": "us", "share": 0.70}
+                    ],
+                    "user_langs": [
+                        {"lang_code": "de", "share": 0.05},
+                        {"lang_code": "es", "share": 0.05},
+                        {"lang_code": "he", "share": 0.10},
+                        {"lang_code": "en", "share": 0.80}
+                    ],
+                    "oss": [
+                        {"os_code": "android", "share": 0.15},
+                        {"os_code": "ios",     "share": 0.15},
+                        {"os_code": "linux",   "share": 0.10},
+                        {"os_code": "osx",     "share": 0.20},
+                        {"os_code": "windows", "share": 0.40}
+                    ],
+                    "browsers": [
+                        {"browser_code": "chrome",  "share": 0.20},
+                        {"browser_code": "edge",    "share": 0.20},
+                        {"browser_code": "firefox", "share": 0.20},
+                        {"browser_code": "opera",   "share": 0.20},
+                        {"browser_code": "safari",  "share": 0.20}
+                    ],
+                    "goodness": 0.4,
+                    "badness": 0.86,
+                    "pain_factor": 0.12
+                },
+                {
+                    "group_name": "Q2",
+                    "countries": [
+                        {"country_code": "de", "share": 0.10},
+                        {"country_code": "es", "share": 0.10},
+                        {"country_code": "il", "share": 0.15},
+                        {"country_code": "us", "share": 0.65}
+                    ],
+                    "user_langs": [
+                        {"lang_code": "de", "share": 0.05},
+                        {"lang_code": "es", "share": 0.05},
+                        {"lang_code": "he", "share": 0.11},
+                        {"lang_code": "en", "share": 0.79}
+                    ],
+                    "oss": [
+                        {"os_code": "android", "share": 0.14},
+                        {"os_code": "ios",     "share": 0.16},
+                        {"os_code": "linux",   "share": 0.12},
+                        {"os_code": "osx",     "share": 0.20},
+                        {"os_code": "windows", "share": 0.38}
+                    ],
+                    "browsers": [
+                        {"browser_code": "chrome",  "share": 0.20},
+                        {"browser_code": "edge",    "share": 0.18},
+                        {"browser_code": "firefox", "share": 0.22},
+                        {"browser_code": "opera",   "share": 0.19},
+                        {"browser_code": "safari",  "share": 0.21}
+                    ],
+                    "goodness": 0.45,
+                    "badness": 0.70,
+                    "pain_factor": 0.11
+                },
+                {
+                    "group_name": "Q3",
+                    "countries": [
+                        {"country_code": "de", "share": 0.10},
+                        {"country_code": "es", "share": 0.10},
+                        {"country_code": "il", "share": 0.20},
+                        {"country_code": "us", "share": 0.60}
+                    ],
+                    "user_langs": [
+                        {"lang_code": "de", "share": 0.05},
+                        {"lang_code": "es", "share": 0.05},
+                        {"lang_code": "he", "share": 0.24},
+                        {"lang_code": "en", "share": 0.66}
+                    ],
+                    "oss": [
+                        {"os_code": "android", "share": 0.15},
+                        {"os_code": "ios",     "share": 0.15},
+                        {"os_code": "linux",   "share": 0.10},
+                        {"os_code": "osx",     "share": 0.20},
+                        {"os_code": "windows", "share": 0.40}
+                    ],
+                    "browsers": [
+                        {"browser_code": "chrome",  "share": 0.30},
+                        {"browser_code": "edge",    "share": 0.10},
+                        {"browser_code": "firefox", "share": 0.30},
+                        {"browser_code": "opera",   "share": 0.10},
+                        {"browser_code": "safari",  "share": 0.20}
+                    ],
+                    "goodness": 0.51,
+                    "badness": 0.66,
+                    "pain_factor": 0.09
+                },
+                {
+                    "group_name": "Q4",
+                    "countries": [
+                        {"country_code": "de", "share": 0.10},
+                        {"country_code": "es", "share": 0.10},
+                        {"country_code": "il", "share": 0.25},
+                        {"country_code": "us", "share": 0.55}
+                    ],
+                    "user_langs": [
+                        {"lang_code": "de", "share": 0.05},
+                        {"lang_code": "es", "share": 0.05},
+                        {"lang_code": "he", "share": 0.30},
+                        {"lang_code": "en", "share": 0.60}
+                    ],
+                    "oss": [
+                        {"os_code": "android", "share": 0.15},
+                        {"os_code": "ios",     "share": 0.15},
+                        {"os_code": "linux",   "share": 0.10},
+                        {"os_code": "osx",     "share": 0.30},
+                        {"os_code": "windows", "share": 0.30}
+                    ],
+                    "browsers": [
+                        {"browser_code": "chrome",  "share": 0.10},
+                        {"browser_code": "edge",    "share": 0.30},
+                        {"browser_code": "firefox", "share": 0.10},
+                        {"browser_code": "opera",   "share": 0.30},
+                        {"browser_code": "safari",  "share": 0.20}
+                    ],
+                    "goodness": 0.59,
+                    "badness": 0.59,
+                    "pain_factor": 0.05
                 }
-            }"""
+            ]
+        }"""
+    ]
+
+    return json.loads(sample_reports[request_number])
+
 
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "7c87a2ff-f8e9-4cdf-afaa-8c33ae7e6e5f"
+    os.environ["HTTP_COOKIE"] = "cd9dd187-3468-47d8-bea3-f1ba4217e12c"
     os.environ["CONTENT_TYPE"] = get_content_type()
-    os.environ["CONTENT_LENGTH"] = str(len(get_body()))
+    os.environ["CONTENT_LENGTH"] = str(len(get_body(0)))
 
-    sys.stdin = StringIO(get_body())
+    sys.stdin = StringIO(get_body(0))

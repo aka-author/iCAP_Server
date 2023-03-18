@@ -7,7 +7,7 @@
 # # ## ### ##### ######## ############# #####################
 
 import cgi, os, sys, uuid
-import utils, status, logs, restreq, restresp, users, auth, apps
+import utils, status, logs, restreq, restresp, performers, users, auth, apps
 
 
 class RestServer (apps.Application):
@@ -112,9 +112,14 @@ class RestServer (apps.Application):
         return self.check_user_permissions(user) if user is not None else False
 
 
-    def validate_request(self, req: restreq.RestRequest) -> bool:
+    def validate_rest_request(self, rest_req: restreq.RestRequest) -> bool:
 
         return True
+    
+
+    def check_performer_blade(self, performer_blade: performers.Blade) -> bool:
+
+        return performer_blade is not None
 
 
     def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
@@ -133,7 +138,7 @@ class RestServer (apps.Application):
 
         if self.authorize_user(req):
 
-            if self.validate_request(req):
+            if self.validate_rest_request(req):
                 resp = self.produce_response(req)
                 self.type_response(resp)
                 self.log(logs.LOG_INFO, status.MSG_RESPONSE, resp.serialize())
