@@ -19,9 +19,16 @@ class RestServer (apps.Application):
 
         super().__init__(app_name, rel_cfg_file_path)
 
+        self.api_version = 2
+
         self.auth_agent = auth.Auth(self)
         self.user_session_uuid = None
         self.current_user = None
+
+    
+    def get_api_version(self) -> int:
+
+        return self.api_version
 
 
     def mock_cgi_input(self):
@@ -187,7 +194,7 @@ class RestServer (apps.Application):
 
         app_resp = appresp.AppResponse(self)\
                         .set_type_name(app_resp_type_name)\
-                        .set_ver(2)\
+                        .set_ver(self.get_api_version())\
                         .set_started_at(started_at)\
                         .set_finished_at(finished_at)\
                         .set_duration((finished_at - started_at).microseconds)\

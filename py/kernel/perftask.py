@@ -24,7 +24,8 @@ class PerformerTask(models.Model):
                 .add_field(fields.StringField("performer_name"))\
                 .add_field(fields.StringField("task_name"))\
                 .add_field(fields.DictField("prolog"))\
-                .add_field(fields.DictField("task_body"))
+                .add_field(fields.DictField("task_body"))\
+                .add_field(fields.DictField("output_template"))
 
         return self
     
@@ -47,3 +48,8 @@ class PerformerTask(models.Model):
     def get_task_body(self) -> Dict:
 
         return self.get_field_value("task_body")
+    
+
+    def get_output_template(self) -> Dict:
+
+        return self.get_field_value("output_template")
