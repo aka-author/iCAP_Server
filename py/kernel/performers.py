@@ -6,7 +6,7 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict
-import workers, controllers, performer_shortcuts
+import workers, controllers, performer_shortcuts, perftask, perfoutput
 
 
 class Blade(controllers.Controller):
@@ -38,6 +38,11 @@ class Blade(controllers.Controller):
     def get_shortcut(self) -> performer_shortcuts.PerformerShortcut:
 
         return self.shortcut
+    
+
+    def perform_task(self, task: perftask.PerformerTask) -> perfoutput.PerformerOutput:
+
+        return perfoutput.PerformerOutput(self)
 
 
 class Admin(Blade):
@@ -45,11 +50,6 @@ class Admin(Blade):
     def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
-
-
-    def perform_admin_task(self, task_name: str, admin_task_data) -> Dict:
-
-        return {}
     
 
 class Processor(Blade):
@@ -59,21 +59,10 @@ class Processor(Blade):
         super().__init__(chief)
 
 
-    def perform_processing_task(self, task_name: str, processing_task_data) -> Dict:
-
-        return {}
-
-
 class Reporter(Blade):
 
     def __init__(self, chief: workers.Worker):
 
         super().__init__(chief)
-
-
-    def build_report(self, report_name: str, assay_query_data: Dict) -> Dict:
-
-
-        return {"version": 1, "wording": "test"}
     
 

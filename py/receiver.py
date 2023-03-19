@@ -13,7 +13,7 @@ from typing import Dict
 import os, sys, pathlib
 
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import dtos, restserver, users, restreq, restresp, measurements
+from kernel import dtos, restreq, restserver, users, restresp, measurements
 from debug import deb_receiver
 
 

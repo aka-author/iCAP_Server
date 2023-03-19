@@ -12,96 +12,99 @@ def get_body(sample_number: int) -> Dict:
 
     sample_requests = [
         """{
+            "app_request_type_name": "performer_task",
             "ver": 2,
-            "performer_name": "basestat",
-            "task_name": "summaries",
-            "payload": {
+            "app_request_body": {
+                "performer_name": "basestat1",
+                "task_name": "summaries",
                 "prolog": {
                     "metadata": [
                         {"meta_name": "debug_index", "content": 0}
                     ]
                 },
-                "scope": {
-                    "conditions": [
-                        {
-                            "cond_name": "langScope",
-                            "varname": "icap.cms.doc.localCode",
-                            "range": {
-                                "datatype_name": "string",
-                                "range_type_name": "list",
-                                "values": {
-                                    "items": ["en", "es"]
+                "task_body": {
+                    "scope": {
+                        "conditions": [
+                            {
+                                "cond_name": "langScope",
+                                "varname": "icap.cms.doc.localCode",
+                                "range": {
+                                    "datatype_name": "string",
+                                    "range_type_name": "list",
+                                    "values": {
+                                        "items": ["en", "es"]
+                                    }
+                                }
+                            },
+                            {
+                                "cond_name": "timeScope",
+                                "varname": "accepted_at", 
+                                "range": {
+                                    "datatype_name": "timestamp",
+                                    "range_type_name": "segment",
+                                    "values": { 
+                                        "min": "2022-01-01", 
+                                        "max": "2022-12-31"
+                                    }
                                 }
                             }
-                        },
-                        {
-                            "cond_name": "timeScope",
-                            "varname": "accepted_at", 
-                            "range": {
-                                "datatype_name": "timestamp",
-                                "range_type_name": "segment",
-                                "values": { 
-                                    "min": "2022-01-01", 
-                                    "max": "2022-12-31"
-                                }
-                            }
-                        }
-                    ],
-                    "expression": "langScope and timeScope"
-                },
-                "granularity": {
-                    "dimensions": [
-                        {
-                            "varname": "accepted_at",
-                            "groups": [
-                                {
-                                    "group_name": "Q1",
-                                    "range": {
-                                        "datatype_name": "timestamp",
-                                        "range_type_Name": "segment",
-                                        "values": { 
-                                            "min": "2022-01-01", 
-                                            "max": "2022-03-31"
+                        ],
+                        "expression": "langScope and timeScope"
+                    },
+                    "granularity": {
+                        "dimensions": [
+                            {
+                                "varname": "accepted_at",
+                                "groups": [
+                                    {
+                                        "group_name": "Q1",
+                                        "range": {
+                                            "datatype_name": "timestamp",
+                                            "range_type_Name": "segment",
+                                            "values": { 
+                                                "min": "2022-01-01", 
+                                                "max": "2022-03-31"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "group_name": "Q2",
+                                        "range": {
+                                            "datatype_name": "timestamp",
+                                            "range_type_name": "segment",
+                                            "values": { 
+                                                "min": "2022-04-01", 
+                                                "max": "2022-06-30"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "group_name": "Q3",
+                                        "range": {
+                                            "datatype_name": "timestamp",
+                                            "range_type_name": "segment",
+                                            "values": { 
+                                                "min": "2022-07-01", 
+                                                "max": "2022-09-30"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "group_name": "Q4",
+                                        "range": {
+                                            "datatype_name": "timestamp",
+                                            "range_type_name": "segment",
+                                            "values": { 
+                                                "min": "2022-10-01", 
+                                                "max": "2022-12-31"
+                                            }
                                         }
                                     }
-                                },
-                                {
-                                    "group_name": "Q2",
-                                    "range": {
-                                        "datatype_name": "timestamp",
-                                        "range_type_name": "segment",
-                                        "values": { 
-                                            "min": "2022-04-01", 
-                                            "max": "2022-06-30"
-                                        }
-                                    }
-                                },
-                                {
-                                    "group_name": "Q3",
-                                    "range": {
-                                        "datatype_name": "timestamp",
-                                        "range_type_name": "segment",
-                                        "values": { 
-                                            "min": "2022-07-01", 
-                                            "max": "2022-09-30"
-                                        }
-                                    }
-                                },
-                                {
-                                    "group_name": "Q4",
-                                    "range": {
-                                        "datatype_name": "timestamp",
-                                        "range_type_name": "segment",
-                                        "values": { 
-                                            "min": "2022-10-01", 
-                                            "max": "2022-12-31"
-                                        }
-                                    }
-                                }
-                            ]
-                        }    
-                    ]
-                } 
+                                ]
+                            }    
+                        ]
+                    } 
+                }
             }
         }"""
     ]
@@ -252,7 +255,7 @@ def get_result(request_number: int) -> Dict:
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "cd9dd187-3468-47d8-bea3-f1ba4217e12c"
+    os.environ["HTTP_COOKIE"] = "bef83f78-1fac-4c91-88fd-96687b6f4d51"
     os.environ["CONTENT_TYPE"] = get_content_type()
     os.environ["CONTENT_LENGTH"] = str(len(get_body(0)))
 

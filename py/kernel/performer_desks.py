@@ -7,8 +7,7 @@
 
 from typing import Dict, List, Tuple
 import sys, os, pathlib, importlib
-import workers, desks, performer_shortcuts, performers, perfresp
-
+import workers, desks, performer_shortcuts, performers, appresp
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.absolute()) + "/performers"))
 
 
@@ -44,12 +43,12 @@ class PerformerDesk(desks.Desk):
     
 
     def involve_reporter(self, performer_name: str) -> performers.Reporter:
-          
+        
         if self.has_performer(performer_name):
 
             shortcut = self.get_performer_shortcut(performer_name)
             reporter_module_full_name = shortcut.get_reporter_module_full_name()
-              
+            
             try:
                 performer_module = importlib.import_module(reporter_module_full_name)
                 performer_reporter = performer_module.new_reporter(shortcut)
@@ -60,8 +59,3 @@ class PerformerDesk(desks.Desk):
             performer_reporter = None
 
         return performer_reporter
-    
-
-    def get_failure_performer_response(self) -> perfresp.PerformerResponse:
-
-        return perfresp.FailurePerformerResponse(self)

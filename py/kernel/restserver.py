@@ -6,8 +6,11 @@
 # Usage:    Derive a REST CGI script from RestServer   (^.^)
 # # ## ### ##### ######## ############# #####################
 
+from typing import Dict
 import cgi, os, sys, uuid
-import utils, status, logs, restreq, restresp, performers, users, auth, apps
+from datetime import datetime
+import utils, status, logs, dtos, restreq, restresp, performers, users, auth, apps
+import status, restreq, appreq, appresp, perftask, perfoutput
 
 
 class RestServer (apps.Application):
@@ -122,9 +125,75 @@ class RestServer (apps.Application):
         return performer_blade is not None
 
 
+    def involve_performer_blade(self, perf_name: str) -> object:
+
+        return None 
+
+
+    def error_unknown_performer(self, task: perftask.PerformerTask) -> perfoutput.PerformerOutput:
+
+        failure = perfoutput.PerformerOutput(self)\
+                        .set_performer_name(task.get_performer_name())\
+                        .set_task_name(task.get_task_name())\
+                        .set_status_code(status.ERR_UNKNOWN_PERFORMER)\
+                        .set_status_message(status.MSG_UNKNOWN_PERFORMER)
+        
+        return failure
+    
+
+    def perform_task(self, task_data: Dict) -> Dict:
+
+        perf_task = perftask.PerformerTask(self).import_dto(dtos.Dto(task_data))
+        
+        perf_name = perf_task.get_performer_name()
+        
+        pref_blade = self.involve_performer_blade(perf_name)
+        
+        perf_output = pref_blade.perform_task(perf_task)\
+                        if self.check_performer_blade(pref_blade)\
+                        else self.error_unknown_performer(perf_task)
+        
+        return perf_output.export_dto().get_payload()
+
+
+    def error_unknown_request_type(self):
+
+        error_info = {"status_code": status.ERR_UNKNOWN_REQUEST_TYPE, 
+                      "status_message": status.MSG_UNKNOWN_REQUEST_TYPE}
+
+        return error_info
+
+
+    def new_app_request_dto(self, req: restreq.RestRequest) -> dtos.Dto:
+
+        return dtos.Dto(req.get_payload()).repair_datatypes()
+
+
     def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
-        return restresp.RestResponse()
+        app_req = appreq.AppRequest(self).import_dto(self.new_app_request_dto(req))
+        app_req_type_name = app_req.get_type_name()
+
+        started_at = datetime.now()
+
+        if app_req_type_name == "performer_task":
+            app_resp_body = self.perform_task(app_req.get_body())
+            app_resp_type_name = "performer_output"
+        else:
+            app_resp_body = self.error_unknown_request_type()
+            app_resp_type_name = "request_error"
+        
+        finished_at = datetime.now()
+
+        app_resp = appresp.AppResponse(self)\
+                        .set_type_name(app_resp_type_name)\
+                        .set_ver(2)\
+                        .set_started_at(started_at)\
+                        .set_finished_at(finished_at)\
+                        .set_duration((finished_at - started_at).microseconds)\
+                        .set_body(app_resp_body)
+
+        return restresp.RestResponse().set_body(app_resp.export_dto().export_payload())
 
 
     def type_response(self, resp: restresp.RestResponse) -> 'RestServer':

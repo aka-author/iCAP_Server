@@ -11,7 +11,7 @@
 
 import os, sys, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import restreq, restresp, users, restserver
+from kernel import restreq, restresp, restserver
 from debug import deb_login
 
 
