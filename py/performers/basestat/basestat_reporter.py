@@ -23,13 +23,16 @@ class BasestatReporter(performers.Reporter):
 
    def perform_task(self, task: perftask.PerformerTask) -> perfoutput.PerformerOutput:
 
-      perf_out = perfoutput.PerformerOutput(self)\
-                  .set_performer_name(task.get_performer_name())\
-                  .set_task_name(task.get_task_name())\
-                  .set_status_code(0)\
-                  .set_status_message("Success")\
-                  .set_prolog({})\
-                  .set_body(task.get_output_template())
+      if task.get_task_name() == "summaries":
+         perf_out = perfoutput.PerformerOutput(self)\
+                     .set_performer_name(task.get_performer_name())\
+                     .set_task_name(task.get_task_name())\
+                     .set_status_code(0)\
+                     .set_status_message("Success")\
+                     .set_prolog({})\
+                     .set_body(task.get_output_template())
+      else:
+         perf_out = self.error_unknown_task(task)
 
       return perf_out
 

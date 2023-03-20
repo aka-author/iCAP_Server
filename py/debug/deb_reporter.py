@@ -246,7 +246,7 @@ def get_body(sample_number: int) -> Dict:
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "6c83ac2e-4b3a-4ab9-8340-f3055294b3ee"
+    os.environ["HTTP_COOKIE"] = "9c84654f-14aa-49f8-9e8d-68fe44bae592"
     os.environ["CONTENT_TYPE"] = get_content_type()
     os.environ["CONTENT_LENGTH"] = str(len(get_body(0)))
 

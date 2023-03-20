@@ -148,6 +148,23 @@ class RestServer (apps.Application):
         return failure
     
 
+    def error_incorrect_performer_output(self, task: perftask.PerformerTask, bullshit: any) -> perfoutput.PerformerOutput:
+
+        try:
+            bullshit_str = str(bullshit)
+        except:
+            bullshit_str = status.MSG_SERIALIZATION_FAILURE
+
+        failure = perfoutput.PerformerOutput(self)\
+                        .set_performer_name(task.get_performer_name())\
+                        .set_task_name(task.get_task_name())\
+                        .set_status_code(status.ERR_INCORRECT_PERFORMER_OUTPUT)\
+                        .set_status_message(status.MSG_INCORRECT_PERFORMER_OUTPUT)\
+                        .set_body({"incorrect_output": bullshit_str})
+        
+        return failure
+
+
     def perform_task(self, task_data: Dict) -> Dict:
 
         perf_task = perftask.PerformerTask(self).import_dto(dtos.Dto(task_data))
@@ -160,7 +177,10 @@ class RestServer (apps.Application):
                         if self.check_performer_blade(pref_blade)\
                         else self.error_unknown_performer(perf_task)
         
-        return perf_output.export_dto().get_payload()
+        safe_perf_output = perf_output if isinstance(perf_output, perfoutput.PerformerOutput)\
+                            else self.error_incorrect_performer_output(perf_task, perf_output)
+        
+        return safe_perf_output.export_dto().get_payload()
 
 
     def error_unknown_request_type(self):
