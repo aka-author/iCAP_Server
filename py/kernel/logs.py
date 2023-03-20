@@ -5,7 +5,7 @@
 # Func:    Writing to logs                        (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import utils, workers, ramtables, fields
+import status, utils, workers, ramtables, fields
 
 
 LOG_INFO    = "INFO"
@@ -21,7 +21,7 @@ class Logger(workers.Worker):
 
         self.log_file_path = self.get_app().get_log_file_path()
         self.log_file = open(self.log_file_path, "a") if self.get_app().is_log_to_file_mode() else None
-        self.log(LOG_INFO, "Start")
+        self.log(LOG_INFO, status.MSG_START)
 
 
     def get_logfile_path(self):
@@ -82,7 +82,7 @@ class Logger(workers.Worker):
 
     def close_all(self):
         
-        self.log(LOG_INFO, "Finish")
+        self.log(LOG_INFO, status.MSG_FINISH)
         
         if self.get_app().is_log_to_file_mode():
             self.log_file.close()

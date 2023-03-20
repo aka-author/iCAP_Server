@@ -7,7 +7,7 @@
 
 from typing import Dict, List, Tuple
 import sys, os, pathlib, importlib
-import workers, desks, performer_shortcuts, performers, appresp
+import workers, desks, performer_shortcuts, performers
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.absolute()) + "/performers"))
 
 

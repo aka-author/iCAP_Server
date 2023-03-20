@@ -53,11 +53,13 @@ class Application (controllers.Controller):
         return self.launch_id
 
 
-    def assemble_component_path(self, rel_path: str) -> str:
+    def assemble_component_path(self, given_path: str) -> str:
 
-        script_path = str(pathlib.Path(__file__).parent.absolute())
-
-        return os.path.abspath(script_path + "/../" + rel_path)
+        if os.path.isabs(given_path):
+            return given_path
+        else:
+            script_path = str(pathlib.Path(__file__).parent.absolute())
+            return os.path.abspath(script_path + "/../" + given_path)
 
 
     def set_cfg_file_path(self, rel_cfg_file_path: str) -> 'Application':

@@ -23,6 +23,8 @@ ERR_UNKNOWN_TASK            = 10
 
 # Messages
 
+MSG_START                   = "Start"
+MSG_FINISH                  = "Finish"
 MSG_SUCCESS                 = "OK"
 MSG_LOGIN_OK                = "Logged into the system"
 MSG_LOGIN_FAILED            = "Failed to login into the system"
