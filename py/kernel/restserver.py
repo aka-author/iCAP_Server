@@ -137,17 +137,6 @@ class RestServer (apps.Application):
         return None 
 
 
-    def error_unknown_performer(self, task: perftask.PerformerTask) -> perfoutput.PerformerOutput:
-
-        failure = perfoutput.PerformerOutput(self)\
-                        .set_performer_name(task.get_performer_name())\
-                        .set_task_name(task.get_task_name())\
-                        .set_status_code(status.ERR_UNKNOWN_PERFORMER)\
-                        .set_status_message(status.MSG_UNKNOWN_PERFORMER)
-        
-        return failure
-    
-
     def error_incorrect_performer_output(self, task: perftask.PerformerTask, bullshit: any) -> perfoutput.PerformerOutput:
 
         try:
@@ -165,29 +154,32 @@ class RestServer (apps.Application):
         return failure
 
 
-    def perform_task(self, task_data: Dict) -> Dict:
-
-        perf_task = perftask.PerformerTask(self).import_dto(dtos.Dto(task_data))
+    def perform_task(self, perf_task: perftask.PerformerTask) -> perfoutput.PerformerOutput:
+                
+        pref_blade = self.involve_performer_blade(perf_task.get_performer_name())
         
-        perf_name = perf_task.get_performer_name()
+        perf_output = pref_blade.perform_task(perf_task) \
+                        if self.check_performer_blade(pref_blade) \
+                        else None
         
-        pref_blade = self.involve_performer_blade(perf_name)
-        
-        perf_output = pref_blade.perform_task(perf_task)\
-                        if self.check_performer_blade(pref_blade)\
-                        else self.error_unknown_performer(perf_task)
-        
-        safe_perf_output = perf_output if isinstance(perf_output, perfoutput.PerformerOutput)\
-                            else self.error_incorrect_performer_output(perf_task, perf_output)
-        
-        return safe_perf_output.export_dto().get_payload()
+        return perf_output
 
 
-    def error_unknown_request_type(self):
+    def error_unknown_request_type(self, app_req_type_name: str) -> Dict:
 
         error_info = {"status_code": status.ERR_UNKNOWN_REQUEST_TYPE, 
-                      "status_message": status.MSG_UNKNOWN_REQUEST_TYPE}
+                      "status_message": status.MSG_UNKNOWN_REQUEST_TYPE,
+                      "app_request_type_name": app_req_type_name}
 
+        return error_info
+    
+
+    def error_unknown_performer(self, perf_name: str) -> Dict:
+
+        error_info = {"status_code": status.ERR_UNKNOWN_PERFORMER, 
+                      "status_message": status.MSG_UNKNOWN_PERFORMER,
+                      "performer_name": perf_name}
+        
         return error_info
 
 
@@ -198,16 +190,22 @@ class RestServer (apps.Application):
 
     def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
 
+        started_at = datetime.now()
+
         app_req = appreq.AppRequest(self).import_dto(self.new_app_request_dto(req))
         app_req_type_name = app_req.get_type_name()
 
-        started_at = datetime.now()
-
         if app_req_type_name == "performer_task":
-            app_resp_body = self.perform_task(app_req.get_body())
-            app_resp_type_name = "performer_output"
+            perf_task = perftask.PerformerTask(self).import_dto(dtos.Dto(app_req.get_body()))
+            perf_output = self.perform_task(perf_task) 
+            if perf_output is not None:
+                 app_resp_type_name = "performer_output" 
+                 app_resp_body = perf_output.export_dto().get_payload()
+            else:
+                 app_resp_type_name = "request_error"
+                 app_resp_body = self.error_unknown_performer(perf_task.get_performer_name())
         else:
-            app_resp_body = self.error_unknown_request_type()
+            app_resp_body = self.error_unknown_request_type(app_req_type_name)
             app_resp_type_name = "request_error"
         
         finished_at = datetime.now()

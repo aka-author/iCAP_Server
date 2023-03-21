@@ -16,7 +16,7 @@ def get_body(sample_number: int) -> Dict:
             "ver": 2,
             "app_request_body": {
                 "performer_name": "basestat",
-                "task_name": "summaries",
+                "task_name": "summaries1",
                 "prolog": {
                     "metadata": [
                         {"meta_name": "debug_index", "content": 0}
@@ -246,7 +246,7 @@ def get_body(sample_number: int) -> Dict:
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "9c84654f-14aa-49f8-9e8d-68fe44bae592"
+    os.environ["HTTP_COOKIE"] = "a8caac64-9245-4822-9179-9307b4475937"
     os.environ["CONTENT_TYPE"] = get_content_type()
     os.environ["CONTENT_LENGTH"] = str(len(get_body(0)))
 

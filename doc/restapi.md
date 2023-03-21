@@ -1,4 +1,4 @@
-# iCAP Rest API v2
+# iCAP REST API v2
 
 ## Logging into and out of a Syste,
 
@@ -63,7 +63,7 @@ Status code: `401`.
 
 HTTP header | Format          | Meaning
 ------------|-----------------|-------------------------------- 
-Cookie      | Serialized UUID | The UUID of a current session
+`Cookie`    | Serialized UUID | The UUID of a current session
 
 
 #### Positive Output
@@ -88,8 +88,8 @@ Status code: `401`.
 #### Authorization
 
 HTTP header | Format          | Meaning
-------------|-----------------|-------------------------------- 
-Cookie      | Serialized UUID | The UUID of a current session
+------------|-----------------|---------------------- 
+`Cookie`    | Serialized UUID | The UUID of a session
 
 
 #### Generic Request Structure
@@ -110,16 +110,17 @@ Property                | Type    | Mandatory | Meaning
 Property         | Type    | Mandatory | Meaning
 -----------------|---------|-----------|-----------------------------------------------
 `performer_name` | String  | Yes       | The name of a performer we are going to use
-`task_name`      | Integer | Yes       | The name of a task we are going to perform. A task name is the name of a report in the case of analytical reports
+`task_name`      | Integer | Yes       | The name of a task we are going to perform. 
 `prolog`         | Object  | No        | A block of task metadata
 `task_body`      | Object  | Yes       | A task definition, say, a block of query conditions 
 
+A `task name` is the name of a report for analytical reports.
 
 
 > **Tip**
 > 
-> Nest a report to `output_template` for debugging purpose. The **Reporter** 
-> will send it back to you as the output.
+> Nest a mocked report to `output_template` for debugging purpose. 
+> The **Reporter** will send it back as the output.
 
 
 **Sample**
@@ -137,7 +138,7 @@ Property         | Type    | Mandatory | Meaning
         "task_body": {
             /* A query conditions go here*/
         }
-    }
+    },
     "output_template": {
         /* Formatting data for the output goes here */
     }
@@ -164,12 +165,12 @@ Property                 | Type                 | Meaning
 
 Property         | Type    | Mandatory | Meaning
 -----------------|---------|-----------|----------------------------------------------------
-`performer_name` | String  | Yes       | The name of the performer which performed the task
-`task_name`      | String  | Yes       | The task name
-`status_code`    | Integer | Yes       | `0` for a successful attempt or an error code for a failure
-`status_message` | String  | Yes       | `OK` or an error message
+`performer_name` | String  | Yes       | The name of a performer that performed the task
+`task_name`      | String  | Yes       | The name of a performed task
+`status_code`    | Integer | Yes       | `0` on success; an error code otherwise
+`status_message` | String  | Yes       | A positive phrase on success; an error message otherwise
 `prolog`         | Object  | No        | Report metadata
-`output_body`    | Object  | Yes       | A report
+`output_body`    | Object  | Yes       | A report or another useful output itself
 
 **Sample**
 
@@ -185,8 +186,11 @@ Property         | Type    | Mandatory | Meaning
         "task_name": "summaries",
         "status_code": 0,
         "status_message": "Success",
-        "prolog": {},
+        "prolog": {
+            /* Metadata goes here */
+        },
         "output_body": {
+            /* Useful data goes here */
         }
     }
 }
@@ -207,7 +211,8 @@ Status code: `200`.
     "duration": 0, 
     "app_response_body": {
         "status_code": 8, 
-        "status_message": "Unknown request type"
+        "status_message": "Unknown request type",
+        "app_request_type_name": "dance_on_your_ears"
     }
 }
 ```
@@ -216,18 +221,15 @@ Status code: `200`.
 
 ```json
 {
-    "app_response_type_name": "performer_output", 
+    "app_response_type_name": "request_error", 
     "ver": 2, 
-    "started_at": "2023-03-20 05:22:18.691382", 
-    "finished_at": "2023-03-20 05:22:18.691382", 
+    "started_at": "2023-03-20 05:19:09.026175", 
+    "finished_at": "2023-03-20 05:19:09.026175", 
     "duration": 0, 
     "app_response_body": {
-        "performer_name": "karabas-barabas", 
-        "task_name": "summaries", 
         "status_code": 9, 
-        "status_message": "Unknown performer", 
-        "prolog": null, 
-        "output_body": null
+        "status_message": "Unknown performer",
+        "app_request_type_name": "karabas-barabas"
     }
 }
 ```
