@@ -1,98 +1,43 @@
-# iCAP REST API v2
+# Reporter. REST API Description
 
-## Logging into and out of a Syste,
+## REST API Version
 
-### Logging into a System
-
-#### URL
-
-`POST /v2/login`
+The version number of the REST API is 2.
 
 
-#### Input
+## Tasks
 
-The input format is URL-encoded form. All the input parameters are mandatory.
+The following tasks are available:
 
-Parameter  | Type   | Meaning
------------|--------|-------------------------
-`username` | String | A user name
-`password` | String | A password of a user
+- Requesting an Analytical Report
 
 
-#### Positive Output
+## Requesting an Analytical Report
 
-Status code: `200`.
+### Result
 
-The output format is JSON. 
+Possible results are:
 
-Property    | Type                 | Meaning
-------------|----------------------|------------------------------------
-`uuid`      | Serialized UUID      | An UUID of a session
-`host`      | String               | A host detected as a request sender
-`opened_at` | Serialized timestamp | A moment when the session started
-`expire_at` | Serialized timestamp | A moment when the session expiees
-`duration`  | Integer              | The duration of the session (sec)
+- A report is sent back to a client
 
-The property `uuid` is crucial. The other properties are auxiliary. 
+- A receipt is sent back to a client
 
-**Sample**
-
-```json
-{
-    "uuid": "902a980a-c53b-4562-af62-4aa33ed42f49",
-    "host": "itsurim.com",
-    "opened_at": "2023-03-19 21:02:06.464613",
-    "expire_at": "2023-03-19 22:42:06.464613",
-    "duration": 6000
-}
-```
-
-#### Negative Output
-
-Status code: `401`.
+A receipt is required during the two-phase report generation. In the first phase, a reporter launches a process that performs calculations and then assembles a report. A reporter sends a receipt back to a client. In the second phase, the client trades receipt for a report.  
 
 
-### Logging Out of a System
-
-#### URL
-
-`POST /v2/logout`
-
-
-#### Authorization and Input
-
-HTTP header | Format          | Meaning
-------------|-----------------|-------------------------------- 
-`Cookie`    | Serialized UUID | The UUID of a current session
-
-
-#### Positive Output
-
-Status code: `200`.
-
-
-#### Negative Output
-
-Status code: `401`.
-
-
-## Requesting Reports
-
-### Generic Report Request
-
-#### URL
+### URL
 
 `POST /v2/reporter`
 
 
-#### Authorization
+### Authorization
 
 HTTP header | Format          | Meaning
 ------------|-----------------|---------------------- 
 `Cookie`    | Serialized UUID | The UUID of a session
 
 
-#### Generic Request Structure
+### Input
 
 The input format is JSON.
 
@@ -103,23 +48,23 @@ Property                | Type    | Mandatory | Meaning
 `app_request_type_name` | String  | Yes       | Always `performer_task` for requesting reports
 `ver`                   | Integer | Yes       | Always `2` for this version of the API
 `app_request_body`      | Object  | Yes       | A task for an analytical performer
-`output_template`       | Object  | No        | Directions for formatting the output
+`output_template`       | Object  | No        | Directions for formatting an output
 
-**A Task for an Analytical Performer**
+**Task for an Analytical Performer**
 
 Property         | Type    | Mandatory | Meaning
 -----------------|---------|-----------|-----------------------------------------------
 `performer_name` | String  | Yes       | The name of a performer we are going to use
-`task_name`      | Integer | Yes       | The name of a task we are going to perform. 
+`task_name`      | Integer | Yes       | The name of a task we are going to perform 
 `prolog`         | Object  | No        | A block of task metadata
 `task_body`      | Object  | Yes       | A task definition, say, a block of query conditions 
 
-A `task name` is the name of a report for analytical reports.
+For analytical reports, a `task name` is the name of a report.
 
 
 > **Tip**
 > 
-> Nest a mocked report to `output_template` for debugging purpose. 
+> Nest a mocked report to `output_template` for debugging purposes. 
 > The **Reporter** will send it back as the output.
 
 
@@ -146,7 +91,7 @@ A `task name` is the name of a report for analytical reports.
 ```
 
 
-#### Generic Output Structure
+### Output
 
 Status code: `200`.
 
@@ -172,7 +117,7 @@ Property         | Type    | Mandatory | Meaning
 `prolog`         | Object  | No        | Report metadata
 `output_body`    | Object  | Yes       | A report or another useful output itself
 
-**Sample**
+**Sample of a Report**
 
 ```json
 {
@@ -196,7 +141,29 @@ Property         | Type    | Mandatory | Meaning
 }
 ```
 
-#### Possible Negative Responses
+**Sample of a Receipt**
+
+```json
+{
+    "app_response_type_name": "receipt_for_output",
+    "ver": 2,
+    "started_at": "2023-03-19 21:26:00.869551",
+    "finished_at": "2023-03-19 22:25:00.000000",
+    "duration": 1234,
+    "app_response_body": {
+        "performer_name": "basestat",
+        "task_name": "summaries",
+        "status_code": 0,
+        "status_message": "Please take the output later",
+        "receipt_uuid": "fccc704c-33b1-49e6-a1f9-02f2f8c4756f",
+        "eta": "2023-03-19 22:30:00.000000",
+        "estimated_duration": "5min"
+    }
+}
+```
+
+
+### Possible Negative Responses
 
 Status code: `200`.
 
