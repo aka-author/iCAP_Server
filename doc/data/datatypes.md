@@ -1,5 +1,10 @@
 # Data Types
 
+## Introduction
+
+Data structures the platform can use for various purposes are described here.
+
+
 ## Atomic Data Types
 
 The listed atomic data types are allowed in the platform.
@@ -18,10 +23,6 @@ Date              | `date`         | `timestamp`   | `String`  | `datetime.datet
 Time              | `time`         | `timestamp`   | `String`  | `datetime.datetime`
    
 The abbreviation _TZ_ stands for a time zone here and in other contexts. 
-
-> **TBD**
->
-> We are going to have a data type for a timeslot duration some time.
 
 For the sake of JSON, some data types require values to be serialized into a string as listed below.
 
@@ -74,16 +75,12 @@ Range type | Matching values
 
 The platform provides a fixed set of named rules. 
 
-Segment bounds belong to a segment. 
-
-> **TBD**
->
-> We parhaps need to support a `set_of_segments` as well.
+The bounds belong to a segment. 
 
 
 ### Structure of a Range
 
-Each range consists of the porperties listed below.
+The properties of a range are listed below.
 
 Property         | Type     | Valid values                
 -----------------|----------|--------------------------------------------------------
@@ -92,7 +89,7 @@ Property         | Type     | Valid values
 `constraints`    | `dict`   | A dictionary relevant for the range type
 
 
-A generic JSON representation of a range as shown below.
+The generic JSON representation of a range as shown below.
 
 ```json
 {
@@ -155,10 +152,6 @@ A property `constraint` provides an explicit set of values that match a range. T
 }
 ```
 
-> **TBD**
->
-> Rules for matching values are coming soon: case sensetivity, etc.
-
 
 ### Segment Ranges
 
@@ -175,7 +168,7 @@ A property `constraint` provides the bounds of a range. The format of constraint
 
 A bound is infinite if it is set to `null`.
 
-**Sample 1. A limited segment**
+**Sample 1: A limited segment**
 
 ```json
 {
@@ -188,7 +181,7 @@ A bound is infinite if it is set to `null`.
 } 
 ```
 
-**Sample 2. A ray**
+**Sample 2: A ray**
 
 ```json
 {
@@ -222,7 +215,7 @@ Property    | Type     | Mandatory | Valid values | Meaning
     "range": {
         "datatype_name": "string",
         "range_type_name": "set",
-        "values": {
+        "constraints": {
             "members": ["de", "en", "es", "fr"]
         }
     }
@@ -276,4 +269,238 @@ If an expression is omitted, then the conditions are treated as joined with `and
 }
 ```
 
+## Groups
 
+A _group_ provides a rule for grouping source data before calculating aggregated values over each group.
+
+The properties of a group are listed below.
+
+Property   | Type   | Valid values            | Meaning
+-----------|--------|-------------------------|----------------------
+`group_by` | `dict` | A definition, see below | A variable for aggregating data
+`range`    | `dict` | A range                 | Conditions for grouping data 
+
+From the logical perspective, when processing a query, a server selects records from a database first. Then the server arranges the selected records into groups. A server uses _indicator values_ for making the groups. To do this, the server calculates a indicator value for each group. Records that give the same indicator value go into the same group. 
+
+The properties of a deputy value definition are listed below.
+
+Property        | Type     | Valid values                 | Meaning
+----------------|----------|------------------------------|------------------------------
+`datetype_name` | `string` | A data type name             | The data type of an indicator
+`group_value`   | Any      | A value of the declared type | An indicator value of a group
+
+**Sample**
+
+```json
+{
+    "group_by": {
+        "datatype_name": "string",
+        "group_value": "Q1"
+    },
+    "range": {
+        "datatype_name": "timestamp",
+        "range_type_Name": "segment",
+        "values": { 
+            "min": "2022-01-01", 
+            "max": "2022-03-31"
+        }
+    }
+}
+```
+
+
+## Dimensions
+
+A _dimension_ describes how to group source data for calculating aggregated values. Technically, a dimension provides a field name that appears in a `GROUP BY` clause of an SQL query, but not only this. A dimension additionally can provide a set of values by which source data is getting grouped. 
+
+The properties of a dimension are listed below. 
+
+Property  | Type     | Mandatory | Valid values     | Meaning
+----------|----------|-----------|------------------|---------------------------------
+`varname` | `string` | Yes       | Variable name    | A variable for aggregating data
+`groups`  | `list`   | No        | A list of groups | Conditions for grouping data 
+
+Without groups, source data is grouped by each variable value that appears there. If groups are present, then source data is grouped by each group name. 
+
+**Sample 1: A simple dimension**
+
+```json
+{
+    "varname": "icap.cms.doc.uid"
+}
+```
+
+**Sample 2: A dimension with explicit groups**
+
+```json
+{
+    "varname": "accepted_at",
+    "groups": [
+        {
+            "group_by": {
+                "datatype_name": "string",
+                "group_value": "Q1"
+            },
+            "range": {
+                "datatype_name": "timestamp",
+                "range_type_Name": "segment",
+                "values": { 
+                    "min": "2022-01-01", 
+                    "max": "2022-03-31"
+                }
+            }
+        },
+        {
+            "group_by": {
+                "datatype_name": "string",
+                "group_value": "Q2"
+            },
+            "range": {
+                "datatype_name": "timestamp",
+                "range_type_Name": "segment",
+                "values": { 
+                    "min": "2022-04-01", 
+                    "max": "2022-06-30"
+                }
+            }
+        }
+        /* The other two quarters go here */
+    ]
+}
+```
+
+
+## Granularity
+
+A _granularity_ describes how source data is grouped. 
+
+The properties of a granularity are listed below.
+
+Property     | Type   | Valid values         | Meaning
+-------------|--------|----------------------|-----------------------
+`dimensions` | `list` | A list of dimensions | The dimensions for grouping source data
+
+At least one dimension must exist in `dimensions`. If n dimensions are provided, and each dimension splits source data on m[1], m[2],..., m[n] groups, then m[1]\*m[2]\*...\*m[n] combined groups appear in the aggregated data. Each combined group is an intersection of n groups where each group comes from one of unique dimensions.
+
+**Sample**
+
+```json
+{
+    "dimensions": [
+        {"varname": "icap.cms.doc.uid"},
+        {"varname": "icap.cms.doc.localCode"}
+    ]
+}
+```
+
+
+## Generic Analytical Query
+
+The query structure described below works fine for some analytical reports. An analytical shop can apply a query discribed like this to source data it assembles. In this case, the structure of the source data depends on the analytical shop.  
+
+The properties of a generic analytical query are listed below. 
+
+Property      | Type   | Valid values  | Meaning
+--------------|--------|---------------|---------------------------------
+`scope`       | `dict` | A scope       | The conditions for selecting source data records
+`granularity` | `dict` | A granularity | The directions for aggregating the selected data
+
+**Sample**
+
+```json
+{
+    "scope": {
+        "conditions": [
+            {
+                "cond_name": "langScope",
+                "varname": "icap.cms.doc.localCode",
+                "range": {
+                    "datatype_name": "string",
+                    "range_type_name": "list",
+                    "values": {
+                        "items": ["en", "es"]
+                    }
+                }
+            },
+            {
+                "cond_name": "timeScope",
+                "varname": "accepted_at", 
+                "range": {
+                    "datatype_name": "timestamp",
+                    "range_type_name": "segment",
+                    "values": { 
+                        "min": "2022-01-01", 
+                        "max": "2022-12-31"
+                    }
+                }
+            }
+        ],
+        "expression": "langScope and timeScope"
+    },
+    "granularity": {
+        "dimensions": [
+            {
+                "varname": "accepted_at",
+                "groups": [
+                    {
+                        "group_by": {
+                            "datatype_name": "string",
+                            "group_value": "Q1"
+                        },
+                        "range": {
+                            "datatype_name": "timestamp",
+                            "range_type_Name": "segment",
+                            "values": { 
+                                "min": "2022-01-01", 
+                                "max": "2022-03-31"
+                            }
+                        }
+                    },
+                    {
+                        "group_by": {
+                            "datatype_name": "string",
+                            "group_value": "Q2"
+                        },
+                        "range": {
+                            "datatype_name": "timestamp",
+                            "range_type_name": "segment",
+                            "values": { 
+                                "min": "2022-04-01", 
+                                "max": "2022-06-30"
+                            }
+                        }
+                    },
+                    {
+                        "group_by": {
+                            "datatype_name": "string",
+                            "group_value": "Q3"
+                        },
+                        "range": {
+                            "datatype_name": "timestamp",
+                            "range_type_name": "segment",
+                            "values": { 
+                                "min": "2022-07-01", 
+                                "max": "2022-09-30"
+                            }
+                        }
+                    },
+                    {
+                        "group_by": {
+                            "datatype_name": "string",
+                            "group_value": "Q4"
+                        },
+                        "range": {
+                            "datatype_name": "timestamp",
+                            "range_type_name": "segment",
+                            "values": { 
+                                "min": "2022-10-01", 
+                                "max": "2022-12-31"
+                            }
+                        }
+                    }
+                ]
+            }    
+        ]
+    } 
+}
+```
