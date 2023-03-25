@@ -2,15 +2,25 @@
 
 ## Introduction
 
-Data structures the platform can use for various purposes are described here.
+This document describes data types and structures platform components and add-ons can use for a wide set of purposes. Technical documentation on performers is supposed to describe specific data structures.
 
 
 ## Atomic Data Types
 
-The listed atomic data types are allowed in the platform.
+Platform components operate in the three environments:
 
-Concept           | Inner name     | Database      | JSON      | Python
-------------------|----------------|---------------|-----------|----------
+- Database
+- JSON data transfer objects (DTOs)
+- Python code
+
+Since datatypes in these environments do not match exectly, a uniform method for passing data from one environment to another is required. This method should not imply writing intividual code snippets for each convertion. The solution is to select a limited subset of atomic data types for each platform and then map each subset to each of other two subsets. 
+
+An internal binary format the Python run-time engine uses for representing values in RAM is a _native_ value format. The most common conversion is JSON -> native -> database or vice versa. The platform kernel foftware provides automated "duck" recognition of data types of values and convertion values between the environments. 
+
+For the purpose of mapping, the platform suggests a _native name_ for each line of data types that mean the same. The listed atomic data types are available in the platform.
+
+Concept           | Native name    | Database      | JSON      | Python
+------------------|----------------|---------------|-----------|--------------------
 Null              | `null`         | `null`        | `Null`    | `NoneType`
 UUID              | `uuid`         | `uuid`        | `String`  | `uuid.UUID`
 Boolean           | `boolean`      | `boolean`     | `Boolean` | `bool`
@@ -24,7 +34,7 @@ Time              | `time`         | `timestamp`   | `String`  | `datetime.datet
    
 The abbreviation _TZ_ stands for a time zone here and in other contexts. 
 
-For the sake of JSON, some data types require values to be serialized into a string as listed below.
+For being represented in JSON, some data types require serialization of values as listed below. 
 
 Concept           | Python format string      | Example
 ------------------|---------------------------|---------------------------------------
@@ -34,22 +44,19 @@ Timestamp with TZ | `%Y-%m-%d %H:%M:%S.%f %z` | `2023-12-03 10:10:10.123456 +020
 Date              | `%Y-%m-%d`                | `2023-12-03`
 Time              | `%H:%M:%S`                | `10:10:10.123456`
 
-Omitting a time part is allowed for serialized timestamps but not for timestamps with a time zone. 
-
-Omitting microseconds is allowed for timestamps and time values. 
+Omitting a time part is allowed for serialized timestamps but not for timestamps with a time zone. Omitting microseconds is allowed for timestamps and time values. 
 
 
 ## Array Data Types
 
 Platform software components can treat arrays as atomic values in certain contexts. The array types are listed below.
 
-
 Concept    | Inner name | Database | JSON     | Python  
 -----------|------------|----------|----------|--------
 List       | `list`     | N/A      | `Array`  | `List`
 Dictionary | `dict`     | N/A      | `Object` | `Dict` 
 
-Unlike programming languages like Pascal, the platform does not recognize arrays by data types of their elements, say, an array of integers or an array of strings. 
+Unlike strongly typed programming languages, the platform does not recognize arrays with different data types of their elements, say, an array of integers or an array of strings. 
 
 
 ## Ranges
@@ -107,10 +114,10 @@ A _named range_ invokes a specific rule for checking a given value. The rule is 
 The format of constraints for named ranges is shown below.
 
 ```json
-"constraints": {"name": "<the name of a rule>"}
+"constraints": {"range_name": "<the name of a rule>"}
 ```
 
-A property `name` contains the name of a rule.
+A property `range_name` contains the name of a rule.
 
 Names and rules available in the platform are listed below.
 
@@ -125,7 +132,7 @@ Name  | Matching values
 {
     "datatype_name": "string",
     "range_type_name": "named",
-    "constraints": {"name": "any"}
+    "constraints": {"range_name": "any"}
 }
 ```
 
@@ -441,12 +448,9 @@ Property      | Type   | Valid values  | Meaning
         "dimensions": [
             {
                 "varname": "accepted_at",
+                "group_by_value_datatype_name": "string",
                 "groups": [
-                    {
-                        "group_by": {
-                            "datatype_name": "string",
-                            "group_value": "Q1"
-                        },
+                        "group_value": "Q1",
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_Name": "segment",
@@ -457,10 +461,7 @@ Property      | Type   | Valid values  | Meaning
                         }
                     },
                     {
-                        "group_by": {
-                            "datatype_name": "string",
-                            "group_value": "Q2"
-                        },
+                        "group_value": "Q2",
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_name": "segment",
@@ -471,10 +472,7 @@ Property      | Type   | Valid values  | Meaning
                         }
                     },
                     {
-                        "group_by": {
-                            "datatype_name": "string",
-                            "group_value": "Q3"
-                        },
+                        "group_value": "Q3",
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_name": "segment",
@@ -485,10 +483,7 @@ Property      | Type   | Valid values  | Meaning
                         }
                     },
                     {
-                        "group_by": {
-                            "datatype_name": "string",
-                            "group_value": "Q4"
-                        },
+                        "group_value": "Q4",
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_name": "segment",

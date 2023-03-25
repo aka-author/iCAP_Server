@@ -366,11 +366,54 @@ class DateField(TimestampField):
         self.parse_format = datatypes.get_default_date_format()
 
 
+class TimeField(TimestampField):
+
+    def __init__(self, varname: str):
+
+        super().__init__(varname, datatypes.DTN_TIME)
+
+        self.serialize_format = datatypes.get_default_time_format()
+        self.parse_format = datatypes.get_default_time_format()
+
+
+class ListField(Field):
+
+    def __init__(self, varname: str):
+
+        super().__init__(varname, datatypes.DTN_LIST)
+
+
 class DictField(Field):
 
     def __init__(self, varname: str):
 
         super().__init__(varname, datatypes.DTN_DICT)
+
+
+def new_native_field(field_name: str, datatype_name: str) -> Field:
+
+    if datatype_name == datatypes.DTN_BIGINT:
+        field = BigintField(field_name)
+    elif datatype_name == datatypes.DTN_DOUBLE:
+        field = DoubleField(field_name)
+    elif datatype_name == datatypes.DTN_TIMESTAMP:
+        field = TimestampField(field_name)
+    elif datatype_name == datatypes.DTN_TIMESTAMP_TZ:
+        field = TimestampTzField(field_name)
+    elif datatype_name == datatypes.DTN_DATE:
+        field = DateField(field_name)
+    elif datatype_name == datatypes.DTN_TIME:
+        field = TimeField(field_name)
+    elif datatype_name == datatypes.DTN_STRING:
+        field = StringField(field_name)
+    elif datatype_name == datatypes.DTN_LIST:
+        field = ListField(field_name)
+    elif datatype_name == datatypes.DTN_DICT:
+        field = DictField(field_name)
+    else:
+        field = StringField("field_name")
+
+    return field
 
 
 class FieldKeeper:

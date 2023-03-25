@@ -31,7 +31,7 @@ def get_body(sample_number: int) -> Dict:
                                 "range": {
                                     "datatype_name": "string",
                                     "range_type_name": "list",
-                                    "values": {
+                                    "constraints": {
                                         "items": ["en", "es"]
                                     }
                                 }
@@ -42,7 +42,7 @@ def get_body(sample_number: int) -> Dict:
                                 "range": {
                                     "datatype_name": "timestamp",
                                     "range_type_name": "segment",
-                                    "values": { 
+                                    "constraints": { 
                                         "min": "2022-01-01", 
                                         "max": "2022-12-31"
                                     }
