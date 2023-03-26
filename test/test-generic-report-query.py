@@ -23,7 +23,7 @@ def get_test_report_query():
                 "scope": {
                     "conditions": [
                         {
-                            "cond_name": "langScope",
+                            "condition_name": "langScope",
                             "varname": "icap.cms.doc.localCode",
                             "range": {
                                 "datatype_name": "string",
@@ -34,7 +34,7 @@ def get_test_report_query():
                             }
                         },
                         {
-                            "cond_name": "timeScope",
+                            "condition_name": "timeScope",
                             "varname": "accepted_at", 
                             "range": {
                                 "datatype_name": "timestamp",

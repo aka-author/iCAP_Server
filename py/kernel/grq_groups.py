@@ -1,4 +1,9 @@
-
+# # ## ### ##### ######## ############# #####################
+# Product: iCAP platform
+# Layer:   Kernel
+# Module:  grq_ranges.py                               (\(\
+# Func:    Defining a group for grouping source data   (^.^)
+# # ## ### ##### ######## ############# #####################
 
 import datatypes, fields, dtos, workers, models, grq_ranges
 

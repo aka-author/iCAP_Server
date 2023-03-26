@@ -1,3 +1,9 @@
+# # ## ### ##### ######## ############# #####################
+# Product: iCAP platform
+# Layer:   Kernel
+# Module:  grq_ranges.py                               (\(\
+# Func:    Defining constraints for source data        (^.^)
+# # ## ### ##### ######## ############# #####################
 
 from typing import List
 import utils, datatypes, fields, dtos, workers, models

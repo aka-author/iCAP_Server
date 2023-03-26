@@ -1,4 +1,9 @@
-
+# # ## ### ##### ######## ############# #####################
+# Product: iCAP platform
+# Layer:   Kernel
+# Module:  grq_dimensions.py                             (\(\
+# Func:    Defining one of gpouping diensions           (^.^)
+# # ## ### ##### ######## ############# #####################
 
 import fields, dtos, workers, models, grq_groups
 

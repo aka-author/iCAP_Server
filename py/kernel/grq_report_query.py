@@ -1,4 +1,9 @@
-
+# # ## ### ##### ######## ############# #####################
+# Product: iCAP platform
+# Layer:   Kernel
+# Module:  grq_report_query.py                         (\(\
+# Func:    Defining a generic report query             (^.^)
+# # ## ### ##### ######## ############# #####################
 
 import dtos, workers, models, grq_scopes, grq_granularity
 

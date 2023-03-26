@@ -1,4 +1,9 @@
-
+# # ## ### ##### ######## ############# #####################
+# Product: iCAP platform
+# Layer:   Kernel
+# Module:  grq_conditions.py                            (\(\
+# Func:    Converting conditions to boolean expressions (^.^)
+# # ## ### ##### ######## ############# #####################
 
 import fields, dtos, workers, models, grq_ranges
 
@@ -15,7 +20,7 @@ class Condition(models.Model):
     def define_fields(self) -> models.Model:
 
         self.get_field_manager()\
-                .add_field(fields.StringField("cond_name"))\
+                .add_field(fields.StringField("condition_name"))\
                 .add_field(fields.StringField("varname"))
 
         return self
@@ -31,9 +36,9 @@ class Condition(models.Model):
         return self
     
 
-    def get_cond_name(self) -> str:
+    def get_condition_name(self) -> str:
 
-        return self.get_field_value("cond_name")
+        return self.get_field_value("condition_name")
     
 
     def get_varname(self) -> str:

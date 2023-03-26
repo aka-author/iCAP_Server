@@ -1,3 +1,9 @@
+# # ## ### ##### ######## ############# #####################
+# Product: iCAP platform
+# Layer:   Kernel
+# Module:  grq_scopes.py                               (\(\
+# Func:    Converting scopes to boolean expressions    (^.^)
+# # ## ### ##### ######## ############# #####################
 
 import fields, dtos, workers, models, grq_conditions
 
@@ -23,7 +29,7 @@ class Scope(models.Model):
     def add_condition(self, condition) -> 'Scope':
 
         self.conditions.append(condition)
-        self.conditions_by_names[condition.get_cond_name()] = condition
+        self.conditions_by_names[condition.get_condition_name()] = condition
 
         return self
 

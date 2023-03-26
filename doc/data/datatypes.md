@@ -217,7 +217,7 @@ Property    | Type     | Mandatory | Valid values | Meaning
 **Sample**
 ```json
 {
-    "cond_name": "target_langs",
+    "condition_name": "target_langs",
     "varname": "icap.cms.doc.localCode",
     "range": {
         "datatype_name": "string",
@@ -249,7 +249,7 @@ If an expression is omitted, then the conditions are treated as joined with `and
 {
     "conditions": [
         {
-            "cond_name": "target_langs",
+            "condition_name": "target_langs",
             "varname": "icap.cms.doc.localCode",
             "range": {
                 "datatype_name": "string",
@@ -260,7 +260,7 @@ If an expression is omitted, then the conditions are treated as joined with `and
             }
         },
         {
-            "cond_name": "target_timeslot",
+            "condition_name": "target_timeslot",
             "varname": "accepted_at", 
             "range": {
                 "datatype_name": "timestamp",
@@ -300,14 +300,11 @@ Property        | Type     | Valid values                 | Meaning
 
 ```json
 {
-    "group_by": {
-        "datatype_name": "string",
-        "group_value": "Q1"
-    },
+    "group_by_value": "Q1",
     "range": {
         "datatype_name": "timestamp",
         "range_type_Name": "segment",
-        "values": { 
+        "constraints": { 
             "min": "2022-01-01", 
             "max": "2022-03-31"
         }
@@ -342,30 +339,25 @@ Without groups, source data is grouped by each variable value that appears there
 ```json
 {
     "varname": "accepted_at",
+    "group_by_value_datatype_name": "string",
     "groups": [
         {
-            "group_by": {
-                "datatype_name": "string",
-                "group_value": "Q1"
-            },
+            "group_by_value": "Q1",
             "range": {
                 "datatype_name": "timestamp",
-                "range_type_Name": "segment",
-                "values": { 
+                "range_type_name": "segment",
+                "constraints": { 
                     "min": "2022-01-01", 
                     "max": "2022-03-31"
                 }
             }
         },
         {
-            "group_by": {
-                "datatype_name": "string",
-                "group_value": "Q2"
-            },
+            "group_by_value": "Q2",
             "range": {
                 "datatype_name": "timestamp",
                 "range_type_Name": "segment",
-                "values": { 
+                "constraints": { 
                     "min": "2022-04-01", 
                     "max": "2022-06-30"
                 }
@@ -419,23 +411,23 @@ Property      | Type   | Valid values  | Meaning
     "scope": {
         "conditions": [
             {
-                "cond_name": "langScope",
+                "condition_name": "langScope",
                 "varname": "icap.cms.doc.localCode",
                 "range": {
                     "datatype_name": "string",
-                    "range_type_name": "list",
-                    "values": {
+                    "range_type_name": "set",
+                    "constraints": {
                         "items": ["en", "es"]
                     }
                 }
             },
             {
-                "cond_name": "timeScope",
+                "condition_name": "timeScope",
                 "varname": "accepted_at", 
                 "range": {
                     "datatype_name": "timestamp",
                     "range_type_name": "segment",
-                    "values": { 
+                    "constraints": { 
                         "min": "2022-01-01", 
                         "max": "2022-12-31"
                     }
@@ -454,7 +446,7 @@ Property      | Type   | Valid values  | Meaning
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_Name": "segment",
-                            "values": { 
+                            "constraints": { 
                                 "min": "2022-01-01", 
                                 "max": "2022-03-31"
                             }
@@ -465,7 +457,7 @@ Property      | Type   | Valid values  | Meaning
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_name": "segment",
-                            "values": { 
+                            "constraints": { 
                                 "min": "2022-04-01", 
                                 "max": "2022-06-30"
                             }
@@ -476,7 +468,7 @@ Property      | Type   | Valid values  | Meaning
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_name": "segment",
-                            "values": { 
+                            "constraints": { 
                                 "min": "2022-07-01", 
                                 "max": "2022-09-30"
                             }
@@ -487,7 +479,7 @@ Property      | Type   | Valid values  | Meaning
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_name": "segment",
-                            "values": { 
+                            "constraints": { 
                                 "min": "2022-10-01", 
                                 "max": "2022-12-31"
                             }

@@ -1,4 +1,9 @@
-
+# # ## ### ##### ######## ############# #####################
+# Product: iCAP platform
+# Layer:   Kernel
+# Module:  grq_granularity.py                           (\(\
+# Func:    Grouping source data for a generic report    (^.^)
+# # ## ### ##### ######## ############# #####################
 
 import fields, dtos, workers, models, grq_dimensions
 
