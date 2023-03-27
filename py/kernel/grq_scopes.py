@@ -61,7 +61,7 @@ class Scope(models.Model):
         return self.conditions[index]
     
 
-    def assemble_expression(self, sql_builder) -> str:
+    def assemble_where_expression(self, sql_builder) -> str:
 
         condition_expressions = []
 

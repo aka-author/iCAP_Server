@@ -35,19 +35,19 @@ class ReportQuery(models.Model):
         return self
     
 
-    def assemble_select_fields(self) -> str:
+    def assemble_select_fields(self, sql_bilder) -> str:
 
-        return ""
+        return self.granularity.assemble_select_fields(sql_bilder)
 
 
-    def assemble_where_expression(self) -> str:
+    def assemble_where_expression(self, sql_bilder) -> str:
 
-        return ""
+        return self.scope.assemble_where_expression(sql_bilder)
     
 
-    def assemble_group_by_list(self) -> str:
+    def assemble_group_by_list(self, sql_bilder) -> str:
 
-        return ""
+        return self.granularity.assemble_group_by_list(sql_bilder)
     
 
     

@@ -5,7 +5,7 @@
 # Func:    Grouping source data for a generic report    (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import fields, dtos, workers, models, grq_dimensions
+import dtos, workers, models, grq_dimensions
 
 
 class Granularity(models.Model):
@@ -36,4 +36,14 @@ class Granularity(models.Model):
         for dimension in self.dimensions:
            group_by_items.append(dimension.assemble_group_by_item(sql_builder))
 
-        return ", ".join(group_by_items)
+        return sql_builder.list(group_by_items)
+    
+
+    def assemble_select_fields(self, sql_builder) -> str:
+
+        select_fields = []
+
+        for dimension in self.dimensions:
+           select_fields.append(dimension.assemble_select_item(sql_builder))
+
+        return sql_builder.list(select_fields) 

@@ -185,3 +185,16 @@ class SqlBuilder(workers.Worker):
     def qualified_table_name(self, table_name: str, db_scheme_name: str=None) -> str:
 
         return utils.prefix(db_scheme_name, ".", table_name)
+    
+
+    # CASE
+
+    def case(self, *cases) -> str:
+
+        with_clauses = []
+        for case in cases:
+            with_clauses.append("WHEN " + case[0] + " THEN " + case[1])
+
+        return "CASE " + " ".join(with_clauses)  + " END"
+
+

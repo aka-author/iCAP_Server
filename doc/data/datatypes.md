@@ -442,10 +442,11 @@ Property      | Type   | Valid values  | Meaning
                 "varname": "accepted_at",
                 "group_by_value_datatype_name": "string",
                 "groups": [
-                        "group_value": "Q1",
+                    {
+                        "group_by_value": "Q1",
                         "range": {
                             "datatype_name": "timestamp",
-                            "range_type_Name": "segment",
+                            "range_type_name": "segment",
                             "constraints": { 
                                 "min": "2022-01-01", 
                                 "max": "2022-03-31"
@@ -453,7 +454,7 @@ Property      | Type   | Valid values  | Meaning
                         }
                     },
                     {
-                        "group_value": "Q2",
+                        "group_by_value": "Q2",
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_name": "segment",
@@ -464,7 +465,7 @@ Property      | Type   | Valid values  | Meaning
                         }
                     },
                     {
-                        "group_value": "Q3",
+                        "group_by_value": "Q3",
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_name": "segment",
@@ -475,7 +476,7 @@ Property      | Type   | Valid values  | Meaning
                         }
                     },
                     {
-                        "group_value": "Q4",
+                        "group_by_value": "Q4",
                         "range": {
                             "datatype_name": "timestamp",
                             "range_type_name": "segment",

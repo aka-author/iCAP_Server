@@ -80,7 +80,7 @@ def get_test_report_query():
                                     }
                                 },
                                 {
-                                    "group_value": "Q3",
+                                    "group_by_value": "Q3",
                                     "range": {
                                         "datatype_name": "timestamp",
                                         "range_type_name": "segment",
@@ -91,7 +91,7 @@ def get_test_report_query():
                                     }
                                 },
                                 {
-                                    "group_value": "Q4",
+                                    "group_by_value": "Q4",
                                     "range": {
                                         "datatype_name": "timestamp",
                                         "range_type_name": "segment",
@@ -119,3 +119,11 @@ report_query = grq_report_query.ReportQuery(app)\
 
 print("Scope :", report_query.scope)
 print("Granularity: ", report_query.granularity.dimensions[1].groups)
+
+print(report_query.assemble_where_expression(sql_builder))
+
+print("GROUP_BY")
+print(report_query.assemble_group_by_list(sql_builder))
+
+print("SELECT")
+print(report_query.assemble_select_fields(sql_builder))

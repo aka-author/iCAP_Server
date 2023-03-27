@@ -89,7 +89,9 @@ class SetConstraint(Constraint):
 
         members_str = ", ".join([sql_builder.typed_value(m) for m in self.get_members()])
 
-        return "({0} in {1})".format(varname, utils.pars(members_str))
+        sql_varname = sql_builder.sql_varname(varname)
+
+        return "({0} in {1})".format(sql_varname, utils.pars(members_str))
 
 
 class SegmentConstraint(Constraint):
@@ -125,7 +127,9 @@ class SegmentConstraint(Constraint):
         min_sql = sql_builder.typed_value(self.get_min())
         max_sql = sql_builder.typed_value(self.get_max())
 
-        return "({0} <= {1} AND {1} <= {2})".format(min_sql, varname, max_sql)
+        sql_varname = sql_builder.sql_varname(varname)
+
+        return "({0} <= {1} AND {1} <= {2})".format(min_sql, sql_varname, max_sql)
 
 
 class Range(models.Model):
