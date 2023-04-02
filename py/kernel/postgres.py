@@ -85,7 +85,7 @@ class PostgresSubqueries(sql_queries.Subqueries):
         
         if len(self.subqueries) > 0:
             defs = [self.get_subquery_def(self.subqueries[sq_name]) for sq_name in self.subqueries]
-            return "WITH\n" + self.sql.list_in_column(defs)  + "\n"
+            return "WITH\n" + self.sql.column_list(defs)  + "\n"
         else:
             return ""
         

@@ -8,7 +8,7 @@
 from typing import Dict
 import sys, os, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.parent.absolute()))) 
-from kernel import performer_shortcuts, performers, perftask, perfoutput
+from kernel import status, dtos, performer_shortcuts, performers, perftask, perfoutput, grq_report_query
 from debug import deb_reporter
 
 
@@ -21,26 +21,91 @@ class BasestatReporter(performers.Reporter):
       self.report_ver = 2
 
 
+   def assemble_summaries_report(self, report_query_dict: Dict) -> Dict:
+
+      report_dict = {}
+
+      rq = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
+
+      print("!!!", rq.granularity.dimensions[0])
+
+      #self.get_default_dbms().new_select()
+
+
+      sql_builder = self.get_app().get_default_dbms().new_sql_builder(None)
+
+      print(rq.assemble_select_fields(sql_builder))
+
+      report_dict = report_query_dict
+
+      return report_dict
+
+
+   def assemble_messages_report(self, report_query_dict: Dict) -> Dict:
+
+      report_dict = {}
+
+      dbms, db = self.get_default_dbms(), self.get_default_db()
+      sql_builder = dbms.new_sql_builder(None)
+
+      report_query_model = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
+      select_messages_where = report_query_model.assemble_where_expression(sql_builder)
+
+      
+      runner = dbms.new_query_runner(db)
+
+      messages_measurements_query = self.get_app().get_source_desk().assemble_messages_query()
+
+      messages_query = self.get_default_dbms().new_select()
+
+      messages_query.subqueries.add(messages_measurements_query)
+      
+      messages_query\
+         .FROM((messages_measurements_query.get_query_name(),))\
+            .WHERE(select_messages_where)\
+            .SELECT_field(("accepted_at",))\
+            .SELECT_field(("icap.cms.doc.uid",))\
+            .SELECT_field(("icap.cms.doc.verno",))\
+            .SELECT_field(("icap.cms.topic.uid",))\
+            .SELECT_field(("icap.cms.topic.verno",))\
+            .SELECT_field(("message",))
+
+      print(messages_query.get_snippet())
+
+      # query_result = runner.execute_query(messages_query).get_query_result()
+
+      # runner.close()
+
+      return report_dict
+
+
    def perform_task(self, task: perftask.PerformerTask) -> perfoutput.PerformerOutput:
 
+      task_body = task.get_task_body()
+
+      status_code = status.OK
+      status_message = status.MSG_SUCCESS
+      out_prolog = out_body = None
+      
       if task.get_task_name() == "summaries":
-         perf_out = perfoutput.PerformerOutput(self)\
+         out_body = self.assemble_summaries_report(task_body)      
+      elif task.get_task_name() == "messages":
+         out_body = self.assemble_messages_report(task_body)  
+      else:
+         status_code = status.ERR_UNKNOWN_TASK 
+         status_message = status.MSG_UNKNOWN_TASK
+
+      perf_out = perfoutput.PerformerOutput(self)\
                      .set_performer_name(task.get_performer_name())\
                      .set_task_name(task.get_task_name())\
-                     .set_status_code(0)\
-                     .set_status_message("Success")\
-                     .set_prolog({})\
-                     .set_body(task.get_output_template())
-      else:
-         perf_out = self.error_unknown_task(task)
-
-      return perf_out
+                     .set_status_code(status_code)\
+                     .set_status_message(status_message)\
+                     .set_prolog(out_prolog)\
+                     .set_body(out_body)
+      
+      return perf_out 
 
 
 def new_reporter(shortcut: performer_shortcuts.PerformerShortcut) -> performers.Reporter:
 
    return BasestatReporter(shortcut.get_chief()).set_shortcut(shortcut)
-
-
-
-

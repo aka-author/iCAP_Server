@@ -5,7 +5,7 @@
 # Func:    Defining a group for grouping source data   (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import datatypes, fields, dtos, workers, models, grq_ranges
+import sql_builders, datatypes, fields, dtos, workers, models, grq_ranges
 
 
 class Group(models.Model):
@@ -47,9 +47,13 @@ class Group(models.Model):
         return self
     
 
-    def assemble_case_pair(self, varname, sql_builder) -> str:
+    def assemble_case_pair(self, varname, sql_builder: sql_builders.SqlBuilder) -> str:
 
-        range_conditions_expr = self.range.assemble_expression(varname, sql_builder)
-        group_by_typed_value = sql_builder.typed_value(self.get_group_by_value())
+        if self.range is not None:
+            range_conditions_expr = self.range.assemble_expression(varname, sql_builder)
+            group_by_typed_value = sql_builder.typed_value(self.get_group_by_value())
+        else:
+            range_conditions_expr = None
+            group_by_typed_value = None
 
         return (range_conditions_expr, group_by_typed_value)

@@ -5,7 +5,7 @@
 # Func:    Defining a generic report query             (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import dtos, workers, models, grq_scopes, grq_granularity
+import sql_builders, dtos, workers, models, grq_scopes, grq_granularity
 
 
 class ReportQuery(models.Model):
@@ -33,21 +33,21 @@ class ReportQuery(models.Model):
             self.granularity = grq_granularity.Granularity(self).import_dto(granularity_dto)
 
         return self
-    
-
-    def assemble_select_fields(self, sql_bilder) -> str:
-
-        return self.granularity.assemble_select_fields(sql_bilder)
 
 
-    def assemble_where_expression(self, sql_bilder) -> str:
+    def assemble_where_expression(self, sql_bilder: sql_builders.SqlBuilder) -> str:
 
         return self.scope.assemble_where_expression(sql_bilder)
     
 
-    def assemble_group_by_list(self, sql_bilder) -> str:
+    def assemble_group_by_list(self, sql_bilder: sql_builders.SqlBuilder) -> str:
 
         return self.granularity.assemble_group_by_list(sql_bilder)
+    
+
+    def assemble_select_fields(self, sql_bilder: sql_builders.SqlBuilder) -> str:
+
+        return self.granularity.assemble_select_fields(sql_bilder)
     
 
     

@@ -186,4 +186,8 @@ class Range(models.Model):
 
     def assemble_expression(self, varname: str, sql_builder) -> str:
 
-        return self.constraints.assemble_expression(varname, sql_builder)
+        expr = self.constraints.assemble_expression(varname, sql_builder) \
+                        if self.constraints is not None \
+                        else "true"
+
+        return expr

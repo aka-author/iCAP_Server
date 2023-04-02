@@ -16,7 +16,7 @@ def get_body(sample_number: int) -> Dict:
             "ver": 2,
             "app_request_body": {
                 "performer_name": "basestat",
-                "task_name": "summaries1",
+                "task_name": "messages",
                 "prolog": {
                     "metadata": [
                         {"meta_name": "debug_index", "content": 0}
@@ -55,46 +55,47 @@ def get_body(sample_number: int) -> Dict:
                         "dimensions": [
                             {
                                 "varname": "accepted_at",
+                                "group_by_value_datatype_name": "string",
                                 "groups": [
                                     {
-                                        "group_name": "Q1",
+                                        "group_by_value": "Q1",
                                         "range": {
                                             "datatype_name": "timestamp",
-                                            "range_type_Name": "segment",
-                                            "values": { 
+                                            "range_type_name": "segment",
+                                            "constraints": { 
                                                 "min": "2022-01-01", 
                                                 "max": "2022-03-31"
                                             }
                                         }
                                     },
                                     {
-                                        "group_name": "Q2",
+                                        "group_by_value": "Q2",
                                         "range": {
                                             "datatype_name": "timestamp",
                                             "range_type_name": "segment",
-                                            "values": { 
+                                            "constraints": { 
                                                 "min": "2022-04-01", 
                                                 "max": "2022-06-30"
                                             }
                                         }
                                     },
                                     {
-                                        "group_name": "Q3",
+                                        "group_by_value": "Q3",
                                         "range": {
                                             "datatype_name": "timestamp",
                                             "range_type_name": "segment",
-                                            "values": { 
+                                            "constraints": { 
                                                 "min": "2022-07-01", 
                                                 "max": "2022-09-30"
                                             }
                                         }
                                     },
                                     {
-                                        "group_name": "Q4",
+                                        "group_by_value": "Q4",
                                         "range": {
                                             "datatype_name": "timestamp",
                                             "range_type_name": "segment",
-                                            "values": { 
+                                            "constraints": { 
                                                 "min": "2022-10-01", 
                                                 "max": "2022-12-31"
                                             }
@@ -246,7 +247,7 @@ def get_body(sample_number: int) -> Dict:
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "a8caac64-9245-4822-9179-9307b4475937"
+    os.environ["HTTP_COOKIE"] = "4c1db495-1d73-404b-8120-4f98a6f0f122"
     os.environ["CONTENT_TYPE"] = get_content_type()
     os.environ["CONTENT_LENGTH"] = str(len(get_body(0)))
 

@@ -5,7 +5,7 @@
 # Func:    Defining one of gpouping diensions           (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import fields, dtos, workers, models, grq_groups
+import sql_builders, fields, dtos, workers, models, grq_groups
 
 
 class Dimension(models.Model):
@@ -50,7 +50,7 @@ class Dimension(models.Model):
         return self
     
 
-    def assemble_group_by_item(self, sql_builder) -> str:
+    def assemble_group_by_item(self, sql_builder: sql_builders.SqlBuilder) -> str:
 
         if len(self.groups) > 0:     
 
@@ -66,7 +66,7 @@ class Dimension(models.Model):
         return expr
     
 
-    def assemble_select_item(self, sql_builder) -> str:
+    def assemble_select_item(self, sql_builder: sql_builders.SqlBuilder) -> str:
 
         group_by_item = self.assemble_group_by_item(sql_builder)
 

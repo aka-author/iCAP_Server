@@ -56,7 +56,7 @@ class SqlBuilder(workers.Worker):
 
     def column_list(self, list_items: List, separ: str=",\n") -> str:
 
-        return list(list_items, separ)
+        return self.list(list_items, separ)
 
 
     # Detecting and mapping data types of values
@@ -84,7 +84,7 @@ class SqlBuilder(workers.Worker):
 
     def qualified_varname(self, varname, table_alias=None) -> str:
 
-        return utils.prefix(table_alias, ".", varname)
+        return utils.prefix(table_alias, ".", self.sql_varname(varname))
 
 
     # Formatting values

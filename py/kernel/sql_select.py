@@ -49,7 +49,7 @@ class SelectClause(sql_queries.Clause):
             field_def["expr"].format(*operand_snippets)
         
         snippet = \
-            self.sql.AS(expr_snippet, field_def["alias"]) \
+            self.sql.AS(expr_snippet, self.sql.sql_varname(str(field_def["alias"]))) \
                 if field_def["alias"] is not None else expr_snippet
 
         return snippet

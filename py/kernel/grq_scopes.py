@@ -5,7 +5,7 @@
 # Func:    Converting scopes to boolean expressions    (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import fields, dtos, workers, models, grq_conditions
+import sql_builders, fields, dtos, workers, models, grq_conditions
 
 
 class Scope(models.Model):
@@ -61,7 +61,7 @@ class Scope(models.Model):
         return self.conditions[index]
     
 
-    def assemble_where_expression(self, sql_builder) -> str:
+    def assemble_where_expression(self, sql_builder: sql_builders.SqlBuilder) -> str:
 
         condition_expressions = []
 

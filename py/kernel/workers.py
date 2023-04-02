@@ -16,9 +16,14 @@ class Worker:
     def __init__(self, chief: 'Worker'=None):
 
         self.chief = chief
+        if chief is not None:
+            chief.register_worker(self)
+
         self.id = uuid.uuid4()
         
         self.status_code = status.OK
+
+        self.workers = []
 
         self.app = None
         self.cfg = None
@@ -31,6 +36,9 @@ class Worker:
     def set_chief(self, chief: 'Worker') -> 'Worker':
 
         self.chief = chief
+
+        if chief is not None:
+            chief.register_worker(self)
 
         return self
 
@@ -72,6 +80,23 @@ class Worker:
         return self.app if self.app is not None \
                else (self.get_chief().get_app() if self.get_chief() is not None \
                else None) 
+
+
+    def register_worker(self, worker: 'Worker') -> 'Worker':
+
+        self.workers.append(worker)
+
+        return self
+
+
+    def count_workers(self) -> int:
+
+        return len(self.workers)
+    
+
+    def get_worker_by_index(self, index: int) -> 'Worker':
+
+        return self.workers[index]
 
 
     def set_cfg(self, cfg: Dict) -> 'Worker':

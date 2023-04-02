@@ -38,7 +38,7 @@ def is_useful(s: str) -> bool:
 
 def prefix(prefix: str, separ: str, term: str="") -> str:
 
-    return (prefix + separ if is_useful(prefix) else "") + term
+    return (str(prefix) + str(separ) if is_useful(prefix) else "") + str(term)
 
 
 def postfix(postfix: str, separ: str, term: str="") -> str:
@@ -49,7 +49,7 @@ def postfix(postfix: str, separ: str, term: str="") -> str:
 def infix(term1: str, infix: str, term2: str) -> str: 
 
     if is_useful(term1) and is_useful(term2):
-        return term1 + infix + term2
+        return str(term1) + str(infix) + str(term2)
     elif is_useful(term1) and is_empty(term2):
         return term1
     elif is_empty(term1) and is_useful(term2):

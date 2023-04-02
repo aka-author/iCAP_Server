@@ -27,7 +27,7 @@ class Recordset(sql_workers.SqlWorker):
 
     def get_recordset_name(self) -> str:
 
-        return self.get_recordset_name
+        return self.recordset_name
     
 
     def set_field_manager(self, fm: fields.FieldManager) -> 'Recordset':

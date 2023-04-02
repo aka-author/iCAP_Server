@@ -60,3 +60,8 @@ class DirectoryDesk(desks.Desk):
     def get_variable_by_name(self, varname: str) -> variables.Variable:
 
         return self.variables_by_names.get(varname)
+    
+
+    def assemble_args_prof(self, args: List) -> str:
+
+        return "A:B:C"

@@ -5,7 +5,7 @@
 # Func:    Converting conditions to boolean expressions (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import fields, dtos, workers, models, grq_ranges
+import sql_builders, fields, dtos, workers, models, grq_ranges
 
 
 class Condition(models.Model):
@@ -51,6 +51,6 @@ class Condition(models.Model):
         return self.range
     
 
-    def assemble_expression(self, sql_builder) -> str:
+    def assemble_expression(self, sql_builder: sql_builders.SqlBuilder) -> str:
 
         return self.range.assemble_expression(self.get_varname(), sql_builder)
