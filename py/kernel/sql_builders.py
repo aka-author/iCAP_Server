@@ -5,7 +5,7 @@
 # Func:    Assembling primitive SQL code snippets    (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import Dict, List
+from typing import List, Tuple
 from datetime import datetime
 import utils, datatypes, workers, sql_workers, sql_queries
 
@@ -29,7 +29,7 @@ class SqlBuilder(workers.Worker):
         return s.replace("'", "''")
     
 
-    def typed_expr(self, expr: str, sql_datatype_name: str) -> str:
+    def typed(self, expr: str, sql_datatype_name: str) -> str:
 
         return expr + "::" + sql_datatype_name
     
@@ -164,20 +164,58 @@ class SqlBuilder(workers.Worker):
 
     # Formatting more complex expressions and operands
 
-    def operand(self, operand: any) -> str:
+    def op_name(self, op: Tuple) -> str:
 
-        if isinstance(operand, tuple):
-            src_recordset_alias = None
-            if len(operand) > 1:
-                if isinstance(operand[1], int):
-                    src_recordset_alias = self.get_query().get_src_recordset_alias_by_index(operand[1])
-                elif isinstance(operand[1], str):
-                    src_recordset_alias = operand[1]                    
-            actual_operand = self.qualified_varname(operand[0], src_recordset_alias)
+        return op[0]
+    
+
+    def op_alias(self, op: Tuple) -> str:
+
+        return op[1] if len(op) > 1 else None
+    
+
+    def op_datatype_name(self, op: Tuple) -> str:
+
+        return op[2] if len(op) > 2 else None
+    
+
+    def op_is_field(self, op: any) -> bool:
+
+        return isinstance(op, tuple)
+
+
+    def recordset_alias(self, op: Tuple) -> str:
+
+        op_alias = self.op_alias(op)
+        is_idx = isinstance(op_alias, int)
+
+        return self.get_query().get_src_recordset_alias_by_index(op_alias) if is_idx else op_alias
+        
+
+    def typed_expression(self, expr: str, native_datatype_name: str) -> str:
+    
+        if native_datatype_name is not None:
+            dbms_datatype_name = self.native2sql_datatype_name(native_datatype_name)
+            return self.typed(expr, dbms_datatype_name)
         else:
-            actual_operand = self.typed_value(operand)
+            return expr
 
-        return actual_operand
+
+    def field_operand(self, op: Tuple) -> str:
+                            
+        qualified = self.qualified_varname(self.op_name(op), self.recordset_alias(op))
+        
+        return self.typed_expression(qualified, self.op_datatype_name(op))
+
+
+    def value_operand(self, op: any) -> str:
+
+        return self.typed_value(op)
+
+
+    def operand(self, op: any) -> str:
+
+        return self.field_operand(op) if self.op_is_field(op) else self.value_operand(op)
 
 
     # Tables

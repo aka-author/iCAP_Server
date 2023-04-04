@@ -299,7 +299,7 @@ class Select(sql_queries.SelectiveQuery):
 
 
     def SELECT_field(self, field_def, alias: str=None) -> 'Select':
-
+        
         self.get_SELECT().add_field(alias, "{0}", *[field_def]).turn_on()
         
         return self

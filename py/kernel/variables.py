@@ -34,6 +34,11 @@ class Variable(models.Model):
         return self.get_field_value("uuid")
     
 
+    def get_datatype_name(self) -> str:
+
+        return self.get_field_value("datatype_name")
+    
+
     def get_shortcut(self) -> str:
 
         return self.get_field_value("shortcut")

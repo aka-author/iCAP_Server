@@ -62,6 +62,18 @@ class DirectoryDesk(desks.Desk):
         return self.variables_by_names.get(varname)
     
 
-    def assemble_args_prof(self, args: List) -> str:
+    def get_variable_datatype_name(self, varname: str) -> str:
 
-        return "A:B:C"
+        variable = self.get_variable_by_name(varname)
+
+        return variable.get_datatype_name() if variable is not None else None
+    
+
+    def get_variable_shortcut(self, varname: str) -> str:
+
+        variable = self.get_variable_by_name(varname)
+
+        return variable.get_shortcut() if variable is not None else None
+
+
+    

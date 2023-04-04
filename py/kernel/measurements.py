@@ -69,6 +69,14 @@ class VarValue(models.Model):
         return self.get_app().get_directory_desk().check_varname(self.get_varname())
 
 
+
+def assemble_argprof(shortcuts: List) -> str:
+
+    shortcuts.sort()
+
+    return "+".join(shortcuts)
+
+
 class Measurement(models.Model):
 
     def __init__(self, chief: workers.Worker):
@@ -130,9 +138,10 @@ class Measurement(models.Model):
         dd = self.get_app().get_directory_desk()
 
         arg_names = [arg.get_varname() for arg in self.args]
-        arg_names.sort()
+        arg_shortcuts = [dd.get_variable_by_name(arg_name).get_shortcut() for arg_name in arg_names]
+        arg_shortcuts.sort()
 
-        return "+".join([dd.get_variable_by_name(arg_name).get_shortcut() for arg_name in arg_names])
+        return assemble_argprof(arg_shortcuts)
                 
 
     def get_outprof(self) -> str:
