@@ -77,6 +77,13 @@ def assemble_argprof(shortcuts: List) -> str:
     return "+".join(shortcuts)
 
 
+def assemble_outprof(shortcuts: List) -> str:
+
+    shortcuts.sort()
+
+    return "+".join(shortcuts)
+
+
 class Measurement(models.Model):
 
     def __init__(self, chief: workers.Worker):
