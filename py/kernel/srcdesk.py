@@ -16,6 +16,8 @@ class SourceDesk(desks.Desk):
         super().__init__(chief)
 
 
+    # Measurements
+
     def new_measurement(self) -> measurements.Measurement:
 
         return measurements.Measurement(self)
@@ -29,8 +31,6 @@ class SourceDesk(desks.Desk):
         return self
 
 
-    # Measurements
-
     def assemble_measurements_query(self, arg_varnames: List, out_varnames: List) -> sql_select.Select:
 
         measurements_query = self.get_default_dbms().new_select()
@@ -41,12 +41,21 @@ class SourceDesk(desks.Desk):
         # Measurements 
 
         measurements_query.FROM(("measurements", sch_name))
-
+        
+        arg_shortcuts = [dd.get_variable_shortcut(varname) for varname in arg_varnames]
+        argprof = measurements.assemble_argprof(arg_shortcuts)
+        out_shortcuts = [dd.get_variable_shortcut(varname) for varname in out_varnames]
+        outprof = measurements.assemble_outprof(out_shortcuts)
+        measurements_query\
+            .WHERE("({0}={1}) AND (string_to_array({2}, '+') && string_to_array({3}, '+'))", 
+                   ("argprof", 0), argprof,
+                   ("outprof", 0), outprof) 
+        
         measurements_query\
             .SELECT_field(("uuid", 0))\
             .SELECT_field(("accepted_at", 0)) 
 
-        # Args
+        # Argument variable values
 
         for idx, varname in enumerate(arg_varnames):
             recordset_idx = idx + 1
@@ -54,13 +63,7 @@ class SourceDesk(desks.Desk):
                 .INNER_JOIN(("varvalues", sch_name))\
                 .ON("{0}={1} AND {2}={3}", 
                     ("uuid", 0), ("measurement_uuid", recordset_idx),
-                    ("varname", recordset_idx), varname)
-
-
-        # arg_shortcuts = [dd.get_variable_shortcut(varname) for varname in arg_varnames]
-        # argsprof = measurements.assemble_argprof(arg_shortcuts)
-        #measurements_query\
-        #    .WHERE("{0}={1}", ("argprof", 0), argsprof)           
+                    ("varname", recordset_idx), varname)        
 
         for idx, varname in enumerate(arg_varnames):
             recordset_idx = idx + 1
@@ -68,7 +71,7 @@ class SourceDesk(desks.Desk):
             measurements_query.SELECT_field(
                 ("serialized_value", recordset_idx, datatype_name), varname)
             
-        # Outs 
+        # Outpot variable values 
 
         for idx, varname in enumerate(out_varnames):
             recordset_idx = len(arg_varnames) + idx + 1
@@ -77,33 +80,12 @@ class SourceDesk(desks.Desk):
                 .ON("{0}={1} AND {2}={3}", 
                     ("uuid", 0), ("measurement_uuid", recordset_idx),
                     ("varname", recordset_idx), varname)
-        
-        # out_shortcuts = [dd.get_variable_shortcut(varname) for varname in out_varnames]
-        # outprof = measurements.assemble_outprof(out_shortcuts)
-        # print("=== ", outprof)
-        # measurements_query\
-        #     .WHERE("string_to_array({0}, '+') && string_to_array({1}, '+')", 
-        #           ("outprof", 0), outprof) 
 
         for idx, varname in enumerate(out_varnames):
             recordset_idx = len(arg_varnames) + idx + 1
             datatype_name = dd.get_variable_datatype_name(varname)
             measurements_query.SELECT_field(
                 ("serialized_value", recordset_idx, datatype_name), varname)
-            
-
-        arg_shortcuts = [dd.get_variable_shortcut(varname) for varname in arg_varnames]
-        argprof = measurements.assemble_argprof(arg_shortcuts)
-        #measurements_query\
-        #    .WHERE("{0}={1}", ("argprof", 0), argsprof) 
-
-        out_shortcuts = [dd.get_variable_shortcut(varname) for varname in out_varnames]
-        outprof = measurements.assemble_outprof(out_shortcuts)
-        print("=== ", outprof)
-        measurements_query\
-            .WHERE("({0}={1}) AND (string_to_array({2}, '+') && string_to_array({3}, '+'))", 
-                   ("argprof", 0), argprof,
-                   ("outprof", 0), outprof) 
         
         return measurements_query       
 
