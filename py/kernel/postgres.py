@@ -72,6 +72,13 @@ class PostgresSqlBuilder(sql_builders.SqlBuilder):
             native_value = raw_value
 
         return native_value
+    
+
+    def match_measurement_profiles(self, idx1: str, idx2: str, separ: str="+") -> str:
+
+        # Say, matching x+W+y+z vs. a+W+b+c gives True 
+
+        return "string_to_array({"+ str(idx1) + "}, '+') && string_to_array({" + str(idx2) + "}, '+')"
 
 
 class PostgresSubqueries(sql_queries.Subqueries):

@@ -234,5 +234,19 @@ class SqlBuilder(workers.Worker):
             with_clauses.append("WHEN " + case[0] + " THEN " + case[1])
 
         return "CASE " + " ".join(with_clauses)  + " END"
+    
+
+    # Specific tasks
+
+    def match_measurement_profiles(self, idx1: str, idx2: str, separ: str="+") -> str:
+
+        # Say, matching x+W+y+z vs. a+W+b+c gives True 
+
+        return "{" + str(idx1) + "} = {" + str(idx2) + "}"
+
+
+
+
+
 
 

@@ -36,6 +36,7 @@ class SourceDesk(desks.Desk):
         measurements_query = self.get_default_dbms().new_select()
 
         dd = self.get_app().get_directory_desk()
+        sql = self.get_default_dbms().new_sql_builder(None)
         sch_name = self.get_app().get_default_db_scheme_name()
 
         # Measurements 
@@ -47,7 +48,7 @@ class SourceDesk(desks.Desk):
         out_shortcuts = [dd.get_variable_shortcut(varname) for varname in out_varnames]
         outprof = measurements.assemble_outprof(out_shortcuts)
         measurements_query\
-            .WHERE("({0}={1}) AND (string_to_array({2}, '+') && string_to_array({3}, '+'))", 
+            .WHERE("({0}={1}) AND " + sql.match_measurement_profiles(2, 3), 
                    ("argprof", 0), argprof,
                    ("outprof", 0), outprof) 
         
