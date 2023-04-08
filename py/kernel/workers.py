@@ -168,6 +168,13 @@ class Worker:
         return self.get_app().is_batch_mode()
 
 
+    def log(self, record_type: str, wording: str="", details: str="") -> 'Worker':
+
+        self.get_app().log(record_type, wording, details)
+
+        return self
+
+
     def deb(self, debinfo: str) -> None:
 
         if self.get_cfg().is_debug_mode():

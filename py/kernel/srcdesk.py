@@ -44,13 +44,17 @@ class SourceDesk(desks.Desk):
         measurements_query.FROM(("measurements", sch_name))
         
         arg_shortcuts = [dd.get_variable_shortcut(varname) for varname in arg_varnames]
-        argprof = measurements.assemble_argprof(arg_shortcuts)
-        out_shortcuts = [dd.get_variable_shortcut(varname) for varname in out_varnames]
-        outprof = measurements.assemble_outprof(out_shortcuts)
-        measurements_query\
-            .WHERE("({0}={1}) AND " + sql.match_measurement_profiles(2, 3), 
-                   ("argprof", 0), argprof,
-                   ("outprof", 0), outprof) 
+        argprof = measurements.assemble_varprof(arg_shortcuts)
+        
+        if len(out_varnames) > 0:
+            out_shortcuts = [dd.get_variable_shortcut(varname) for varname in out_varnames]
+            outprof = measurements.assemble_varprof(out_shortcuts)
+            measurements_query\
+                .WHERE("({0}={1}) AND " + sql.match_measurement_profiles(2, 3), 
+                    ("argprof", 0), argprof, ("outprof", 0), outprof) 
+        else:
+            measurements_query\
+                .WHERE("{0}={1}", ("argprof", 0), argprof) 
         
         measurements_query\
             .SELECT_field(("uuid", 0))\
@@ -93,17 +97,29 @@ class SourceDesk(desks.Desk):
 
     def assemble_messages_query(self) -> sql_select.Select:
 
-        # messages_query = self.get_default_dbms().new_select()\
-        #        .FROM(("measurements", self.get_default_db_scheme_name()))\
-        #        .WHERE("True")\
-        #        .SELECT_field(("message", 0))
-
-
-        messages_query = self.assemble_measurements_query(
+        topic_pageread_query = self.assemble_measurements_query(
+            ["icap.pagereadId"],
             ["icap.cms.doc.uid", "icap.cms.doc.verno", 
-             "icap.cms.topic.uid", "icap.cms.topic.verno",
-             "icap.action.code"], 
-            ["icap.action.message"]
-        )
+             "icap.cms.topic.uid", "icap.cms.topic.verno"])
 
-        return messages_query 
+        reader_action_query = self.assemble_measurements_query(\
+            ["icap.pagereadId", "icap.action.code", "icap.action.timeOffset"],[])
+
+        combo_query = self.get_default_dbms().new_select()
+
+        combo_query.subqueries\
+            .add(topic_pageread_query)\
+            .add(reader_action_query)
+        
+        combo_query\
+            .FROM((topic_pageread_query.get_query_name(),))\
+            .INNER_JOIN((reader_action_query.get_query_name(),))\
+            .ON("{0}={1}", ("icap.pagereadId", 0), ("icap.pagereadId", 1))\
+            .SELECT_field(("icap.pagereadId", 0))\
+            .SELECT_field(("icap.cms.doc.uid", 0))\
+            .SELECT_field(("icap.cms.doc.verno", 0))\
+            .SELECT_field(("icap.cms.topic.uid", 0))\
+            .SELECT_field(("icap.cms.topic.verno", 0))\
+            .SELECT_field(("icap.action.code", 1))\
+
+        return combo_query 

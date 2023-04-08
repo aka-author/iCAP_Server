@@ -14,7 +14,7 @@ class RestRequest:
     def __init__(self, environ, params, body):
 
         self.status_code = status.OK
-
+        
         self.environ = environ
         self.form_fields = params
         self.body = body
@@ -64,10 +64,10 @@ class RestRequest:
 
 
     def get_pseudofield(self):
-
-        field_names = self.form_fields.keys()
-
-        return self.params[field_names[0]] if len(field_names) > 0 else ""
+        
+        field_names = [field_name for field_name in self.form_fields]
+        
+        return self.form_fields[field_names[0]] if len(field_names) > 0 else ""
 
 
     def get_credentials(self):
@@ -115,11 +115,10 @@ class RestRequest:
 
         s_payload = ""
         
-        c_type = self.get_content_type()
 
-        if c_type == "application/json":
+        if utils.check_content_type("application/json"):
             s_payload = self.get_body() 
-        elif c_type == "multipart/form-data": 
+        elif utils.check_content_type("multipart/form-data"): 
             if self.has_pseudofield():
                 s_payload = self.get_pseudofield()
 
@@ -131,10 +130,10 @@ class RestRequest:
         payload = {}        
 
         try:
-            payload = json.loads(self.get_serialized_payload())
+            payload = json.loads(self.get_serialized_payload())    
         except:
             self.set_status_code(status.ERR_INCORRECT_REQUEST)
-            
+        
         return payload
 
 

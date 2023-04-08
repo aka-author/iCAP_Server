@@ -50,13 +50,17 @@ class Receiver(restserver.RestServer):
 
     def produce_response(self, req: restreq.RestRequest) -> restresp.RestResponse:
                         
-        for measurement_dict in req.get_payload().get("measurements"): 
+        req_payload = req.get_payload()
+        
+        if isinstance(req_payload, dict):
+            if req_payload.get("measurements") is not None:
+                for measurement_dict in req_payload.get("measurements"): 
 
-            source_desk = self.get_source_desk()
+                    source_desk = self.get_source_desk()
 
-            source_desk.insert_measurement(source_desk.new_measurement()\
-                            .import_dto(self.new_measurement_dto(measurement_dict))\
-                            .rebuild())
+                    source_desk.insert_measurement(source_desk.new_measurement()\
+                                    .import_dto(self.new_measurement_dto(measurement_dict))\
+                                    .rebuild())
 
         return restresp.RestResponse()
 

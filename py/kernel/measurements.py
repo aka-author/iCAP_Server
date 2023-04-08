@@ -7,7 +7,7 @@
 
 from typing import List
 import uuid
-import utils, dtos, workers, fields, models, variables
+import logs, dtos, workers, fields, models, variables
 
 
 class VarValue(models.Model):
@@ -54,7 +54,8 @@ class VarValue(models.Model):
     def rebuild(self, measurement: 'Measurement', partition: str) -> 'VarValue':
 
         variable_uuid = self.get_variable().get_uuid()
-        serialized_value = str(self.get_field_value("parsable_value"))
+        varvalue = self.get_field_value("parsable_value")
+        serialized_value = str(varvalue) if varvalue is not None else None 
 
         self.set_field_value("measurement_uuid", measurement.get_uuid())\
             .set_field_value("variable_uuid", variable_uuid)\
@@ -70,14 +71,7 @@ class VarValue(models.Model):
 
 
 
-def assemble_argprof(shortcuts: List) -> str:
-
-    shortcuts.sort()
-
-    return "+".join(shortcuts)
-
-
-def assemble_outprof(shortcuts: List) -> str:
+def assemble_varprof(shortcuts: List) -> str:
 
     shortcuts.sort()
 
@@ -140,26 +134,31 @@ class Measurement(models.Model):
         return self.varvals_by_names[varname].get_parsable_value()
     
 
-    def get_argprof(self) -> str:
+    def collect_shortcuts(self, varnames: List) -> List:
 
         dd = self.get_app().get_directory_desk()
 
-        arg_names = [arg.get_varname() for arg in self.args]
-        arg_shortcuts = [dd.get_variable_by_name(arg_name).get_shortcut() for arg_name in arg_names]
-        arg_shortcuts.sort()
+        shortcuts = \
+            [dd.get_variable_by_name(varname).get_shortcut() \
+                for varname in varnames \
+                    if dd.get_variable_by_name(varname) is not None]
+        
+        return shortcuts
 
-        return assemble_argprof(arg_shortcuts)
+
+    def get_argprof(self) -> str:
+
+        arg_names = [arg.get_varname() for arg in self.args]
+
+        return assemble_varprof(self.collect_shortcuts(arg_names))
                 
 
     def get_outprof(self) -> str:
 
-        dd = self.get_app().get_directory_desk()
-
         out_names = [out.get_varname() for out in self.outs]
-        out_names.sort()
 
-        return "+".join([dd.get_variable_by_name(out_name).get_shortcut() for out_name in out_names])                
-
+        return assemble_varprof(self.collect_shortcuts(out_names))
+    
 
     def get_hashkey(self):
 
@@ -258,6 +257,6 @@ class Measurement(models.Model):
             count_result = runner.get_query_result().fetch_one()
             runner.close()
         else:
-            raise Exception("Database error")
+            raise Exception("A database error while checking a measurement")
         
         return count_result.fm.get_field_value("count_valid") == 0

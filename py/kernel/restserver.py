@@ -67,19 +67,23 @@ class RestServer (apps.Application):
 
         cgi_body = ""
         cgi_form_fields = {}
-
-        c_type = os.environ.get("CONTENT_TYPE", "Not provided")
-
-        if c_type == "application/json":
+        
+        if utils.check_content_type("application/json"):
             cgi_body = sys.stdin.read(int(os.environ.get("CONTENT_LENGTH", "0")))
-        elif c_type == "application/x-www-form-urlencoded":
+        elif utils.check_content_type("application/x-www-form-urlencoded"):
             try:
                 cgi_form_fields = utils.extract_fields_from_url_encoded_form(input())
             except:
                 cgi_form_fields = {}
-        elif c_type == "multipart/form-data":
-            cgi_form_fields = utils.extract_fields_from_storage(cgi.FieldStorage())            
-        
+        elif utils.check_content_type("multipart/form-data"):
+            #cgi_form_fields = utils.extract_fields_from_storage(cgi.FieldStorage())
+            ctype = os.environ.get("CONTENT_TYPE", "0") 
+            cgi_body = sys.stdin.read(int(os.environ.get("CONTENT_LENGTH", "0")))
+            json_str = utils.extract_json_body_from_pseudoform(cgi_body, ctype)
+            cgi_form_fields["pseudofield"] = json_str
+
+        self.log("DEBUG", "Request", os.environ.get("CONTENT_TYPE", "Not provided"))
+
         req = restreq.RestRequest(os.environ, cgi_form_fields, cgi_body)
         
         self.set_req(req)

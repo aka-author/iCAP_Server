@@ -5,7 +5,7 @@
 # Func:    Service functions                      (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import hashlib, uuid, re, urllib.parse
+import os, hashlib, uuid, re, urllib.parse
 from datetime import datetime
 
 
@@ -126,6 +126,16 @@ def separate(s1, separ, s2):
 def md5(str):
 
     return hashlib.md5(str.encode("utf-8")).hexdigest()
+
+
+def substring_before(s: str, separ: str) -> str:
+
+    return s.split(separ)[0]
+
+
+def substring_after(s: str, separ: str) -> str:
+
+    return s.split(separ)[1]
 
 
 # UUID and unique names
@@ -252,6 +262,11 @@ def strnow():
 
 # CGI 
 
+def check_content_type(content_type: str) -> bool:
+
+    return content_type in os.environ.get("CONTENT_TYPE", "Not provided")
+
+
 def extract_fields_from_url_encoded_form(form_urlencoded):
 
     params = {}
@@ -267,8 +282,29 @@ def extract_fields_from_url_encoded_form(form_urlencoded):
 def extract_fields_from_storage(fs):
 
     params = {}
-
+    
     for param_name in fs:
         params[param_name] = fs[param_name].value
 
     return params
+
+
+def cgi_baundary(content_type: str) -> str:
+
+    return substring_after(content_type, "boundary=")
+
+
+def cgi_form_field(body: str, content_type: str) -> str:
+
+    boundary = cgi_baundary(content_type)
+
+    items = body.split(boundary)
+
+    return items[1] if len(items) > 1 else ""  
+
+
+def extract_json_body_from_pseudoform(cgi_body, ctype):
+    tmp = cgi_form_field(cgi_body, ctype)
+    items = tmp.split("\n")
+    pseudo = "\n".join([items[i] for i in range(3,len(items)-1)])
+    return pseudo

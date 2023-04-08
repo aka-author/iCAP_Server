@@ -9,7 +9,7 @@
 import os, pathlib, uuid
 import status, controllers, cfg, logs
 import postgres
-import userdesk, dirdesk, srcdesk
+import workers, userdesk, dirdesk, srcdesk
 
 
 GLOBAL_APP = None
@@ -132,7 +132,7 @@ class Application (controllers.Controller):
         return self.logger
 
 
-    def log(self, record_type: str, wording: str="", details: str="") -> 'Application':
+    def log(self, record_type: str, wording: str="", details: str="") -> workers.Worker:
 
         self.get_logger().log(record_type, wording, details)
 
