@@ -92,34 +92,4 @@ class SourceDesk(desks.Desk):
             measurements_query.SELECT_field(
                 ("serialized_value", recordset_idx, datatype_name), varname)
         
-        return measurements_query       
-
-
-    def assemble_messages_query(self) -> sql_select.Select:
-
-        topic_pageread_query = self.assemble_measurements_query(
-            ["icap.pagereadId"],
-            ["icap.cms.doc.uid", "icap.cms.doc.verno", 
-             "icap.cms.topic.uid", "icap.cms.topic.verno"])
-
-        reader_action_query = self.assemble_measurements_query(\
-            ["icap.pagereadId", "icap.action.code", "icap.action.timeOffset"],[])
-
-        combo_query = self.get_default_dbms().new_select()
-
-        combo_query.subqueries\
-            .add(topic_pageread_query)\
-            .add(reader_action_query)
-        
-        combo_query\
-            .FROM((topic_pageread_query.get_query_name(),))\
-            .INNER_JOIN((reader_action_query.get_query_name(),))\
-            .ON("{0}={1}", ("icap.pagereadId", 0), ("icap.pagereadId", 1))\
-            .SELECT_field(("icap.pagereadId", 0))\
-            .SELECT_field(("icap.cms.doc.uid", 0))\
-            .SELECT_field(("icap.cms.doc.verno", 0))\
-            .SELECT_field(("icap.cms.topic.uid", 0))\
-            .SELECT_field(("icap.cms.topic.verno", 0))\
-            .SELECT_field(("icap.action.code", 1))\
-
-        return combo_query 
+        return measurements_query 

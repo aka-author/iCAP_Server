@@ -30,9 +30,9 @@ def get_body(sample_number: int) -> Dict:
                                 "varname": "icap.cms.doc.localCode",
                                 "range": {
                                     "datatype_name": "string",
-                                    "range_type_name": "list",
+                                    "range_type_name": "set",
                                     "constraints": {
-                                        "items": ["en", "es"]
+                                        "members": ["en", "es"]
                                     }
                                 }
                             },
@@ -43,8 +43,8 @@ def get_body(sample_number: int) -> Dict:
                                     "datatype_name": "timestamp",
                                     "range_type_name": "segment",
                                     "constraints": { 
-                                        "min": "2022-01-01", 
-                                        "max": "2022-12-31"
+                                        "min": "2023-04-01", 
+                                        "max": "2023-05-01"
                                     }
                                 }
                             }
@@ -247,7 +247,7 @@ def get_body(sample_number: int) -> Dict:
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "4c93fed0-b289-45e4-a5a5-3b2930e782d1"
+    os.environ["HTTP_COOKIE"] = "ee3777de-cd2a-4977-997c-75ef5c84e276"
     os.environ["CONTENT_TYPE"] = get_content_type()
     os.environ["CONTENT_LENGTH"] = str(len(get_body(0)))
 

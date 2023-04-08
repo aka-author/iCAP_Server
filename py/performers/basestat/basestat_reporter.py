@@ -8,7 +8,8 @@
 from typing import Dict
 import sys, os, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.parent.absolute()))) 
-from kernel import status, dtos, performer_shortcuts, performers, perftask, perfoutput, grq_report_query
+from kernel import status, dtos, performer_shortcuts, performers, perftask, \
+                     sql_select, perfoutput, grq_report_query
 from debug import deb_reporter
 
 
@@ -41,6 +42,45 @@ class BasestatReporter(performers.Reporter):
       return report_dict
 
 
+   def assemble_messages_query(self) -> sql_select.Select:
+        
+        sd = self.get_app().get_source_desk()
+
+        topic_pageread_query = sd.assemble_measurements_query(
+            ["icap.pagereadId"],
+            ["icap.cms.doc.uid", 
+             "icap.cms.doc.verno", 
+             "icap.cms.topic.uid", 
+             "icap.cms.topic.verno"])
+
+        reader_action_query = sd.assemble_measurements_query(\
+            ["icap.pagereadId", 
+             "icap.action.code", 
+             "icap.action.timeOffset"],
+            ["icap.action.message"])
+
+        combo_query = self.get_default_dbms().new_select()
+
+        combo_query.subqueries\
+            .add(topic_pageread_query)\
+            .add(reader_action_query)
+        
+        combo_query\
+            .FROM((topic_pageread_query.get_query_name(),))\
+            .INNER_JOIN((reader_action_query.get_query_name(),))\
+            .ON("{0}={1}", ("icap.pagereadId", 0), ("icap.pagereadId", 1))\
+            .SELECT_field(("accepted_at", 0))\
+            .SELECT_field(("icap.pagereadId", 0))\
+            .SELECT_field(("icap.cms.doc.uid", 0))\
+            .SELECT_field(("icap.cms.doc.verno", 0))\
+            .SELECT_field(("icap.cms.topic.uid", 0))\
+            .SELECT_field(("icap.cms.topic.verno", 0))\
+            .SELECT_field(("icap.action.code", 1))\
+            .SELECT_field(("icap__action__message", 1))
+
+        return combo_query 
+
+
    def assemble_messages_report(self, report_query_dict: Dict) -> Dict:
 
       report_dict = {}
@@ -54,7 +94,7 @@ class BasestatReporter(performers.Reporter):
       
       runner = dbms.new_query_runner(db)
 
-      messages_measurements_query = self.get_app().get_source_desk().assemble_messages_query()
+      messages_measurements_query = self.assemble_messages_query()
 
       messages_query = self.get_default_dbms().new_select()
 
@@ -68,7 +108,8 @@ class BasestatReporter(performers.Reporter):
             .SELECT_field(("icap.cms.doc.verno",))\
             .SELECT_field(("icap.cms.topic.uid",))\
             .SELECT_field(("icap.cms.topic.verno",))\
-            .SELECT_field(("message",))
+            .SELECT_field(("icap__action__code",))\
+            .SELECT_field(("icap__action__message",))
 
       print(messages_query.get_snippet())
 
