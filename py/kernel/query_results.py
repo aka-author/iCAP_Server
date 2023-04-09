@@ -5,6 +5,7 @@
 # Func:    Fetching and iterating query results      (^.^)
 # # ## ### ##### ######## ############# #####################
 
+from typing import List
 import fields, ramtables, db_recordsets, sql_queries
 
 
@@ -89,7 +90,7 @@ class QueryResult(db_recordsets.Recordset):
         return self.eof_flag
 
 
-    def dump(self) -> ramtables.Table:
+    def dump_ramtable(self) -> ramtables.Table:
 
         q = self.get_query()
 
@@ -107,3 +108,8 @@ class QueryResult(db_recordsets.Recordset):
             rt_dump.insert(buffer)
 
         return rt_dump
+    
+
+    def dump_list_of_dicts(self) -> List:
+
+        return self.dump_ramtable().dump_list_of_dicts() 

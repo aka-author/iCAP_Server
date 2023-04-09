@@ -8,7 +8,7 @@
 from typing import Dict
 import sys, os, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.parent.absolute()))) 
-from kernel import status, dtos, performer_shortcuts, performers, perftask, \
+from kernel import status, fields, dtos, performer_shortcuts, performers, perftask, \
                      sql_select, perfoutput, grq_report_query
 from debug import deb_reporter
 
@@ -42,48 +42,62 @@ class BasestatReporter(performers.Reporter):
       return report_dict
 
 
+   # Reporting messages
+
    def assemble_messages_query(self) -> sql_select.Select:
         
-        sd = self.get_app().get_source_desk()
+      source_desk = self.get_app().get_source_desk()
 
-        topic_pageread_query = sd.assemble_measurements_query(
-            ["icap.pagereadId"],
-            ["icap.cms.doc.uid", 
-             "icap.cms.doc.verno", 
-             "icap.cms.topic.uid", 
-             "icap.cms.topic.verno"])
+      topic_pageread_query = source_desk.assemble_measurements_query(
+         ["icap.pagereadId"],
+         ["icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno", 
+          "icap.cms.topic.uid", "icap.cms.topic.verno"])
 
-        reader_action_query = sd.assemble_measurements_query(\
-            ["icap.pagereadId", 
-             "icap.action.code", 
-             "icap.action.timeOffset"],
-            ["icap.action.message"])
+      reader_action_query = source_desk.assemble_measurements_query(\
+         ["icap.pagereadId", "icap.action.code", "icap.action.timeOffset"],
+         ["icap.action.message"])
 
-        combo_query = self.get_default_dbms().new_select()
+      messages_query = self.get_default_dbms().new_select()
 
-        combo_query.subqueries\
-            .add(topic_pageread_query)\
-            .add(reader_action_query)
+      messages_query.subqueries\
+         .add(topic_pageread_query)\
+         .add(reader_action_query)
         
-        combo_query\
-            .FROM((topic_pageread_query.get_query_name(),))\
-            .INNER_JOIN((reader_action_query.get_query_name(),))\
-            .ON("{0}={1}", ("icap.pagereadId", 0), ("icap.pagereadId", 1))\
-            .SELECT_field(("accepted_at", 0))\
-            .SELECT_field(("icap.pagereadId", 0))\
-            .SELECT_field(("icap.cms.doc.uid", 0))\
-            .SELECT_field(("icap.cms.doc.verno", 0))\
-            .SELECT_field(("icap.cms.topic.uid", 0))\
-            .SELECT_field(("icap.cms.topic.verno", 0))\
-            .SELECT_field(("icap.action.code", 1))\
-            .SELECT_field(("icap__action__message", 1))
+      messages_query\
+         .FROM((topic_pageread_query.get_query_name(),))\
+         .INNER_JOIN((reader_action_query.get_query_name(),))\
+         .ON("{0}={1}", ("icap.pagereadId", 0), ("icap.pagereadId", 1))\
+         .SELECT_field(("accepted_at", 0))\
+         .SELECT_field(("icap.pagereadId", 0))\
+         .SELECT_field(("icap.cms.doc.uid", 0))\
+         .SELECT_field(("icap.cms.doc.localCode", 0))\
+         .SELECT_field(("icap.cms.doc.verno", 0))\
+         .SELECT_field(("icap.cms.topic.uid", 0))\
+         .SELECT_field(("icap.cms.topic.verno", 0))\
+         .SELECT_field(("icap.action.code", 1))\
+         .SELECT_field(("icap.action.message", 1))
 
-        return combo_query 
+      return messages_query 
 
+
+   def assemble_messages_field_manager(self) -> fields.FieldKeeper():
+
+      messages_field_manager = fields.FieldManager()\
+            .add_field(fields.TimestampField("accepted_at"))\
+            .add_field(fields.StringField("icap.cms.doc.uid"))\
+            .add_field(fields.StringField("icap.cms.doc.localCode"))\
+            .add_field(fields.StringField("icap.cms.doc.verno"))\
+            .add_field(fields.StringField("icap.cms.topic.uid"))\
+            .add_field(fields.StringField("icap.cms.topic.verno"))\
+            .add_field(fields.StringField("icap.action.code"))\
+            .add_field(fields.StringField("icap.action.message"))
+      
+      return messages_field_manager
+      
 
    def assemble_messages_report(self, report_query_dict: Dict) -> Dict:
 
-      report_dict = {}
+      messages_report_dict = {}
 
       dbms, db = self.get_default_dbms(), self.get_default_db()
       sql_builder = dbms.new_sql_builder(None)
@@ -91,33 +105,33 @@ class BasestatReporter(performers.Reporter):
       report_query_model = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
       select_messages_where = report_query_model.assemble_where_expression(sql_builder)
 
+      messages_query = self.assemble_messages_query()
+
+      messages_report_query = self.get_default_dbms().new_select()\
+         .set_field_manager(self.assemble_messages_field_manager())
+
+      messages_report_query.subqueries.add(messages_query)
       
-      runner = dbms.new_query_runner(db)
-
-      messages_measurements_query = self.assemble_messages_query()
-
-      messages_query = self.get_default_dbms().new_select()
-
-      messages_query.subqueries.add(messages_measurements_query)
-      
-      messages_query\
-         .FROM((messages_measurements_query.get_query_name(),))\
+      messages_report_query\
+         .FROM((messages_query.get_query_name(),))\
             .WHERE(select_messages_where)\
             .SELECT_field(("accepted_at",))\
             .SELECT_field(("icap.cms.doc.uid",))\
+            .SELECT_field(("icap.cms.doc.localCode",))\
             .SELECT_field(("icap.cms.doc.verno",))\
             .SELECT_field(("icap.cms.topic.uid",))\
             .SELECT_field(("icap.cms.topic.verno",))\
-            .SELECT_field(("icap__action__code",))\
-            .SELECT_field(("icap__action__message",))
+            .SELECT_field(("icap.action.code",))\
+            .SELECT_field(("icap.action.message",))
 
-      print(messages_query.get_snippet())
+      self.deb(messages_query.get_snippet())
 
-      # query_result = runner.execute_query(messages_query).get_query_result()
+      runner = dbms.new_query_runner(db)
+      query_result = runner.execute_query(messages_report_query).get_query_result()
+      messages_report_dict["messages"] = query_result.dump_list_of_dicts()
+      runner.close()
 
-      # runner.close()
-
-      return report_dict
+      return messages_report_dict
 
 
    def perform_task(self, task: perftask.PerformerTask) -> perfoutput.PerformerOutput:

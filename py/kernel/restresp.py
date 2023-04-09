@@ -5,6 +5,7 @@
 # Func:    Assembling text for an HTTP responce       (^.^)                                                                                                                                            
 # # ## ### ##### ######## ############# #####################
 
+import dtos
 import json
 
 
@@ -122,6 +123,11 @@ class RestResponse:
         content_type = self.get_content_type()
 
         if content_type == 'application/json':
+
+            # tmp_dto = dtos.Dto(self.get_body())
+            # print(self.get_body())
+            # serializable_body = tmp_dto.export_payload()
+
             try:
                 body_text = json.dumps(self.get_body())
             except:

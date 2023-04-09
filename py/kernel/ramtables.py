@@ -37,6 +37,11 @@ class Row:
         self.fm.set_field_keeper(table.get_field_keeper())
 
 
+    def get_field_value(self, varname: str) -> any:
+
+        return self.fm.get_field_value(varname)
+
+
     def __str__(self):
 
         return " ".join([self.fm.get_serialized_field_value(fn) \
@@ -120,6 +125,22 @@ class Table:
     def delete_all(self):
 
         self.rows = []
+
+
+    def dump_list_of_dicts(self):
+
+        list_of_dicts = []
+
+        for row in self.rows:
+
+            row_dict = {}
+            
+            for field in self.fk.fields: 
+                row_dict[field.get_varname()] = row.get_field_value(field.get_varname())
+            
+            list_of_dicts.append(row_dict)
+
+        return list_of_dicts
 
 
     def __str__(self):
