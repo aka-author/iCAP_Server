@@ -5,7 +5,7 @@
 # Func:    Building basic statistical reports       (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import Dict
+from typing import Dict, List
 import sys, os, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.parent.absolute()))) 
 from kernel import status, fields, dtos, performer_shortcuts, performers, perftask, \
@@ -21,6 +21,33 @@ class BasestatReporter(performers.Reporter):
 
       self.report_ver = 2
 
+
+   # Selecting taxonomy
+
+   def get_taxonomy_varnames(self) -> List:
+
+      dir_desk = self.get_app().get_directory_desk()
+      
+      taxonomy_varnames = \
+         [varname for varname in dir_desk.get_varnames() if ".taxonomy." in varname]
+
+      return taxonomy_varnames
+
+
+   def assemble_topic_taxonomy_query(self) -> sql_select.Select:
+
+      arg_names = ["icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno", 
+                   "icap.cms.topic.uid", "icap.cms.topic.verno"]
+      
+      out_names = self.get_taxonomy_varnames()
+
+      src_desk = self.get_app().get_source_desk()
+      topic_taxonomy_query = src_desk.assemble_measurements_query(arg_names, out_names)
+
+      return topic_taxonomy_query
+
+
+   # Reporting summaries
 
    def assemble_summaries_report(self, report_query_dict: Dict) -> Dict:
 
@@ -76,8 +103,38 @@ class BasestatReporter(performers.Reporter):
          .SELECT_field(("icap.cms.topic.verno", 0))\
          .SELECT_field(("icap.action.code", 1))\
          .SELECT_field(("icap.action.message", 1))
+      
+      topic_taxonomy_query = self.assemble_topic_taxonomy_query()
 
-      return messages_query 
+      messages_taxonomy_query = self.get_default_dbms().new_select()
+
+      messages_taxonomy_query.subqueries\
+         .add(messages_query)\
+         .add(topic_taxonomy_query)
+
+      messages_taxonomy_query\
+         .FROM((messages_query.get_query_name(),))\
+         .LEFT_JOIN((topic_taxonomy_query.get_query_name(),))\
+         .ON("{0}={1} AND {2}={3} AND {4}={5} AND {6}={7} AND {8}={9}", 
+             ("icap.cms.doc.uid", 0), ("icap.cms.doc.uid", 1),
+             ("icap.cms.doc.localCode", 0), ("icap.cms.doc.localCode", 1), 
+             ("icap.cms.doc.verno", 0), ("icap.cms.doc.verno", 1),
+             ("icap.cms.topic.uid", 0), ("icap.cms.topic.uid", 1),
+             ("icap.cms.topic.verno", 0), ("icap.cms.topic.verno", 1))\
+         .SELECT_field(("accepted_at", 0))\
+         .SELECT_field(("icap.pagereadId", 0))\
+         .SELECT_field(("icap.cms.doc.uid", 0))\
+         .SELECT_field(("icap.cms.doc.localCode", 0))\
+         .SELECT_field(("icap.cms.doc.verno", 0))\
+         .SELECT_field(("icap.cms.topic.uid", 0))\
+         .SELECT_field(("icap.cms.topic.verno", 0))\
+         .SELECT_field(("icap.action.code", 0))\
+         .SELECT_field(("icap.action.message", 0))
+      
+      for taxonomy_varname in self.get_taxonomy_varnames():
+         messages_taxonomy_query.SELECT_field((taxonomy_varname, 1))
+
+      return messages_taxonomy_query 
 
 
    def assemble_messages_field_manager(self) -> fields.FieldKeeper():
@@ -96,6 +153,8 @@ class BasestatReporter(performers.Reporter):
       
 
    def assemble_messages_report(self, report_query_dict: Dict) -> Dict:
+
+      # print(self.assemble_topic_taxonomy_query().get_snippet())
 
       messages_report_dict = {}
 
@@ -124,7 +183,7 @@ class BasestatReporter(performers.Reporter):
             .SELECT_field(("icap.action.code",))\
             .SELECT_field(("icap.action.message",))
 
-      self.deb(messages_query.get_snippet())
+      self.deb(messages_report_query.get_snippet())
 
       runner = dbms.new_query_runner(db)
       query_result = runner.execute_query(messages_report_query).get_query_result()
@@ -133,6 +192,8 @@ class BasestatReporter(performers.Reporter):
 
       return messages_report_dict
 
+
+   # Performer's main
 
    def perform_task(self, task: perftask.PerformerTask) -> perfoutput.PerformerOutput:
 

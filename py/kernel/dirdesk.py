@@ -74,6 +74,11 @@ class DirectoryDesk(desks.Desk):
         variable = self.get_variable_by_name(varname)
 
         return variable.get_shortcut() if variable is not None else None
+    
+
+    def get_varnames(self) -> List:
+
+        return self.variables_by_names.keys()
 
 
     
