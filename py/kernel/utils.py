@@ -102,12 +102,22 @@ def wspad(s: str) -> str:
     return pad(s, " ")
 
 
-def pars(s):
+def pars(s: str) -> str:
 
     return pad(safestr(s), "(", ")") 
 
 
-def apos(s):
+def brackets(s: str) -> str:
+
+    return pad(safestr(s), "[", "]") 
+
+
+def braces(s: str) -> str:
+
+    return pad(safestr(s), "{", "}") 
+
+
+def apos(s: str) -> str:
 
     return pad(safestr(s), "'") 
 

@@ -27,7 +27,7 @@ class BasestatReporter(performers.Reporter):
    def get_taxonomy_varnames(self) -> List:
 
       dir_desk = self.get_app().get_directory_desk()
-      
+
       taxonomy_varnames = \
          [varname for varname in dir_desk.get_varnames() if ".taxonomy." in varname]
 
@@ -42,7 +42,8 @@ class BasestatReporter(performers.Reporter):
       out_names = self.get_taxonomy_varnames()
 
       src_desk = self.get_app().get_source_desk()
-      topic_taxonomy_query = src_desk.assemble_measurements_query(arg_names, out_names)
+      topic_taxonomy_query = src_desk.assemble_measurements_query(arg_names, out_names)\
+                              .set_query_name("topicmeta")
 
       return topic_taxonomy_query
 
@@ -84,7 +85,7 @@ class BasestatReporter(performers.Reporter):
          ["icap.pagereadId", "icap.action.code", "icap.action.timeOffset"],
          ["icap.action.message"])
 
-      messages_query = self.get_default_dbms().new_select()
+      messages_query = self.get_default_dbms().new_select().set_query_name("messages")
 
       messages_query.subqueries\
          .add(topic_pageread_query)\
@@ -106,7 +107,7 @@ class BasestatReporter(performers.Reporter):
       
       topic_taxonomy_query = self.assemble_topic_taxonomy_query()
 
-      messages_taxonomy_query = self.get_default_dbms().new_select()
+      messages_taxonomy_query = self.get_default_dbms().new_select().set_query_name("msgmeta")
 
       messages_taxonomy_query.subqueries\
          .add(messages_query)\

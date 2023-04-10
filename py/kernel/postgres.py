@@ -5,7 +5,7 @@
 # Func:    Working with Postgres databases       (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import Dict
+from typing import Dict, List
 import psycopg2
 from datetime import datetime
 import utils, status, datatypes, controllers
@@ -79,6 +79,18 @@ class PostgresSqlBuilder(sql_builders.SqlBuilder):
         # Say, matching x+W+y+z vs. a+W+b+c gives True 
 
         return "string_to_array({"+ str(idx1) + "}, '+') && string_to_array({" + str(idx2) + "}, '+')"
+    
+
+    def check_list_vs_string_list_field(self, items: List, operand_idx: int, separ: str=" ") -> str:
+
+        # ["cat", "dog", "cow"] in RAM vs. "rabbit dog lizard" in DB
+
+        expr = \
+            "ARRAY " + utils.brackets(self.list([utils.apos(item) for item in items])) \
+            + " && string_to_array" \
+            + utils.pars(self.list([utils.braces(str(operand_idx)), utils.apos(separ)]))
+        
+        return utils.pars(expr)
 
 
 class PostgresSubqueries(sql_queries.Subqueries):

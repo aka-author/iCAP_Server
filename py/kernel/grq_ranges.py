@@ -132,6 +132,47 @@ class SegmentConstraint(Constraint):
         return "({0} <= {1} AND {1} <= {2})".format(min_sql, sql_varname, max_sql)
 
 
+class PatternConstraint(Constraint):
+
+    def __init__(self, chief: workers.Worker, datatype_name=datatypes.DTN_STRING):
+
+        super().__init__(chief, datatype_name)
+
+    
+    def define_fields(self) -> models.Model:
+
+        self.get_field_manager()\
+                .add_field(fields.StringField("expression_type"))\
+                .add_field(fields.ListField("expressions"))
+
+        return self 
+
+
+    def get_expression_type(self) -> List:
+
+        return self.get_field_value("expression_type")
+    
+
+    def get_expressions(self) -> List:
+
+        return self.get_field_value("expressions")
+    
+
+    def assemble_expression(self, varname, sql_builder) -> str:
+
+        expr_type = self.get_expression_type()
+        expressions  = self.get_expressions()
+
+        if expr_type == "strlistitem":
+            expr_template = sql_builder.check_list_vs_string_list_field(expressions, 0)
+            sql_varname = sql_builder.sql_varname(varname)
+            expression = expr_template.format(sql_varname)
+        else:
+            expression = "true"
+
+        return expression
+
+
 class Range(models.Model):
 
     def __init__(self, chief: workers.Worker):
@@ -175,6 +216,8 @@ class Range(models.Model):
                 self.constraints = SetConstraint(self, datatype_name)
             elif range_type_name == "segment":
                 self.constraints = SegmentConstraint(self, datatype_name)
+            elif range_type_name == "pattern":
+                self.constraints = PatternConstraint(self, datatype_name)
             else: 
                 self.constraints = None
 

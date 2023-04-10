@@ -24,6 +24,8 @@ class Recordset(sql_workers.SqlWorker):
 
         self.recordset_name = recordset_name
 
+        return self
+
 
     def get_recordset_name(self) -> str:
 

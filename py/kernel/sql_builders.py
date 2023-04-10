@@ -238,11 +238,18 @@ class SqlBuilder(workers.Worker):
 
     # Specific tasks
 
-    def match_measurement_profiles(self, idx1: str, idx2: str, separ: str="+") -> str:
+    def match_measurement_profiles(self, idx1: int, idx2: int, separ: str="+") -> str:
 
         # Say, matching x+W+y+z vs. a+W+b+c gives True 
 
         return "{" + str(idx1) + "} = {" + str(idx2) + "}"
+    
+
+    def check_list_vs_string_list_field(self, items: List, operand_idx: int) -> str:
+
+        # ["cat", "dog", "cow"] in RAM vs. "rabbit+dog+lizard" in DB
+
+        return items + "in {" + str(operand_idx) + "}"
 
 
 

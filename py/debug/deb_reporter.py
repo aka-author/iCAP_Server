@@ -26,6 +26,18 @@ def get_body(sample_number: int) -> Dict:
                     "scope": {
                         "conditions": [
                             {
+                                "condition_name": "taxonomyScope",
+                                "varname": "icap.cms.taxonomy.Product scales",
+                                "range": {
+                                    "datatype_name": "string",
+                                    "range_type_name": "pattern",
+                                    "constraints": {
+                                        "expression_type": "strlistitem",
+                                        "expressions": ["small", "medium"]
+                                    }
+                                }
+                            },
+                            {
                                 "condition_name": "langScope",
                                 "varname": "icap.cms.doc.localCode",
                                 "range": {
@@ -49,7 +61,7 @@ def get_body(sample_number: int) -> Dict:
                                 }
                             }
                         ],
-                        "expression": "langScope and timeScope"
+                        "expression": "langScope and timeScope and taxonomyScope"
                     },
                     "granularity": {
                         "dimensions": [
@@ -247,7 +259,7 @@ def get_body(sample_number: int) -> Dict:
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "e866b1e5-cbff-4b7a-b8dc-b6d9006b0751"
+    os.environ["HTTP_COOKIE"] = "1c8ed944-f5a6-4ebd-b348-578b772ecdf4"
     os.environ["CONTENT_TYPE"] = get_content_type()
     os.environ["CONTENT_LENGTH"] = str(len(get_body(0)))
 
