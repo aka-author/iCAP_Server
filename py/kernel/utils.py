@@ -316,5 +316,5 @@ def cgi_form_field(body: str, content_type: str) -> str:
 def extract_json_body_from_pseudoform(cgi_body, ctype):
     tmp = cgi_form_field(cgi_body, ctype)
     items = tmp.split("\n")
-    pseudo = "\n".join([items[i] for i in range(3,len(items)-1)])
+    pseudo = "\n".join([items[i] for i in range(3, len(items) - 1)])
     return pseudo

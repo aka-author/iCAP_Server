@@ -79,6 +79,7 @@ Range type | Matching values
 `named`    | Each value matching an individual named rule 
 `set`      | Each value that belongs to an explicit set of values 
 `segment`  | Each value between the minimum and the maximum
+`pattern`  | Each value matching a pattern; a few pattern types are available
 
 The platform provides a fixed set of named rules. 
 
@@ -202,17 +203,65 @@ A bound is infinite if it is set to `null`.
 ```
 
 
+### Pattern Ranges 
+
+#### Understanding Pattern Ranges
+
+_Pattern range_ is the most common range type. I suggest a new subtype of pattern ranges when I need to implement some corner case. 
+
+A property `constraint` provides a list of expressions and a name of a rule for checking values against the expressions. 
+
+Property          | Type     | Meaning
+------------------|----------|----------------------------------------------------
+`expression_type` | `string` | Denotes a rule for applying expressions to values
+`expressions`     | `list`   | A list of expressions to be applied to values
+
+A fixed set of rules is available in the platform. The rules are described later in this section. Each rule correspondes to a certain pattern range subtype. 
+
+
+#### Pattern Range Subtypes
+
+The following subtypes of pattern ranges are available.
+
+Subtype name  | Meaning 
+--------------|------------------------------------------------------
+`strlistitem` | Checking a list against a list formattid as a string
+
+
+#### String List Item
+
+This subtype allows to check a _string list_ against a list of strings. 
+
+A _string list_ is a string representation of a list. Say, if we have a list of animals: `cat`, `dog`, `horse`, then a corresponding string list will be `cat dog horse` with a white space as a _separator_. 
+
+The rule compares a list provided in a property `expression` with a value formatted as a string list, e.g. [`cat`, `dog`, `horse`] against `rabbit dog lizard`. The rule gives `true` if an intersection of a list and a string list is not empty. Otherwise the rule gives `false`.
+
+The subtype does not allow an application component to provide a separator explicitly. Basically, a separator depends on a variable we are checking against a range. If a certain separator is defined for a variable in a database, then the platform takes it. The platform considers a separator is a white space by default.
+
+**Sample**
+```json
+{
+    "datatype_name": "string",
+    "range_type_name": "pattern",
+    "constraints": {
+        "expression_type": "strlistitem",
+        "expressions": ["small", "medium"]
+    }
+}
+```
+
+
 ## Conditions
 
 A _condition_ is a rule for checking a variable value against a range. In other words, it is a place where a variable and a range meed each other.
 
 The properties of a condition are listed below.
 
-Property    | Type     | Mandatory | Valid values | Meaning
-------------|----------|-----------|--------------|---------------------------------
-`cond_name` | `string` | No        | A name       | A name for referring a condition
-`varname`   | `string` | Yes       | A name       | A variable we are going to check
-`range`     | `dict`   | Yes       | A range      | A range for checking variable values
+Property         | Type     | Mandatory | Valid values | Meaning
+-----------------|----------|-----------|--------------|---------------------------------
+`condition_name` | `string` | No        | A name       | A name for referring a condition
+`varname`        | `string` | Yes       | A name       | A variable we are going to check
+`range`          | `dict`   | Yes       | A range      | A range for checking variable values
 
 **Sample**
 ```json
@@ -278,23 +327,14 @@ If an expression is omitted, then the conditions are treated as joined with `and
 
 ## Groups
 
-A _group_ provides a rule for grouping source data before calculating aggregated values over each group.
+A _group_ provides a rule for grouping source data before calculating aggregated values over each group. A _deputy value_ should stand for each record. Records that have the same deputy value go into the same group. Deputy values in the same _dimension_ (see below) must have the same data type.
 
 The properties of a group are listed below.
 
-Property   | Type   | Valid values            | Meaning
------------|--------|-------------------------|----------------------
-`group_by` | `dict` | A definition, see below | A variable for aggregating data
-`range`    | `dict` | A range                 | Conditions for grouping data 
-
-From the logical perspective, when processing a query, a server selects records from a database first. Then the server arranges the selected records into groups. A server uses _indicator values_ for making the groups. To do this, the server calculates a indicator value for each group. Records that give the same indicator value go into the same group. 
-
-The properties of a deputy value definition are listed below.
-
-Property        | Type     | Valid values                 | Meaning
-----------------|----------|------------------------------|------------------------------
-`datetype_name` | `string` | A data type name             | The data type of an indicator
-`group_value`   | Any      | A value of the declared type | An indicator value of a group
+Property         | Type   | Valid values     | Meaning
+-----------------|--------|------------------|---------------------------------
+`group_by_value` | Any    | Any atomic value | A deputy value of a group
+`range`          | `dict` | A range          | Conditions for grouping data 
 
 **Sample**
 
@@ -303,7 +343,7 @@ Property        | Type     | Valid values                 | Meaning
     "group_by_value": "Q1",
     "range": {
         "datatype_name": "timestamp",
-        "range_type_Name": "segment",
+        "range_type_name": "segment",
         "constraints": { 
             "min": "2022-01-01", 
             "max": "2022-03-31"
@@ -322,7 +362,8 @@ The properties of a dimension are listed below.
 Property  | Type     | Mandatory | Valid values     | Meaning
 ----------|----------|-----------|------------------|---------------------------------
 `varname` | `string` | Yes       | Variable name    | A variable for aggregating data
-`groups`  | `list`   | No        | A list of groups | Conditions for grouping data 
+`group_by_value_datatype_name` | `string` | Yes | Data type name | A data type of deputy values
+`groups` | `list`   | No        | A list of groups | Conditions for grouping data 
 
 Without groups, source data is grouped by each variable value that appears there. If groups are present, then source data is grouped by each group name. 
 

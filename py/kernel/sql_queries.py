@@ -264,7 +264,6 @@ class Query(db_recordsets.Recordset):
         return super().get_recordset_name()
 
 
-
     def add_clause(self, clause: Clause) -> 'Query':
 
         self.clauses.append(clause)
