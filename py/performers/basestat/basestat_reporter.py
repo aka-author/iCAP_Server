@@ -79,7 +79,8 @@ class BasestatReporter(performers.Reporter):
       topic_pageread_query = source_desk.assemble_measurements_query(
          ["icap.pagereadId"],
          ["icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno", 
-          "icap.cms.topic.uid", "icap.cms.topic.verno"])
+          "icap.cms.topic.uid", "icap.cms.topic.verno",
+          "icap.page.title", "icap.page.url"])
 
       reader_action_query = source_desk.assemble_measurements_query(\
          ["icap.pagereadId", "icap.action.code", "icap.action.timeOffset"],
@@ -102,6 +103,8 @@ class BasestatReporter(performers.Reporter):
          .SELECT_field(("icap.cms.doc.verno", 0))\
          .SELECT_field(("icap.cms.topic.uid", 0))\
          .SELECT_field(("icap.cms.topic.verno", 0))\
+         .SELECT_field(("icap.page.title", 0))\
+         .SELECT_field(("icap.page.url", 0))\
          .SELECT_field(("icap.action.code", 1))\
          .SELECT_field(("icap.action.message", 1))
       
@@ -129,6 +132,8 @@ class BasestatReporter(performers.Reporter):
          .SELECT_field(("icap.cms.doc.verno", 0))\
          .SELECT_field(("icap.cms.topic.uid", 0))\
          .SELECT_field(("icap.cms.topic.verno", 0))\
+         .SELECT_field(("icap.page.title", 0))\
+         .SELECT_field(("icap.page.url", 0))\
          .SELECT_field(("icap.action.code", 0))\
          .SELECT_field(("icap.action.message", 0))
       
@@ -147,6 +152,8 @@ class BasestatReporter(performers.Reporter):
             .add_field(fields.StringField("icap.cms.doc.verno"))\
             .add_field(fields.StringField("icap.cms.topic.uid"))\
             .add_field(fields.StringField("icap.cms.topic.verno"))\
+            .add_field(fields.StringField("icap.page.title"))\
+            .add_field(fields.StringField("icap.page.url"))\
             .add_field(fields.StringField("icap.action.code"))\
             .add_field(fields.StringField("icap.action.message"))
       
@@ -181,6 +188,8 @@ class BasestatReporter(performers.Reporter):
             .SELECT_field(("icap.cms.doc.verno",))\
             .SELECT_field(("icap.cms.topic.uid",))\
             .SELECT_field(("icap.cms.topic.verno",))\
+            .SELECT_field(("icap.page.title", 0))\
+            .SELECT_field(("icap.page.url", 0))\
             .SELECT_field(("icap.action.code",))\
             .SELECT_field(("icap.action.message",))
 
@@ -188,7 +197,8 @@ class BasestatReporter(performers.Reporter):
 
       runner = dbms.new_query_runner(db)
       query_result = runner.execute_query(messages_report_query).get_query_result()
-      messages_report_dict["messages"] = query_result.dump_list_of_dicts()
+      if query_result is not None:
+         messages_report_dict["messages"] = query_result.dump_list_of_dicts()
       runner.close()
 
       return messages_report_dict

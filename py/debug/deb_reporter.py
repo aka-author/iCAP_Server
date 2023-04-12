@@ -30,7 +30,7 @@ def get_body(sample_number: int) -> Dict:
                                 "varname": "icap.cms.taxonomy.Product scales",
                                 "range": {
                                     "datatype_name": "string",
-                                    "range_type_name": "pattern",
+                                    "range_type_name": "pattern1",
                                     "constraints": {
                                         "expression_type": "strlistitem",
                                         "expressions": ["small", "medium"]
@@ -259,7 +259,7 @@ def get_body(sample_number: int) -> Dict:
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "1c8ed944-f5a6-4ebd-b348-578b772ecdf4"
+    os.environ["HTTP_COOKIE"] = "6e849f56-75b5-4a1f-a43e-c3c01ae66427"
     os.environ["CONTENT_TYPE"] = get_content_type()
     os.environ["CONTENT_LENGTH"] = str(len(get_body(0)))
 
