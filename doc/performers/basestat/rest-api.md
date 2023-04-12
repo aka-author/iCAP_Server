@@ -91,6 +91,8 @@ The variables associated with a reader's action are listed below.
 Variable                 | Type        | Valid values  | Meaning
 -------------------------|-------------|---------------|---------------
 `accepted_at`            | `timestamp` | Any timestamp | Date and time when an action happened
+`userOs`                 | `string`    | OS name       | Reader's local operating system name
+`userBrowser`            | `string`    | Browser name  | Reader's web browser name
 `userLangCode`           | `string`    | Local code    | Local configured in a reader's browser
 `icap.countryCode`       | `string`    | Country code  | Country where a reader was staying
 `icap.cms.doc.uid`       | `string`    | Any string    | Unique id of a document

@@ -93,7 +93,7 @@ class BasestatReporter(performers.Reporter):
          ["icap.pagereadId"],
          ["icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno", 
           "icap.cms.topic.uid", "icap.cms.topic.verno",
-          "icap.page.title", "icap.page.url", "userLangCode"])
+          "icap.page.title", "icap.page.url", "userLangCode", "userAgentInfo"])
 
       reader_action_query = source_desk.assemble_measurements_query(\
          ["icap.pagereadId", "icap.action.code", "icap.action.timeOffset"],
@@ -119,6 +119,7 @@ class BasestatReporter(performers.Reporter):
          .SELECT_field(("icap.page.title", 0))\
          .SELECT_field(("icap.page.url", 0))\
          .SELECT_field(("userLangCode", 0))\
+         .SELECT_field(("userAgentInfo", 0))\
          .SELECT_field(("icap.action.code", 1))\
          .SELECT_field(("icap.action.message", 1))
       
@@ -154,6 +155,7 @@ class BasestatReporter(performers.Reporter):
          .SELECT_field(("icap.page.url", 0))\
          .SELECT_field(("icap.countryCode", 2))\
          .SELECT_field(("userLangCode", 0))\
+         .SELECT_field(("userAgentInfo", 0))\
          .SELECT_field(("icap.action.code", 0))\
          .SELECT_field(("icap.action.message", 0))
       
@@ -176,6 +178,8 @@ class BasestatReporter(performers.Reporter):
             .add_field(fields.StringField("icap.page.url"))\
             .add_field(fields.StringField("icap.countryCode"))\
             .add_field(fields.StringField("userLangCode"))\
+            .add_field(fields.StringField("userOs"))\
+            .add_field(fields.StringField("userBrowser"))\
             .add_field(fields.StringField("icap.action.code"))\
             .add_field(fields.StringField("icap.action.message"))
       
@@ -201,6 +205,9 @@ class BasestatReporter(performers.Reporter):
 
       messages_report_query.subqueries.add(messages_query)
       
+      expros = "CASE WHEN {0} LIKE '%Windows%' THEN 'windows' ELSE 'other' END"
+      exprbr = "CASE WHEN {0} LIKE '%Firefox%' THEN 'firefox' ELSE 'other' END"
+
       messages_report_query\
          .FROM((messages_query.get_query_name(),))\
             .WHERE(select_messages_where)\
@@ -214,6 +221,8 @@ class BasestatReporter(performers.Reporter):
             .SELECT_field(("icap.page.url", 0))\
             .SELECT_field(("icap.countryCode",))\
             .SELECT_field(("userLangCode",))\
+            .SELECT_expression("userOs", expros, ("userAgentInfo", 0))\
+            .SELECT_expression("userBrowser", exprbr, ("userAgentInfo", 0))\
             .SELECT_field(("icap.action.code",))\
             .SELECT_field(("icap.action.message",))
 
