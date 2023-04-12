@@ -118,6 +118,7 @@ class BasestatReporter(performers.Reporter):
          .SELECT_field(("icap.cms.topic.verno", 0))\
          .SELECT_field(("icap.page.title", 0))\
          .SELECT_field(("icap.page.url", 0))\
+         .SELECT_field(("userLangCode", 0))\
          .SELECT_field(("icap.action.code", 1))\
          .SELECT_field(("icap.action.message", 1))
       
@@ -152,6 +153,7 @@ class BasestatReporter(performers.Reporter):
          .SELECT_field(("icap.page.title", 0))\
          .SELECT_field(("icap.page.url", 0))\
          .SELECT_field(("icap.countryCode", 2))\
+         .SELECT_field(("userLangCode", 0))\
          .SELECT_field(("icap.action.code", 0))\
          .SELECT_field(("icap.action.message", 0))
       
@@ -173,6 +175,7 @@ class BasestatReporter(performers.Reporter):
             .add_field(fields.StringField("icap.page.title"))\
             .add_field(fields.StringField("icap.page.url"))\
             .add_field(fields.StringField("icap.countryCode"))\
+            .add_field(fields.StringField("userLangCode"))\
             .add_field(fields.StringField("icap.action.code"))\
             .add_field(fields.StringField("icap.action.message"))
       
@@ -210,6 +213,7 @@ class BasestatReporter(performers.Reporter):
             .SELECT_field(("icap.page.title", 0))\
             .SELECT_field(("icap.page.url", 0))\
             .SELECT_field(("icap.countryCode",))\
+            .SELECT_field(("userLangCode",))\
             .SELECT_field(("icap.action.code",))\
             .SELECT_field(("icap.action.message",))
 
