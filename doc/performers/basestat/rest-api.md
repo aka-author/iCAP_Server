@@ -91,8 +91,10 @@ The variables associated with a reader's action are listed below.
 Variable                 | Type        | Valid values  | Meaning
 -------------------------|-------------|---------------|---------------
 `accepted_at`            | `timestamp` | Any timestamp | Date and time when an action happened
+`userLangCode`           | `string`    | Local code    | Local configured in a reader's browser
+`icap.countryCode`       | `string`    | Country code  | Country where a reader was staying
 `icap.cms.doc.uid`       | `string`    | Any string    | Unique id of a document
-`icap.cms.doc.localCode` | `string`    | A local code  | Local code of a viewed page
+`icap.cms.doc.localCode` | `string`    | Local code    | Local code of a viewed page
 `icap.cms.doc.verno`     | `string`    | Any string    | Document version number
 `icap.cms.topic.uid`     | `string`    | Any string    | Unique id of a topic
 `icap.cms.topic.verno`   | `string`    | Any string    | Topic version number

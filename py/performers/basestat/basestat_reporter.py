@@ -93,7 +93,7 @@ class BasestatReporter(performers.Reporter):
          ["icap.pagereadId"],
          ["icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno", 
           "icap.cms.topic.uid", "icap.cms.topic.verno",
-          "icap.page.title", "icap.page.url"])
+          "icap.page.title", "icap.page.url", "userLangCode"])
 
       reader_action_query = source_desk.assemble_measurements_query(\
          ["icap.pagereadId", "icap.action.code", "icap.action.timeOffset"],
