@@ -34,6 +34,19 @@ class BasestatReporter(performers.Reporter):
       return taxonomy_varnames
 
 
+   def assemble_pageread_country_query(self) -> sql_select.Select:
+
+      arg_names = ["icap.pagereadId"]
+      
+      out_names = ["icap.countryCode"]
+
+      src_desk = self.get_app().get_source_desk()
+      pageread_country_query = src_desk.assemble_measurements_query(arg_names, out_names)\
+                                 .set_query_name("countries")
+
+      return pageread_country_query 
+
+
    def assemble_topic_taxonomy_query(self) -> sql_select.Select:
 
       arg_names = ["icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno", 
@@ -109,12 +122,14 @@ class BasestatReporter(performers.Reporter):
          .SELECT_field(("icap.action.message", 1))
       
       topic_taxonomy_query = self.assemble_topic_taxonomy_query()
+      pageread_country_query = self.assemble_pageread_country_query()
 
       messages_taxonomy_query = self.get_default_dbms().new_select().set_query_name("msgmeta")
-
+      
       messages_taxonomy_query.subqueries\
          .add(messages_query)\
-         .add(topic_taxonomy_query)
+         .add(topic_taxonomy_query)\
+         .add(pageread_country_query)
 
       messages_taxonomy_query\
          .FROM((messages_query.get_query_name(),))\
@@ -125,6 +140,8 @@ class BasestatReporter(performers.Reporter):
              ("icap.cms.doc.verno", 0), ("icap.cms.doc.verno", 1),
              ("icap.cms.topic.uid", 0), ("icap.cms.topic.uid", 1),
              ("icap.cms.topic.verno", 0), ("icap.cms.topic.verno", 1))\
+         .LEFT_JOIN((pageread_country_query.get_query_name(),))\
+         .ON("{0}={1}", ("icap.pagereadId", 0), ("icap.pagereadId", 2))\
          .SELECT_field(("accepted_at", 0))\
          .SELECT_field(("icap.pagereadId", 0))\
          .SELECT_field(("icap.cms.doc.uid", 0))\
@@ -134,6 +151,7 @@ class BasestatReporter(performers.Reporter):
          .SELECT_field(("icap.cms.topic.verno", 0))\
          .SELECT_field(("icap.page.title", 0))\
          .SELECT_field(("icap.page.url", 0))\
+         .SELECT_field(("icap.countryCode", 2))\
          .SELECT_field(("icap.action.code", 0))\
          .SELECT_field(("icap.action.message", 0))
       
@@ -154,6 +172,7 @@ class BasestatReporter(performers.Reporter):
             .add_field(fields.StringField("icap.cms.topic.verno"))\
             .add_field(fields.StringField("icap.page.title"))\
             .add_field(fields.StringField("icap.page.url"))\
+            .add_field(fields.StringField("icap.countryCode"))\
             .add_field(fields.StringField("icap.action.code"))\
             .add_field(fields.StringField("icap.action.message"))
       
@@ -190,6 +209,7 @@ class BasestatReporter(performers.Reporter):
             .SELECT_field(("icap.cms.topic.verno",))\
             .SELECT_field(("icap.page.title", 0))\
             .SELECT_field(("icap.page.url", 0))\
+            .SELECT_field(("icap.countryCode",))\
             .SELECT_field(("icap.action.code",))\
             .SELECT_field(("icap.action.message",))
 

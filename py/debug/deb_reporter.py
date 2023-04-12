@@ -38,6 +38,17 @@ def get_body(sample_number: int) -> Dict:
                                 }
                             },
                             {
+                                "condition_name": "actionScope",
+                                "varname": "icap.action.code",
+                                "range": {
+                                    "datatype_name": "string",
+                                    "range_type_name": "set",
+                                    "constraints": {
+                                        "members": ["DISLIKE"]
+                                    }
+                                }
+                            },
+                            {
                                 "condition_name": "langScope",
                                 "varname": "icap.cms.doc.localCode",
                                 "range": {
@@ -259,7 +270,7 @@ def get_body(sample_number: int) -> Dict:
 
 def mock_cgi_input():
 
-    os.environ["HTTP_COOKIE"] = "6e849f56-75b5-4a1f-a43e-c3c01ae66427"
+    os.environ["HTTP_COOKIE"] = "6e3abbc1-a9c6-495e-b51c-42f812bdca3d"
     os.environ["CONTENT_TYPE"] = get_content_type()
     os.environ["CONTENT_LENGTH"] = str(len(get_body(0)))
 
