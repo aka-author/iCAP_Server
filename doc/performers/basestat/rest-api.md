@@ -106,6 +106,26 @@ Variable                 | Type        | Valid values  | Meaning
 `icap.action.message`    | `string`    | Any string    | Message a reader posted
 
 
+## User's OS
+
+- android
+- ios
+- linux
+- macos
+- other
+- windows
+
+
+## User's Browser
+
+- chrom
+- edge
+- firefox
+- opera
+- other
+- safari
+
+
 ## Local Codes
 
 A _local code_ is a standard string value denoting a primary language and a language version specific for a certain country. A document, topic, or another content slice has a local code. 

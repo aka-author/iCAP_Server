@@ -205,8 +205,23 @@ class BasestatReporter(performers.Reporter):
 
       messages_report_query.subqueries.add(messages_query)
       
-      expros = "CASE WHEN {0} LIKE '%Windows%' THEN 'windows' ELSE 'other' END"
-      exprbr = "CASE WHEN {0} LIKE '%Firefox%' THEN 'firefox' ELSE 'other' END"
+      expros = """CASE 
+                  WHEN {0} LIKE '%Android%' THEN 'android' 
+                  WHEN {0} LIKE '%iP%' THEN 'ios' 
+                  WHEN {0} LIKE '%Linux%' THEN 'linux' 
+                  WHEN {0} LIKE '%Mac%' THEN 'macos'
+                  WHEN {0} LIKE '%Win%' THEN 'windows' 
+                  ELSE 'other' 
+                  END"""
+      
+      exprbr = """CASE
+                  WHEN LOWER({0}) LIKE '%chrom%' THEN 'chrome'
+                  WHEN LOWER({0}) LIKE '%edg%' THEN 'edge'  
+                  WHEN LOWER({0}) LIKE '%firefox%' THEN 'firefox'
+                  WHEN LOWER({0}) LIKE '%opr%' THEN 'opera'
+                  WHEN LOWER({0}) LIKE '%safari%' THEN 'safari' 
+                  ELSE 'other' 
+                  END"""
 
       messages_report_query\
          .FROM((messages_query.get_query_name(),))\
