@@ -22,21 +22,20 @@ class BasestatReporter(performers.Reporter):
       self.report_ver = 2
 
 
-   def assemble_basestat_topics_query(self) -> sql_select.Select:
+   # Common queries
 
-      arg_names = ["icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno", 
-                   "icap.cms.topic.uid", "icap.cms.topic.verno"]
+   def get_action_varnames(self) -> List:
+
+      varnames = \
+         ["accepted_at", "icap.pagereadId",
+          "icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno",
+          "icap.cms.topic.uid", "icap.cms.topic.verno",
+          "icap.page.title", "icap.page.url",
+          "icap.action.code", "icap.action.timeOffset", "icap.action.message",
+          "icap.countryCode", "userLangCode", "userOs", "userBrowser"]
       
-      out_names = self.get_taxonomy_varnames()
+      return varnames
 
-      src_desk = self.get_app().get_source_desk()
-      topic_taxonomy_query = src_desk.assemble_measurements_query(arg_names, out_names)\
-                              .set_query_name("topicmeta")
-
-      return topic_taxonomy_query
-
-
-   # Selecting taxonomy
 
    def get_taxonomy_varnames(self) -> List:
 
@@ -46,46 +45,6 @@ class BasestatReporter(performers.Reporter):
          [varname for varname in dir_desk.get_varnames() if ".taxonomy." in varname]
 
       return taxonomy_varnames
-
-
-   def assemble_pageread_country_query(self) -> sql_select.Select:
-
-      arg_names = ["icap.pagereadId"]
-      
-      out_names = ["icap.countryCode"]
-
-      src_desk = self.get_app().get_source_desk()
-      pageread_country_query = src_desk.assemble_measurements_query(arg_names, out_names)\
-                                 .set_query_name("countries")
-
-      return pageread_country_query 
-
-
-   def assemble_basestat_actions_query(self) -> sql_select.Select:
-
-      basestat_actions_query = self.get_default_dbms().new_select()
-
-      basestat_actions_query\
-         .FROM(("basestat__actions", self.get_default_db_scheme_name()))\
-         .SELECT_field(("accepted_at",))\
-         .SELECT_field(("icap.pagereadId",))\
-         .SELECT_field(("icap.cms.doc.uid",))\
-         .SELECT_field(("icap.cms.doc.localCode",))\
-         .SELECT_field(("icap.cms.doc.verno",))\
-         .SELECT_field(("icap.cms.topic.uid",))\
-         .SELECT_field(("icap.cms.topic.verno",))\
-         .SELECT_field(("icap.page.title",))\
-         .SELECT_field(("icap.page.url",))\
-         .SELECT_field(("icap.action.code",))\
-         .SELECT_field(("icap.action.timeOffset",))\
-         .SELECT_field(("icap.action.message",))\
-         .SELECT_field(("icap.countryCode",))\
-         .SELECT_field(("userLangCode",))\
-         .SELECT_field(("userAgentInfo",))\
-         .SELECT_field(("userOs",))\
-         .SELECT_field(("userBrowser",))
-         
-      return basestat_actions_query
    
 
    def assemble_basestat_topics_query(self) -> sql_select.Select:
@@ -100,9 +59,20 @@ class BasestatReporter(performers.Reporter):
                               .set_query_name("topicmeta")
 
       return basestat_topics_query
+
+
+   def assemble_basestat_actions_query(self) -> sql_select.Select:
+
+      basestat_actions_query = self.get_default_dbms().new_select()
+
+      basestat_actions_query\
+         .FROM(("basestat__actions", self.get_default_db_scheme_name()))
+      
+      for varname in self.get_action_varnames():
+         basestat_actions_query.SELECT_field((varname,))
+         
+      return basestat_actions_query
    
-
-
 
    # Reporting summaries
 
@@ -122,17 +92,17 @@ class BasestatReporter(performers.Reporter):
 
    def assemble_actions_topics_query(self) -> sql_select.Select:
         
-      
       actions_query = self.assemble_basestat_actions_query().set_query_name("actions") 
       topics_query = self.assemble_basestat_topics_query().set_query_name("topics")
 
-      messages_query = self.get_default_dbms().new_select().set_query_name("messages") 
+      actions_topics_query = self.get_default_dbms().new_select()\
+         .set_query_name("actions_topics") 
 
-      messages_query.subqueries\
+      actions_topics_query.subqueries\
          .add(actions_query)\
          .add(topics_query)
         
-      messages_query\
+      actions_topics_query\
          .FROM((actions_query.get_query_name(),))\
          .LEFT_JOIN((topics_query.get_query_name(),))\
          .ON("{0}={1} AND {2}={3} AND {4}={5} AND {6}={7} AND {8}={9}", 
@@ -140,29 +110,15 @@ class BasestatReporter(performers.Reporter):
              ("icap.cms.doc.localCode", 0), ("icap.cms.doc.localCode", 1), 
              ("icap.cms.doc.verno", 0), ("icap.cms.doc.verno", 1),
              ("icap.cms.topic.uid", 0), ("icap.cms.topic.uid", 1),
-             ("icap.cms.topic.verno", 0), ("icap.cms.topic.verno", 1))\
-         .SELECT_field(("accepted_at", 0))\
-         .SELECT_field(("icap.pagereadId", 0))\
-         .SELECT_field(("icap.cms.doc.uid", 0))\
-         .SELECT_field(("icap.cms.doc.localCode", 0))\
-         .SELECT_field(("icap.cms.doc.verno", 0))\
-         .SELECT_field(("icap.cms.topic.uid", 0))\
-         .SELECT_field(("icap.cms.topic.verno", 0))\
-         .SELECT_field(("icap.page.title", 0))\
-         .SELECT_field(("icap.page.url", 0))\
-         .SELECT_field(("icap.action.code", 0))\
-         .SELECT_field(("icap.action.timeOffset",))\
-         .SELECT_field(("icap.action.message", 0))\
-         .SELECT_field(("icap.countryCode",))\
-         .SELECT_field(("userLangCode", 0))\
-         .SELECT_field(("userAgentInfo", 0))\
-         .SELECT_field(("userOs", 0))\
-         .SELECT_field(("userBrowser", 0))
+             ("icap.cms.topic.verno", 0), ("icap.cms.topic.verno", 1))
+      
+      for action_varname in self.get_action_varnames():
+         actions_topics_query.SELECT_field((action_varname, 0))
       
       for taxonomy_varname in self.get_taxonomy_varnames():
-         messages_query.SELECT_field((taxonomy_varname, 1))
+         actions_topics_query.SELECT_field((taxonomy_varname, 1))
          
-      return messages_query 
+      return actions_topics_query 
 
 
    def assemble_messages_field_manager(self) -> fields.FieldKeeper():
@@ -184,7 +140,6 @@ class BasestatReporter(performers.Reporter):
             .add_field(fields.StringField("userOs"))\
             .add_field(fields.StringField("userBrowser"))\
             
-      
       return messages_field_manager
       
 
@@ -207,22 +162,10 @@ class BasestatReporter(performers.Reporter):
       
       messages_report_query\
          .FROM((actions_topics_query.get_query_name(),))\
-         .WHERE("(icap__action__message is not null) AND " + select_messages_where)\
-         .SELECT_field(("accepted_at",))\
-         .SELECT_field(("icap.cms.doc.uid",))\
-         .SELECT_field(("icap.cms.doc.localCode",))\
-         .SELECT_field(("icap.cms.doc.verno",))\
-         .SELECT_field(("icap.cms.topic.uid",))\
-         .SELECT_field(("icap.cms.topic.verno",))\
-         .SELECT_field(("icap.page.title",))\
-         .SELECT_field(("icap.page.url",))\
-         .SELECT_field(("icap.action.code",))\
-         .SELECT_field(("icap.action.timeOffset",))\
-         .SELECT_field(("icap.action.message",))\
-         .SELECT_field(("icap.countryCode",))\
-         .SELECT_field(("userLangCode",))\
-         .SELECT_field(("userOs",))\
-         .SELECT_field(("userBrowser",))
+         .WHERE("(icap__action__message is not null) AND " + select_messages_where)
+      
+      for action_varname in self.get_action_varnames():
+         messages_report_query.SELECT_field((action_varname,))
                   
       self.deb(messages_report_query.get_snippet())
 
