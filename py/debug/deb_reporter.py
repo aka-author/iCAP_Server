@@ -26,19 +26,29 @@ def get_body(sample_number: int) -> Dict:
                     "scope": {
                         "conditions": [
                             {
-                                "condition_name": "taxonomyScope",
-                                "varname": "icap.cms.taxonomy.Product scales",
+                                "condition_name": "browser",
+                                "varname": "userBrowser",
                                 "range": {
                                     "datatype_name": "string",
-                                    "range_type_name": "pattern1",
+                                    "range_type_name": "set",
                                     "constraints": {
-                                        "expression_type": "strlistitem",
-                                        "expressions": ["small", "medium"]
+                                        "members": ["chrome"]
                                     }
                                 }
                             },
                             {
-                                "condition_name": "actionScope",
+                                "condition_name": "topic",
+                                "varname": "icap.cms.topic.uid",
+                                "range": {
+                                    "datatype_name": "string",
+                                    "range_type_name": "set",
+                                    "constraints": {
+                                        "members": ["74685"]
+                                    }
+                                }
+                            },
+                            {
+                                "condition_name": "action",
                                 "varname": "icap.action.code",
                                 "range": {
                                     "datatype_name": "string",
@@ -49,18 +59,7 @@ def get_body(sample_number: int) -> Dict:
                                 }
                             },
                             {
-                                "condition_name": "langScope",
-                                "varname": "icap.cms.doc.localCode",
-                                "range": {
-                                    "datatype_name": "string",
-                                    "range_type_name": "set",
-                                    "constraints": {
-                                        "members": ["en", "es"]
-                                    }
-                                }
-                            },
-                            {
-                                "condition_name": "timeScope",
+                                "condition_name": "time",
                                 "varname": "accepted_at", 
                                 "range": {
                                     "datatype_name": "timestamp",
@@ -72,7 +71,7 @@ def get_body(sample_number: int) -> Dict:
                                 }
                             }
                         ],
-                        "expression": "langScope and timeScope and taxonomyScope"
+                        "expression": "doc AND browser AND countryCode AND langScope AND timeScope"
                     },
                     "granularity": {
                         "dimensions": [
