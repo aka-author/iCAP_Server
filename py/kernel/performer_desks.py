@@ -42,6 +42,26 @@ class PerformerDesk(desks.Desk):
         return self.performer_shortcuts_by_names.get(performer_name)
     
 
+    def involve_admin(self, performer_name: str) -> performers.Reporter:
+        
+        if self.has_performer(performer_name):
+
+            shortcut = self.get_performer_shortcut(performer_name)
+            
+            reporter_module_full_name = shortcut.get_admin_module_full_name()
+            
+            try:
+                performer_module = importlib.import_module(reporter_module_full_name)
+                performer_reporter = performer_module.new_admin(shortcut)
+            except:
+                performer_reporter = None
+
+        else:
+            performer_reporter = None
+
+        return performer_reporter
+    
+
     def involve_reporter(self, performer_name: str) -> performers.Reporter:
         
         if self.has_performer(performer_name):

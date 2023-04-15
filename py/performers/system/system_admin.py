@@ -13,7 +13,7 @@ from kernel import status, fields, dtos, performer_shortcuts, performers, perfta
 from debug import deb_reporter
 
 
-class BasestatReporter(performers.Reporter):
+class SystemAdmin(performers.Reporter):
 
    def __init__(self, chief):
 
@@ -143,39 +143,39 @@ class BasestatReporter(performers.Reporter):
       return messages_field_manager
       
 
-   def assemble_messages_report(self, report_query_dict: Dict) -> Dict:
+   def preprocess(self, report_query_dict: Dict) -> Dict:
 
-      messages_report_dict = {}
+      preprocess_report_dict = {"result": "done"}
 
-      dbms, db = self.get_default_dbms(), self.get_default_db()
-      sql_builder = dbms.new_sql_builder(None)
+      # dbms, db = self.get_default_dbms(), self.get_default_db()
+      # sql_builder = dbms.new_sql_builder(None)
 
-      report_query_model = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
-      select_messages_where = report_query_model.assemble_where_expression(sql_builder)
+      # report_query_model = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
+      # select_messages_where = report_query_model.assemble_where_expression(sql_builder)
 
-      actions_topics_query = self.assemble_actions_topics_query()
+      # actions_topics_query = self.assemble_actions_topics_query()
 
-      messages_report_query = self.get_default_dbms().new_select()\
-         .set_field_manager(self.assemble_messages_field_manager())
+      # messages_report_query = self.get_default_dbms().new_select()\
+      #   .set_field_manager(self.assemble_messages_field_manager())
 
-      messages_report_query.subqueries.add(actions_topics_query)
+      # messages_report_query.subqueries.add(actions_topics_query)
       
-      messages_report_query\
-         .FROM((actions_topics_query.get_query_name(),))\
-         .WHERE("(icap__action__message is not null) AND " + select_messages_where)
+      # messages_report_query\
+      #   .FROM((actions_topics_query.get_query_name(),))\
+      #   .WHERE("(icap__action__message is not null) AND " + select_messages_where)
       
-      for action_varname in self.get_action_varnames():
-         messages_report_query.SELECT_field((action_varname,))
+      # for action_varname in self.get_action_varnames():
+      #   messages_report_query.SELECT_field((action_varname,))
                   
-      self.deb(messages_report_query.get_snippet())
+      # self.deb(messages_report_query.get_snippet())
 
-      runner = dbms.new_query_runner(db)
-      query_result = runner.execute_query(messages_report_query).get_query_result()
-      if query_result is not None:
-         messages_report_dict["messages"] = query_result.dump_list_of_dicts()
-      runner.close()
+      # runner = dbms.new_query_runner(db)
+      # query_result = runner.execute_query(messages_report_query).get_query_result()
+      # if query_result is not None:
+      #   messages_report_dict["messages"] = query_result.dump_list_of_dicts()
+      # runner.close()
 
-      return messages_report_dict
+      return preprocess_report_dict
 
 
    # Performer's main
@@ -188,10 +188,8 @@ class BasestatReporter(performers.Reporter):
       status_message = status.MSG_SUCCESS
       out_prolog = out_body = None
       
-      if task.get_task_name() == "summaries":
-         out_body = self.assemble_summaries_report(task_body)      
-      elif task.get_task_name() == "messages":
-         out_body = self.assemble_messages_report(task_body)  
+      if task.get_task_name() == "preprocess":
+         out_body = self.preprocess(task_body)        
       else:
          status_code = status.ERR_UNKNOWN_TASK 
          status_message = status.MSG_UNKNOWN_TASK
@@ -207,6 +205,6 @@ class BasestatReporter(performers.Reporter):
       return perf_out 
 
 
-def new_reporter(shortcut: performer_shortcuts.PerformerShortcut) -> performers.Reporter:
-
-   return BasestatReporter(shortcut.get_chief()).set_shortcut(shortcut)
+def new_admin(shortcut: performer_shortcuts.PerformerShortcut) -> performers.Reporter:
+   
+   return SystemAdmin(shortcut.get_chief()).set_shortcut(shortcut)
