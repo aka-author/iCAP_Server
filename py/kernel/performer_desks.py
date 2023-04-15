@@ -32,6 +32,11 @@ class PerformerDesk(desks.Desk):
         return loaded_performer_shortcuts, performer_shortcuts_by_names
 
 
+    def get_performer_names(self) -> List:
+
+        return self.performer_shortcuts_by_names.keys()
+
+
     def has_performer(self, performer_name: str) -> bool:
 
         return performer_name in self.performer_shortcuts_by_names
@@ -48,19 +53,38 @@ class PerformerDesk(desks.Desk):
 
             shortcut = self.get_performer_shortcut(performer_name)
             
-            reporter_module_full_name = shortcut.get_admin_module_full_name()
+            admin_module_full_name = shortcut.get_admin_module_full_name()
             
             try:
-                performer_module = importlib.import_module(reporter_module_full_name)
-                performer_reporter = performer_module.new_admin(shortcut)
+                admin_module = importlib.import_module(admin_module_full_name)
+                performer_admin = admin_module.new_admin(shortcut)
             except:
-                performer_reporter = None
+                performer_admin = None
 
         else:
-            performer_reporter = None
+            performer_admin = None
 
-        return performer_reporter
+        return performer_admin
     
+
+    def involve_processor(self, performer_name: str) -> performers.Reporter:
+        
+        if self.has_performer(performer_name):
+
+            shortcut = self.get_performer_shortcut(performer_name)
+            processor_module_full_name = shortcut.get_processor_module_full_name()
+            
+            try:
+                processor_module = importlib.import_module(processor_module_full_name)
+                performer_processor = processor_module.new_processor(shortcut)
+            except:
+                performer_processor = None
+
+        else:
+            performer_processor = None
+
+        return performer_processor
+
 
     def involve_reporter(self, performer_name: str) -> performers.Reporter:
         

@@ -1,16 +1,15 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  basestat_reporter.py                     (\(\
-# Func:    Building basic statistical reports       (^.^)
+# Module:  system_admin.py                       (\(\
+# Func:    Performing administrative tasks       (^.^)
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict, List
 import sys, os, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.parent.absolute()))) 
 from kernel import status, fields, dtos, performer_shortcuts, performers, perftask, \
-                     sql_select, perfoutput, grq_report_query
-from debug import deb_reporter
+                     sql_select, perfoutput, grq_report_query, performer_desks
 
 
 class SystemAdmin(performers.Reporter):
@@ -147,33 +146,12 @@ class SystemAdmin(performers.Reporter):
 
       preprocess_report_dict = {"result": "done"}
 
-      # dbms, db = self.get_default_dbms(), self.get_default_db()
-      # sql_builder = dbms.new_sql_builder(None)
+      performer_desk = performer_desks.PerformerDesk(self)
 
-      # report_query_model = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
-      # select_messages_where = report_query_model.assemble_where_expression(sql_builder)
-
-      # actions_topics_query = self.assemble_actions_topics_query()
-
-      # messages_report_query = self.get_default_dbms().new_select()\
-      #   .set_field_manager(self.assemble_messages_field_manager())
-
-      # messages_report_query.subqueries.add(actions_topics_query)
-      
-      # messages_report_query\
-      #   .FROM((actions_topics_query.get_query_name(),))\
-      #   .WHERE("(icap__action__message is not null) AND " + select_messages_where)
-      
-      # for action_varname in self.get_action_varnames():
-      #   messages_report_query.SELECT_field((action_varname,))
-                  
-      # self.deb(messages_report_query.get_snippet())
-
-      # runner = dbms.new_query_runner(db)
-      # query_result = runner.execute_query(messages_report_query).get_query_result()
-      # if query_result is not None:
-      #   messages_report_dict["messages"] = query_result.dump_list_of_dicts()
-      # runner.close()
+      for perf_name in performer_desk.get_performer_names():
+         perf_blade = performer_desk.involve_processor(perf_name)
+         if perf_blade is not None:
+            perf_blade.process()
 
       return preprocess_report_dict
 
