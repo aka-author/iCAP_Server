@@ -217,7 +217,7 @@ class Select(sql_queries.SelectiveQuery):
         return self
        
 
-    def get_FROM(self) -> SelectClause:
+    def get_FROM(self) -> FromClause:
 
         return self.clauses_by_names["FROM"]
     

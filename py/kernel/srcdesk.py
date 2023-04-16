@@ -31,7 +31,7 @@ class SourceDesk(desks.Desk):
         return self
 
 
-    def assemble_measurements_query(self, arg_varnames: List, out_varnames: List) -> sql_select.Select:
+    def assemble_measurements_query(self, arg_varnames: List, out_varnames: List, options: str="strict") -> sql_select.Select:
 
         measurements_query = self.get_default_dbms().new_select()
 
@@ -49,9 +49,14 @@ class SourceDesk(desks.Desk):
         if len(out_varnames) > 0:
             out_shortcuts = [dd.get_variable_shortcut(varname) for varname in out_varnames]
             outprof = measurements.assemble_varprof(out_shortcuts)
-            measurements_query\
-                .WHERE("({0}={1}) AND " + sql.match_measurement_profiles(2, 3), 
-                    ("argprof", 0), argprof, ("outprof", 0), outprof) 
+
+            if options == "strict":
+                measurements_query\
+                    .WHERE("({0}={1}) AND " + sql.match_measurement_profiles(2, 3), 
+                        ("argprof", 0), argprof, ("outprof", 0), outprof) 
+            else:
+                measurements_query\
+                    .WHERE("{0}={1}", ("argprof", 0), argprof) 
         else:
             measurements_query\
                 .WHERE("{0}={1}", ("argprof", 0), argprof) 

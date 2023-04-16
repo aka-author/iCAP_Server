@@ -7,7 +7,7 @@
 
 from typing import List
 import utils
-import fields, dbms_instances, sql_queries
+import fields, dbms_instances, sql_queries, sql_select
 
 
 class IntoClause(sql_queries.MonotableClause):
@@ -85,7 +85,9 @@ class Insert(sql_queries.Query):
     def create_clauses(self) -> 'sql_queries.Query':
 
         self.add_clause(IntoClause(self))\
-            .add_clause(ValuesClause(self))
+            .add_clause(ValuesClause(self))\
+            .add_clause(sql_select.SelectClause(self).set_headless_flag(False))\
+            .add_clause(sql_select.FromClause(self))
         
         return self
 
@@ -104,6 +106,50 @@ class Insert(sql_queries.Query):
 
         self.clauses_by_names["VALUES"].set_values(values).turn_on()
 
+        return self
+    
+
+    def get_FROM(self) -> sql_select.FromClause:
+
+        return self.clauses_by_names["FROM"]
+    
+
+    def count_src_recordsets(self) -> int:
+
+        return len(self.get_FROM().src_recordsets)
+    
+
+    def get_next_alias(self, alias: str) -> str:
+
+        return utils.safeval(alias, "t" + str(self.count_src_recordsets()))
+    
+
+    def FROM(self, recordset: tuple, alias: str=None) -> 'Insert':
+
+        self.get_FROM().add_src_recordset(\
+            None,
+            recordset[0], recordset[1] if len(recordset) > 1 else None, 
+            self.get_next_alias(alias)).turn_on()        
+            
+        return self
+    
+
+    def get_SELECT(self) -> sql_select.SelectClause:
+
+        return self.clauses_by_names["SELECT"]
+
+
+    def SELECT_field(self, field_def, alias: str=None) -> 'Select':
+        
+        self.get_SELECT().add_field(alias, "{0}", *[field_def]).turn_on()
+        
+        return self
+
+
+    def SELECT_expression(self, alias: str, expr: str, *operands) -> 'Select':
+
+        self.get_SELECT().add_field(alias, expr, *operands).turn_on()
+        
         return self
 
 
