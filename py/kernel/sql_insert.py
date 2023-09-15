@@ -7,7 +7,10 @@
 
 from typing import List
 import utils
-import fields, dbms_instances, sql_queries, sql_select
+import fields
+import dbms_instances
+import sql_queries
+import sql_select
 
 
 class IntoClause(sql_queries.MonotableClause):
@@ -20,23 +23,19 @@ class IntoClause(sql_queries.MonotableClause):
 
         self.varnames = []
 
-
-    def set_varnames(self, varnames: List) -> 'IntoClause':
+    def set_varnames(self, varnames: list) -> 'IntoClause':
 
         self.varnames = varnames
 
         return self
-    
 
-    def get_varnames(self) -> List:
+    def get_varnames(self) -> list:
 
         return self.varnames
-
 
     def assemble_varname_list(self) -> str:
 
         return self.sql.list([self.sql.sql_varname(varname) for varname in self.get_varnames()])
-
 
     def assemble_snippet(self) -> str:
 
@@ -50,25 +49,23 @@ class ValuesClause(sql_queries.Clause):
 
         super().__init__(chief)
 
+        self.values = None
+
         self.clause_name = "VALUES"
 
-
-    def set_values(self, values: List) -> 'ValuesClause':
+    def set_values(self, values: list) -> 'ValuesClause':
 
         self.values = values
 
         return self
 
-
     def get_values(self) -> List:
 
         return self.values
 
-
     def get_value_list(self) -> str:
 
         return self.sql.list([self.sql.typed_value(value) for value in self.get_values()])
-
 
     def assemble_snippet(self) -> str: 
 
@@ -77,10 +74,9 @@ class ValuesClause(sql_queries.Clause):
 
 class Insert(sql_queries.Query):
 
-    def __init__(self, chief: 'dbms_instances.Dbms', query_name: str=None):
+    def __init__(self, chief: 'dbms_instances.Dbms', query_name: str = None):
 
         super().__init__(chief, "INSERT", query_name)
-
 
     def create_clauses(self) -> 'sql_queries.Query':
 
@@ -91,7 +87,6 @@ class Insert(sql_queries.Query):
         
         return self
 
-
     def INTO(self, table_name, db_scheme_name, *varnames) -> 'Insert':
 
         self.clauses_by_names["INTO"]\
@@ -101,50 +96,42 @@ class Insert(sql_queries.Query):
 
         return self
 
-
     def VALUES(self, *values) -> 'Insert':
 
         self.clauses_by_names["VALUES"].set_values(values).turn_on()
 
         return self
-    
 
     def get_FROM(self) -> sql_select.FromClause:
 
         return self.clauses_by_names["FROM"]
-    
 
     def count_src_recordsets(self) -> int:
 
         return len(self.get_FROM().src_recordsets)
-    
 
     def get_next_alias(self, alias: str) -> str:
 
         return utils.safeval(alias, "t" + str(self.count_src_recordsets()))
-    
 
-    def FROM(self, recordset: tuple, alias: str=None) -> 'Insert':
+    def FROM(self, recordset: tuple, alias: str = None) -> 'Insert':
 
-        self.get_FROM().add_src_recordset(\
+        self.get_FROM().add_src_recordset(
             None,
             recordset[0], recordset[1] if len(recordset) > 1 else None, 
             self.get_next_alias(alias)).turn_on()        
             
         return self
-    
 
     def get_SELECT(self) -> sql_select.SelectClause:
 
         return self.clauses_by_names["SELECT"]
 
-
-    def SELECT_field(self, field_def, alias: str=None) -> 'Select':
+    def SELECT_field(self, field_def, alias: str = None) -> 'Select':
         
         self.get_SELECT().add_field(alias, "{0}", *[field_def]).turn_on()
         
         return self
-
 
     def SELECT_expression(self, alias: str, expr: str, *operands) -> 'Select':
 
@@ -152,8 +139,8 @@ class Insert(sql_queries.Query):
         
         return self
 
-
-    def build_of_field_manager(self, fm: fields.FieldManager, db_table_name: str, db_scheme_name: str=None) -> 'Insert':
+    def build_of_field_manager(self, fm: fields.FieldManager,
+                               db_table_name: str, db_scheme_name: str = None) -> 'Insert':
 
         varnames = []
         values = []

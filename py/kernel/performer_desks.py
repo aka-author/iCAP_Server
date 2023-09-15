@@ -103,3 +103,4 @@ class PerformerDesk(desks.Desk):
             performer_reporter = None
 
         return performer_reporter
+    

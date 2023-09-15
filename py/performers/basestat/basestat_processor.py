@@ -1,6 +1,6 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Layer:   Basestat
+# Layer:   Performer (Basestat)
 # Module:  basestat_processor.py                  (\(\
 # Func:    Preprocessing measurements             (^.^)
 # # ## ### ##### ######## ############# #####################
@@ -10,7 +10,7 @@ import sys, os, pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.parent.absolute()))) 
 from kernel import status, fields, dtos, workers, performer_shortcuts, performers, perftask, \
                      sql_select, sql_insert, perfoutput, grq_report_query
-# import basestat_queries
+
 
 class BasestatQueryBuilder(workers.Worker):
 
@@ -87,7 +87,7 @@ class BasestatQueryBuilder(workers.Worker):
             .ON("{0}={1}", ("icap.pagereadId", 0), ("icap.pagereadId", 1))\
             .LEFT_JOIN((countries_query.get_query_name(),))\
             .ON("{0}={1}", ("icap.pagereadId", 0), ("icap.pagereadId", 2))\
-            .SELECT_field(("accepted_at", 0))\
+            .SELECT_field(("accepted_at", 1))\
             .SELECT_field(("icap.pagereadId", 0))\
             .SELECT_field(("icap.cms.doc.uid", 0))\
             .SELECT_field(("icap.cms.doc.localCode", 0))\
@@ -121,7 +121,7 @@ class BasestatProcessor(performers.Processor):
        
         bqb = BasestatQueryBuilder(self)
 
-        dbms, db = self.get_default_dbms(), self.get_default_db()
+        dbms = self.get_default_dbms()
 
         scheme_name = self.get_default_db_scheme_name()
 
@@ -167,6 +167,8 @@ class BasestatProcessor(performers.Processor):
         dbms, db = self.get_default_dbms(), self.get_default_db()
 
         load_action_query = self.assemble_load_actions_query()
+
+        self.deb(load_action_query.get_snippet())
 
         runner = dbms.new_query_runner(db)
         runner.execute_query(load_action_query)

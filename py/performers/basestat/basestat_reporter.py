@@ -6,7 +6,9 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import Dict, List
-import sys, os, pathlib
+import sys
+import os
+import pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.parent.absolute()))) 
 from kernel import status, fields, dtos, performer_shortcuts, performers, perftask, \
                      sql_select, perfoutput, grq_report_query
@@ -73,6 +75,75 @@ class BasestatReporter(performers.Reporter):
          
       return basestat_actions_query
    
+
+   # Grabbing directories
+
+   def grab_directory(self, directory_field_name: str) -> list:
+
+      dircodes = []
+
+      dbms, db = self.get_default_dbms(), self.get_default_db()
+
+      dircodes_field_manager = fields.FieldManager()\
+         .add_field(fields.StringField(directory_field_name))
+      
+      dircodes_query = dbms.new_select()\
+         .set_field_manager(dircodes_field_manager)
+      
+      dircodes_query\
+         .FROM(("basestat__actions", self.get_default_db_scheme_name()))\
+         .DISTINCT()\
+         .SELECT_field((directory_field_name,))
+      
+      runner = dbms.new_query_runner(db)
+      query_result = runner.execute_query(dircodes_query).get_query_result()
+      
+      if query_result is not None:
+         for country_dict in query_result.dump_list_of_dicts():
+            dircodes.append(country_dict[directory_field_name])
+
+      runner.close()
+
+      return dircodes
+
+
+   def grab_countries(self) -> list:
+
+      return self.grab_directory("icap__countrycode")
+
+   
+   def grab_browsers(self) -> list: 
+
+      return self.grab_directory("userbrowser")
+
+
+   def grab_oss(self) -> list: 
+
+      return self.grab_directory("useros")
+   
+
+   def grab_user_langs(self) -> list: 
+
+      return self.grab_directory("userlangcode")
+   
+
+   def grab_locals(self) -> list: 
+
+      return self.grab_directory("icap__cms__doc__localcode")
+
+
+   def assemble_directories_report(self, report_query_dict: dict) -> dict:
+
+      directories_report_dict = {
+         "countries": self.grab_countries(),
+         "browsers": self.grab_browsers(),
+         "oss": self.grab_oss(),
+         "user_langs": self.grab_user_langs(),
+         "locals": self.grab_locals()
+      }
+
+      return directories_report_dict
+
 
    # Reporting summaries
 
@@ -176,7 +247,7 @@ class BasestatReporter(performers.Reporter):
       runner.close()
 
       return messages_report_dict
-
+   
 
    # Performer's main
 
@@ -192,6 +263,8 @@ class BasestatReporter(performers.Reporter):
          out_body = self.assemble_summaries_report(task_body)      
       elif task.get_task_name() == "messages":
          out_body = self.assemble_messages_report(task_body)  
+      elif task.get_task_name() == "directories":
+         out_body = self.assemble_directories_report(task_body)
       else:
          status_code = status.ERR_UNKNOWN_TASK 
          status_message = status.MSG_UNKNOWN_TASK

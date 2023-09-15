@@ -1,8 +1,8 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
 # Layer:   Kernel
-# Module:  srcdesk.py                        (\(\
-# Func:    Managing source data              (^.^)
+# Module:  srcdesk.py                                 (\(\
+# Func:    Managing raw source data                   (^.^)
 # # ## ### ##### ######## ############# #####################
 
 from typing import List
@@ -73,7 +73,7 @@ class SourceDesk(desks.Desk):
                 .INNER_JOIN(("varvalues", sch_name))\
                 .ON("{0}={1} AND {2}={3}", 
                     ("uuid", 0), ("measurement_uuid", recordset_idx),
-                    ("varname", recordset_idx), varname)        
+                    ("varname", recordset_idx), varname)  
 
         for idx, varname in enumerate(arg_varnames):
             recordset_idx = idx + 1

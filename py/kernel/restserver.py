@@ -276,3 +276,4 @@ class RestServer (apps.Application):
             self.fail(status.MSG_APP_INIT_FAILED)
 
         return  self.quit()
+    

@@ -7,9 +7,12 @@
 # # ## ### ##### ######## ############# #####################
 
 from typing import List, Dict
-import copy, math, uuid
+import copy
+import math 
+import uuid
 from datetime import datetime
-import utils, datatypes
+import utils
+import datatypes
 
 
 class Field: 
