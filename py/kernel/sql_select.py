@@ -158,14 +158,14 @@ class FromClause(sql_queries.Clause):
 class GroupByClause(sql_queries.Clause):
 
     def __init__(self, chief: sql_queries.Query):
+
         super().__init__(chief)
 
         self.clause_name = "GROUP BY"
 
     def assemble_snippet(self) -> str:
-        snippet = ""
-
-        return snippet
+        
+        return self.snippet
 
 
 class OrderByClause(sql_queries.Clause):
@@ -284,7 +284,15 @@ class Select(sql_queries.SelectiveQuery):
 
         return self
 
-    def GROUP_BY(self) -> 'Select':
+
+    def get_GROUP_BY(self) -> GroupByClause:
+
+        return self.clauses_by_names["GROUP BY"]
+
+
+    def GROUP_BY_expression(self, expression) -> 'Select':
+
+        self.get_GROUP_BY().set_snippet(expression).turn_on()
 
         return self
 

@@ -5,7 +5,12 @@
 # Func:    Defining one of gpouping diensions           (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import sql_builders, fields, dtos, workers, models, grq_groups
+import sql_builders
+import fields
+import dtos 
+import workers
+import models
+import grq_groups
 
 
 class Dimension(models.Model):
@@ -20,8 +25,8 @@ class Dimension(models.Model):
     def define_fields(self) -> models.Model:
 
         self.get_field_manager()\
-                .add_field(fields.StringField("varname"))\
-                .add_field(fields.StringField("group_by_value_datatype_name"))
+            .add_field(fields.StringField("varname"))\
+            .add_field(fields.StringField("group_by_value_datatype_name"))
 
         return self
     
@@ -43,11 +48,22 @@ class Dimension(models.Model):
         if isinstance(groups_list, list):
             for group_dict in groups_list:
                 group_dto = dtos.Dto(group_dict)
-                self.groups.append(\
-                    grq_groups.Group(self, self.get_group_by_value_datatype_name())\
-                        .import_dto(group_dto))
+                self.groups.append(
+                    grq_groups.Group(self, self.get_group_by_value_datatype_name())
+                    .import_dto(group_dto)
+                )
 
         return self
+    
+
+    def get_varname(self) -> str:
+
+        return self.get_field_value("varname")
+    
+
+    def get_groups(self) -> list:
+
+        return self.groups
     
 
     def assemble_group_by_item(self, sql_builder: sql_builders.SqlBuilder) -> str:

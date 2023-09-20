@@ -9,9 +9,16 @@
 # Usage     REST server, CGI script                    (^.^)
 # # ## ### ##### ######## ############# ##################### 
 
-import os, sys, pathlib
+import os 
+import sys 
+import pathlib
+
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.absolute()) + "/kernel"))
-from kernel import performer_desks, restserver, users
+
+from kernel import (
+    performer_desks, restserver, users
+)
+
 from debug import deb_reporter
 
 

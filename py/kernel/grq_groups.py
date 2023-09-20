@@ -5,7 +5,13 @@
 # Func:    Defining a group for grouping source data   (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import sql_builders, datatypes, fields, dtos, workers, models, grq_ranges
+import sql_builders 
+import datatypes
+import fields
+import dtos
+import workers
+import models
+import grq_ranges
 
 
 class Group(models.Model):
@@ -26,8 +32,8 @@ class Group(models.Model):
 
     def define_fields(self) -> models.Model:
 
-        self.get_field_manager()\
-                .add_field(fields.new_native_field("group_by_value", self.get_datatype_name()))
+        self.get_field_manager() \
+            .add_field(fields.new_native_field("group_by_value", self.get_datatype_name()))
 
         return self
     
@@ -35,6 +41,11 @@ class Group(models.Model):
     def get_group_by_value(self) -> any:
 
         return self.get_field_value("group_by_value")
+    
+
+    def get_range(self) -> grq_ranges.Range:
+
+        return self.range
     
 
     def import_submodels_from_dto(self, group_dto: dtos.Dto) -> models.Model:
@@ -57,3 +68,4 @@ class Group(models.Model):
             group_by_typed_value = None
 
         return (range_conditions_expr, group_by_typed_value)
+    

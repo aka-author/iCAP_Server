@@ -318,3 +318,19 @@ def extract_json_body_from_pseudoform(cgi_body, ctype):
     items = tmp.split("\n")
     pseudo = "\n".join([items[i] for i in range(3, len(items) - 1)])
     return pseudo
+
+
+# Misc.
+
+def uniqueCombinations(sets: list) -> list:
+
+    combinations = []
+
+    if len(sets) > 1:
+        for subcomb in uniqueCombinations(sets[1:]):
+            for item in sets[0]:
+                combinations.append((item,) + subcomb)                
+    else:
+        combinations = [(item,) for item in sets[0]]
+
+    return combinations

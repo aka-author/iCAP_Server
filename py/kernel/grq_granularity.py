@@ -5,7 +5,11 @@
 # Func:    Grouping source data for a generic report    (^.^)
 # # ## ### ##### ######## ############# #####################
 
-import sql_builders, dtos, workers, models, grq_dimensions
+import sql_builders 
+import dtos
+import workers 
+import models 
+import grq_dimensions
 
 
 class Granularity(models.Model):
@@ -28,6 +32,11 @@ class Granularity(models.Model):
 
         return self
     
+
+    def get_dimensions(self) -> list:
+
+        return self.dimensions
+
 
     def assemble_group_by_list(self, sql_builder: sql_builders.SqlBuilder) -> str:
 

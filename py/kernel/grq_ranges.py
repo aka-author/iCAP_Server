@@ -5,8 +5,12 @@
 # Func:    Defining constraints for source data        (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import List
-import utils, datatypes, fields, dtos, workers, models
+import utils 
+import datatypes
+import fields
+import dtos
+import workers
+import models
 
 
 class Constraint(models.Model):
@@ -44,8 +48,7 @@ class NamedConstraint(Constraint):
     
     def define_fields(self) -> models.Model:
 
-        self.get_field_manager()\
-                .add_field(fields.StringField("range_name"))
+        self.get_field_manager().add_field(fields.StringField("range_name"))
 
         return self 
     
@@ -74,13 +77,12 @@ class SetConstraint(Constraint):
     
     def define_fields(self) -> models.Model:
 
-        self.get_field_manager()\
-                .add_field(fields.ListField("members"))
+        self.get_field_manager().add_field(fields.ListField("members"))
 
         return self 
 
 
-    def get_members(self) -> List:
+    def get_members(self) -> list:
 
         return self.get_field_value("members")
     
@@ -148,12 +150,12 @@ class PatternConstraint(Constraint):
         return self 
 
 
-    def get_expression_type(self) -> List:
+    def get_expression_type(self) -> list:
 
         return self.get_field_value("expression_type")
     
 
-    def get_expressions(self) -> List:
+    def get_expressions(self) -> list:
 
         return self.get_field_value("expressions")
     
@@ -184,8 +186,8 @@ class Range(models.Model):
 
     def define_fields(self) -> models.Model:
 
-        self.get_field_manager()\
-            .add_field(fields.StringField("datatype_name"))\
+        self.get_field_manager() \
+            .add_field(fields.StringField("datatype_name")) \
             .add_field(fields.StringField("range_type_name"))
 
         return self
@@ -229,8 +231,9 @@ class Range(models.Model):
 
     def assemble_expression(self, varname: str, sql_builder) -> str:
 
-        expr = self.constraints.assemble_expression(varname, sql_builder) \
-                        if self.constraints is not None \
-                        else "true"
+        expr = (
+            self.constraints.assemble_expression(varname, sql_builder) \
+            if self.constraints is not None else "true"
+        )
 
         return expr

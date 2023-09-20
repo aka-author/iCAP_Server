@@ -5,24 +5,29 @@
 # Func:    Preprocessing measurements             (^.^)
 # # ## ### ##### ######## ############# #####################
 
-from typing import Dict, List
-import sys, os, pathlib
+import sys
+import os
+import pathlib
+
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.parent.absolute()))) 
-from kernel import status, fields, dtos, workers, performer_shortcuts, performers, perftask, \
-                     sql_select, sql_insert, perfoutput, grq_report_query
+
+from kernel import (
+    workers, performer_shortcuts, performers, sql_select, sql_insert
+)
 
 
 class BasestatQueryBuilder(workers.Worker):
 
     def get_basestat_actions_varnames(self): 
 
-        varnames = \
-            ["accepted_at", "icap.pagereadId",
-             "icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno", 
-             "icap.cms.topic.uid", "icap.cms.topic.verno", 
-             "icap.page.title", "icap.page.url", 
-             "icap.action.code", "icap.action.timeOffset", "icap.action.message", 
-             "icap.countryCode", "userLangCode", "userAgentInfo", "userOs", "userBrowser"]
+        varnames = [
+            "accepted_at", "icap.pagereadId",
+            "icap.cms.doc.uid", "icap.cms.doc.localCode", "icap.cms.doc.verno", 
+            "icap.cms.topic.uid", "icap.cms.topic.verno", 
+            "icap.page.title", "icap.page.url", 
+            "icap.action.code", "icap.action.timeOffset", "icap.action.message", 
+            "icap.countryCode", "userLangCode", "userAgentInfo", "userOs", "userBrowser"
+        ]
         
         return varnames
 
@@ -35,7 +40,7 @@ class BasestatQueryBuilder(workers.Worker):
 
         src_desk = self.get_app().get_source_desk()
         pageread_country_query = src_desk.assemble_measurements_query(arg_names, out_names)\
-                                    .set_query_name("countries")
+                                .set_query_name("countries")
 
         return pageread_country_query 
     
@@ -126,8 +131,8 @@ class BasestatProcessor(performers.Processor):
         scheme_name = self.get_default_db_scheme_name()
 
         timebase_query = dbms.new_select().set_query_name("timebase")\
-                .FROM(("basestat__actions", scheme_name))\
-                .SELECT_expression("start_from", "max({0})", ("accepted_at",))
+            .FROM(("basestat__actions", scheme_name))\
+            .SELECT_expression("start_from", "max({0})", ("accepted_at",))
 
         full_actions_query = bqb.assemble_full_actions_query()
 

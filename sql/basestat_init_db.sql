@@ -94,3 +94,19 @@ create index basestat__actions__icap_cms_topic_verno__idx
     on basestat__actions (icap__cms__topic__verno);
 
 
+create table basestat__coeff_sets (
+    uuid                        uuid default gen_random_uuid() not null primary key,
+    coeff_set_name              varchar default 'Default',
+    bounce_max_sec              int default 1 not null,
+    bounce_score                real default 1 not null,
+    stuck_min_sec               int default 600 not null,
+    stuck_score                 real default 1 not null,
+    like_score                  real default 5 not null,
+    like_with_message_score     real default 10 not null,
+    dislike_score               real default 5 not null,
+    dislike_with_message_score  real default 10 not null,
+    is_active                   boolean default false,
+    created_at                  timestamp default now() not null,
+    updated_at                  timestamp default now() not null,
+    deleted_at                  timestamp
+)

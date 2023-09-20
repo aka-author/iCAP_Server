@@ -11,12 +11,12 @@ def get_content_type():
 def get_body(sample_number: int) -> dict:
 
     sample_requests = {
-        "messages": """{
+        "summaries": """{
                 "app_request_type_name": "performer_task",
                 "ver": 2,
                 "app_request_body": {
                     "performer_name": "basestat",
-                    "task_name": "messages",
+                    "task_name": "summaries",
                     "prolog": {
                         "metadata": [
                             {"meta_name": "debug_index", "content": 0}
@@ -33,28 +33,6 @@ def get_body(sample_number: int) -> dict:
                                         "range_type_name": "set",
                                         "constraints": {
                                             "members": ["chrome"]
-                                        }
-                                    }
-                                },
-                                {
-                                    "condition_name": "topic",
-                                    "varname": "icap.cms.topic.uid",
-                                    "range": {
-                                        "datatype_name": "string",
-                                        "range_type_name": "set",
-                                        "constraints": {
-                                            "members": ["74685"]
-                                        }
-                                    }
-                                },
-                                {
-                                    "condition_name": "action",
-                                    "varname": "icap.action.code",
-                                    "range": {
-                                        "datatype_name": "string",
-                                        "range_type_name": "set",
-                                        "constraints": {
-                                            "members": ["DISLIKE"]
                                         }
                                     }
                                 },
@@ -76,54 +54,7 @@ def get_body(sample_number: int) -> dict:
                         "granularity": {
                             "dimensions": [
                                 {
-                                    "varname": "accepted_at",
-                                    "group_by_value_datatype_name": "string",
-                                    "groups": [
-                                        {
-                                            "group_by_value": "Q1",
-                                            "range": {
-                                                "datatype_name": "timestamp",
-                                                "range_type_name": "segment",
-                                                "constraints": { 
-                                                    "min": "2022-01-01", 
-                                                    "max": "2022-03-31"
-                                                }
-                                            }
-                                        },
-                                        {
-                                            "group_by_value": "Q2",
-                                            "range": {
-                                                "datatype_name": "timestamp",
-                                                "range_type_name": "segment",
-                                                "constraints": { 
-                                                    "min": "2022-04-01", 
-                                                    "max": "2022-06-30"
-                                                }
-                                            }
-                                        },
-                                        {
-                                            "group_by_value": "Q3",
-                                            "range": {
-                                                "datatype_name": "timestamp",
-                                                "range_type_name": "segment",
-                                                "constraints": { 
-                                                    "min": "2022-07-01", 
-                                                    "max": "2022-09-30"
-                                                }
-                                            }
-                                        },
-                                        {
-                                            "group_by_value": "Q4",
-                                            "range": {
-                                                "datatype_name": "timestamp",
-                                                "range_type_name": "segment",
-                                                "constraints": { 
-                                                    "min": "2022-10-01", 
-                                                    "max": "2022-12-31"
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "varname": "icap.cms.topic.uid"
                                 }    
                             ]
                         } 
@@ -274,12 +205,67 @@ def get_body(sample_number: int) -> dict:
             }"""
     }
     
+    """
+    ,
+                                {
+                                    "varname": "accepted_at",
+                                    "group_by_value_datatype_name": "string",
+                                    "groups": [
+                                        {
+                                            "group_by_value": "Q1",
+                                            "range": {
+                                                "datatype_name": "timestamp",
+                                                "range_type_name": "segment",
+                                                "constraints": { 
+                                                    "min": "2022-01-01", 
+                                                    "max": "2022-03-31"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "group_by_value": "Q2",
+                                            "range": {
+                                                "datatype_name": "timestamp",
+                                                "range_type_name": "segment",
+                                                "constraints": { 
+                                                    "min": "2022-04-01", 
+                                                    "max": "2022-06-30"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "group_by_value": "Q3",
+                                            "range": {
+                                                "datatype_name": "timestamp",
+                                                "range_type_name": "segment",
+                                                "constraints": { 
+                                                    "min": "2022-07-01", 
+                                                    "max": "2022-09-30"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "group_by_value": "Q4",
+                                            "range": {
+                                                "datatype_name": "timestamp",
+                                                "range_type_name": "segment",
+                                                "constraints": { 
+                                                    "min": "2022-10-01", 
+                                                    "max": "2022-12-31"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+    """
+
+
     return sample_requests[sample_number]
 
 
 def mock_cgi_input():
 
-    body = get_body("directories")
+    body = get_body("summaries")
 
     os.environ["HTTP_COOKIE"] = "12345678-1234-1234-1234-123456789abc"
     os.environ["CONTENT_TYPE"] = get_content_type()

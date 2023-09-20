@@ -357,7 +357,31 @@ class Model(workers.Worker):
 
     # Debugging
 
+    def deb_format(self, padding_spaces: str="") -> str:
+
+        stringified_model = padding_spaces + "{\n"
+
+        indent = "   "
+
+        stringified_model += "\n".join(
+            [
+                indent + padding_spaces + varname + ": " + str(self.fm.get_serialized_field_value(varname)) 
+                for varname in self.fm.get_varnames()
+            ]
+        )
+
+        if self.fm.count_fields() > 0 and self.count_workers() > 0:
+            stringified_model += "\n"
+
+        stringified_model += "\n".join(
+            [worker.deb_format(padding_spaces + indent) for worker in self.workers]
+        )
+
+        stringified_model += "\n" + padding_spaces + "}"
+
+        return stringified_model 
+
+
     def __str__(self):
 
-        return "\n".join([varname + ": " + str(self.fm.get_serialized_field_value(varname)) \
-                            for varname in self.fm.get_varnames()])
+        return self.deb_format()
