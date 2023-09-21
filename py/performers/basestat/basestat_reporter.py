@@ -255,52 +255,83 @@ class BasestatReporter(performers.Reporter):
       
       return coeff_sets_query
    
-   def assemble_pain_query(self, report_query_model, actions_topics_query, coeff_set_query) -> sql_select.Select:
+   def get_pagereads_expression(self) -> str:
 
-      pain_query = self.get_default_dbms().new_select() 
-
-      pain_query.subqueries \
-         .add(actions_topics_query) \
-         .add(coeff_set_query)
-      
-      calcpain = """
+      pagereads_expression = """
          CASE 
-         WHEN icap__action__code='UNLOAD' THEN 
-            CASE
-            WHEN icap__action__timeoffset < bounce_max_sec*1000 THEN bounce_score
-            WHEN icap__action__timeoffset > stuck_min_sec*1000 THEN stuck_score
+            WHEN icap__action__code='LOAD' THEN 1
             ELSE 0
-            END
-         WHEN icap__action__code='LIKE' THEN 0
-         WHEN icap__action__code='DISLIKE' THEN
-            CASE
-            WHEN icap__action__message is not null THEN dislike_with_message_score
-            ELSE dislike_score
-            END
-         ELSE 0
          END
       """
 
+      return pagereads_expression
+
+   def get_joy_expression(self) -> str:
+
+      joy_expression = """
+         CASE 
+            WHEN icap__action__code='LIKE' THEN
+               CASE
+                  WHEN icap__action__message is not null THEN dislike_with_message_score
+                  ELSE dislike_score
+               END
+            ELSE 0
+         END
+      """
+
+      return joy_expression
+
+   def get_pain_expression(self) -> str:
+
+      pain_expression = """
+         CASE 
+            WHEN icap__action__code='UNLOAD' THEN 
+               CASE
+                  WHEN icap__action__timeoffset < bounce_max_sec*1000 THEN bounce_score
+                  WHEN icap__action__timeoffset > stuck_min_sec*1000 THEN stuck_score
+                  ELSE 0
+               END
+            WHEN icap__action__code='DISLIKE' THEN
+               CASE
+                  WHEN icap__action__message is not null THEN dislike_with_message_score
+                  ELSE dislike_score
+               END
+            ELSE 0
+         END
+      """
+
+      return pain_expression
+   
+   def assemble_scores_query(self, report_query_model, actions_topics_query, coeff_set_query) -> sql_select.Select:
+
+      scores_query = self.get_default_dbms().new_select() 
+
+      scores_query.subqueries \
+         .add(actions_topics_query) \
+         .add(coeff_set_query)
+      
       sql_builder = self.get_app().get_default_dbms().new_sql_builder(None)
 
       select_pain_where = report_query_model.assemble_where_expression(sql_builder)
 
-      pain_query \
+      scores_query \
          .FROM((actions_topics_query.get_query_name(),)) \
          .INNER_JOIN((coeff_set_query.get_query_name(),)) \
          .ON("true") \
          .WHERE(select_pain_where) \
          .SELECT_field(("*",)) \
-         .SELECT_expression("pain", calcpain)
+         .SELECT_expression("pagereads", self.get_pagereads_expression()) \
+         .SELECT_expression("joy", self.get_joy_expression()) \
+         .SELECT_expression("pain", self.get_pain_expression())
       
-      return pain_query
+      return scores_query
 
-   def assemble_group_pain_query(self, report_query_model, pain_query) -> sql_select.Select:
+   def assemble_subtotals_query(self, report_query_model, scores_query) -> sql_select.Select:
 
       group_pain_query = self.get_default_dbms().new_select() 
 
       group_pain_query \
-         .subqueries.add(pain_query)
+         .subqueries.add(scores_query)
       
       sql_builder = self.get_app().get_default_dbms().new_sql_builder(None)
 
@@ -308,43 +339,49 @@ class BasestatReporter(performers.Reporter):
       group_by_fields = granularity.assemble_group_by_list(sql_builder)
       group_by = granularity.assemble_group_by_list(sql_builder)
 
+      subtotals = ", sum(pagereads) AS group_pagereads, sum(joy) AS group_joy, sum(pain) AS group_pain"
+
       group_pain_query \
-         .FROM((pain_query.get_query_name(),)) \
-         .get_SELECT().set_snippet(group_by_fields + ", sum(pain) AS group_pain") 
+         .FROM((scores_query.get_query_name(),)) \
+         .get_SELECT().set_snippet(group_by_fields + subtotals) 
          
       group_pain_query.GROUP_BY_expression(group_by)
 
       return group_pain_query
    
-   def assemble_total_pain_query(self, pain_query) -> sql_select.Select:
+   def assemble_totals_query(self, pain_query) -> sql_select.Select:
 
       total_pain_query = self.get_default_dbms().new_select() 
 
       total_pain_query \
-            .subqueries.add(pain_query)
+         .subqueries.add(pain_query)
       
       total_pain_query \
          .FROM((pain_query.get_query_name(),)) \
+         .SELECT_expression("total_pagereads", "sum(pagereads)") \
+         .SELECT_expression("total_joy", "sum(joy)") \
          .SELECT_expression("total_pain", "sum(pain)")
       
       return total_pain_query
 
-   def assemble_pain_factor_query(self, group_pain_query, total_pain_query) -> sql_select.Select:
+   def assemble_indicators_query(self, subtotals_query, totals_query) -> sql_select.Select:
 
-      pain_factor_query = self.get_default_dbms().new_select()
+      indicators_query = self.get_default_dbms().new_select()
 
-      pain_factor_query.subqueries \
-         .add(group_pain_query) \
-         .add(total_pain_query) 
+      indicators_query.subqueries \
+         .add(subtotals_query) \
+         .add(totals_query) 
          
-      pain_factor_query \
-         .FROM((group_pain_query.get_query_name(),)) \
-         .INNER_JOIN((total_pain_query.get_query_name(),)) \
+      indicators_query \
+         .FROM((subtotals_query.get_query_name(),)) \
+         .INNER_JOIN((totals_query.get_query_name(),)) \
          .ON("true") \
          .SELECT_field(("*",)) \
+         .SELECT_expression("badness", "group_pain/group_pagereads") \
+         .SELECT_expression("joy_factor", "group_joy/total_joy") \
          .SELECT_expression("pain_factor", "group_pain/total_pain")
       
-      return pain_factor_query
+      return indicators_query
 
    def assemble_summaries_report(self, report_query_dict: dict) -> dict:
 
@@ -354,12 +391,12 @@ class BasestatReporter(performers.Reporter):
 
       actions_topics_query = self.assemble_actions_topics_query()
       coeff_sets_query = self.assemble_coeff_set_query()      
-      pain_query = self.assemble_pain_query(report_query_model, actions_topics_query, coeff_sets_query)  
-      group_pain_query = self.assemble_group_pain_query(report_query_model, pain_query)    
-      total_pain_query = self.assemble_total_pain_query(pain_query)
-      pain_factor_query = self.assemble_pain_factor_query(group_pain_query, total_pain_query)
+      scores_query = self.assemble_scores_query(report_query_model, actions_topics_query, coeff_sets_query)  
+      subtotals_query = self.assemble_subtotals_query(report_query_model, scores_query)    
+      totals_query = self.assemble_totals_query(scores_query)
+      indicators_query = self.assemble_indicators_query(subtotals_query, totals_query)
       
-      print(pain_factor_query.get_snippet())
+      print(indicators_query.get_snippet())
 
       
       report_dict = report_query_dict
@@ -396,7 +433,6 @@ class BasestatReporter(performers.Reporter):
          .set_body(out_body)
       
       return perf_out 
-
 
 def new_reporter(shortcut: performer_shortcuts.PerformerShortcut) -> performers.Reporter:
 
