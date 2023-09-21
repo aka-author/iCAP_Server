@@ -12,54 +12,78 @@ def get_body(sample_number: int) -> dict:
 
     sample_requests = {
         "summaries": """{
-                "app_request_type_name": "performer_task",
-                "ver": 2,
-                "app_request_body": {
-                    "performer_name": "basestat",
-                    "task_name": "summaries",
-                    "prolog": {
-                        "metadata": [
-                            {"meta_name": "debug_index", "content": 0}
-                        ]
-                    },
-                    "task_body": {
-                        "scope": {
-                            "conditions": [
-                                {
-                                    "condition_name": "browser",
-                                    "varname": "userBrowser",
-                                    "range": {
-                                        "datatype_name": "string",
-                                        "range_type_name": "set",
-                                        "constraints": {
-                                            "members": ["chrome"]
-                                        }
-                                    }
-                                },
-                                {
-                                    "condition_name": "time",
-                                    "varname": "accepted_at", 
-                                    "range": {
-                                        "datatype_name": "timestamp",
-                                        "range_type_name": "segment",
-                                        "constraints": { 
-                                            "min": "2023-04-01", 
-                                            "max": "2023-05-01"
-                                        }
+            "app_request_type_name": "performer_task",
+            "ver": 2,
+            "app_request_body": {
+                "performer_name": "basestat",
+                "task_name": "summaries",
+                "task_body": {
+                    "scope": {
+                        "conditions": [
+                            {
+                                "condition_name": "browser",
+                                "varname": "userBrowser",
+                                "range": {
+                                    "datatype_name": "string",
+                                    "range_type_name": "set",
+                                    "constraints": {
+                                        "members": ["chrome"]
                                     }
                                 }
-                            ],
-                            "expression": "doc AND browser AND countryCode AND langScope AND timeScope"
-                        },
-                        "granularity": {
-                            "dimensions": [
-                                {
-                                    "varname": "icap.cms.topic.uid"
-                                }    
-                            ]
-                        } 
+                            },
+                            {
+                                "condition_name": "time",
+                                "varname": "accepted_at", 
+                                "range": {
+                                    "datatype_name": "timestamp",
+                                    "range_type_name": "segment",
+                                    "constraints": { 
+                                        "min": "2023-04-01", 
+                                        "max": "2023-09-10"
+                                    }
+                                }
+                            }
+                        ],
+                        "expression": "doc AND browser AND countryCode AND langScope AND timeScope"
                     },
-                    "output_template": {
+                    "granularity": {
+                        "dimensions": [
+                            {
+                                "varname": "icap.cms.topic.uid"
+                            }    
+                        ]
+                    } 
+                }
+            }
+        }""",
+        "directories": """{
+            "app_request_type_name": "performer_task",
+            "ver": 2,
+            "app_request_body": {
+                "performer_name": "basestat",
+                "task_name": "directories",
+                "task_body": {
+                }
+            }
+        }"""
+    }
+    
+    return sample_requests[sample_number]
+
+
+def mock_cgi_input():
+
+    body = get_body("summaries")
+
+    os.environ["HTTP_COOKIE"] = "12345678-1234-1234-1234-123456789abc"
+    os.environ["CONTENT_TYPE"] = get_content_type()
+    os.environ["CONTENT_LENGTH"] = str(len(body))
+
+    sys.stdin = StringIO(body)
+
+
+"""
+"output_template": {
                         "groups": [
                             {
                                 "group_name": "Q1",
@@ -192,20 +216,10 @@ def get_body(sample_number: int) -> dict:
                         ]
                     }
                 }
-            }""",
-        "directories": """{
-                "app_request_type_name": "performer_task",
-                "ver": 2,
-                "app_request_body": {
-                    "performer_name": "basestat",
-                    "task_name": "directories",
-                    "task_body": {
-                    }
-                }
-            }"""
-    }
-    
-    """
+            }
+"""
+
+"""
     ,
                                 {
                                     "varname": "accepted_at",
@@ -258,17 +272,3 @@ def get_body(sample_number: int) -> dict:
                                     ]
                                 }
     """
-
-
-    return sample_requests[sample_number]
-
-
-def mock_cgi_input():
-
-    body = get_body("summaries")
-
-    os.environ["HTTP_COOKIE"] = "12345678-1234-1234-1234-123456789abc"
-    os.environ["CONTENT_TYPE"] = get_content_type()
-    os.environ["CONTENT_LENGTH"] = str(len(body))
-
-    sys.stdin = StringIO(body)

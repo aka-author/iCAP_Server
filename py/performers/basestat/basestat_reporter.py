@@ -377,15 +377,47 @@ class BasestatReporter(performers.Reporter):
          .INNER_JOIN((totals_query.get_query_name(),)) \
          .ON("true") \
          .SELECT_field(("*",)) \
-         .SELECT_expression("badness", "group_pain/group_pagereads") \
-         .SELECT_expression("joy_factor", "group_joy/total_joy") \
-         .SELECT_expression("pain_factor", "group_pain/total_pain")
+         .SELECT_expression("badness", "CASE WHEN group_pagereads > 0 THEN group_pain/group_pagereads ELSE 0 END") \
+         .SELECT_expression("joy_factor", "CASE WHEN total_joy > 0 THEN group_joy/total_joy ELSE 0 END") \
+         .SELECT_expression("pain_factor", "CASE WHEN total_pain > 0 THEN group_pain/total_pain ELSE 0 END")
       
       return indicators_query
 
+   def assemble_summaries_field_manager(self, report_query_model) -> fields.FieldManager: 
+
+      fm = fields.FieldManager()
+
+      dimensions = report_query_model.get_granularity().get_dimensions()
+
+      for dimension in dimensions:
+         fm.add_field(fields.StringField(dimension.get_varname()))
+
+      fm \
+         .add_field(fields.BigintField("group_pagereads")) \
+         .add_field(fields.BigintField("group_joy")) \
+         .add_field(fields.BigintField("group_pain")) \
+         .add_field(fields.BigintField("total_pagereads")) \
+         .add_field(fields.BigintField("total_joy")) \
+         .add_field(fields.BigintField("total_pain")) \
+         .add_field(fields.DoubleField("badness")) \
+         .add_field(fields.DoubleField("joy_factor")) \
+         .add_field(fields.DoubleField("pain_factor"))
+
+      return fm
+
+   def clean_summary(self, summary: dict) -> dict:
+
+      summary.pop("group_joy")
+      summary.pop("group_pain")
+      summary.pop("total_pagereads")
+      summary.pop("total_joy")
+      summary.pop("total_pain")
+
+      return summary
+
    def assemble_summaries_report(self, report_query_dict: dict) -> dict:
 
-      report_dict = {}
+      summaries_report_dict = {}
       
       report_query_model = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
 
@@ -396,12 +428,20 @@ class BasestatReporter(performers.Reporter):
       totals_query = self.assemble_totals_query(scores_query)
       indicators_query = self.assemble_indicators_query(subtotals_query, totals_query)
       
-      print(indicators_query.get_snippet())
+      fm = self.assemble_summaries_field_manager(report_query_model)
 
+      indicators_query.set_field_manager(fm)
+
+      dbms, db = self.get_default_dbms(), self.get_default_db()
+
+      runner = dbms.new_query_runner(db)
+      query_result = runner.execute_query(indicators_query).get_query_result()
+      if query_result is not None:
+         summaries_report_dict = [self.clean_summary(summary) for summary in query_result.dump_list_of_dicts()]
+            
+      runner.close()
       
-      report_dict = report_query_dict
-
-      return report_dict
+      return summaries_report_dict
 
 
    # Performer's main
