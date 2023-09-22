@@ -236,6 +236,11 @@ class SqlBuilder(workers.Worker):
         return "CASE " + " ".join(with_clauses)  + " END"
     
 
+    def safediv(self, divided: str, divisor: str, fallback: str=0) -> str:
+
+        return "CASE WHEN {1} <> 0 THEN {0}/{1} ELSE {2} END".format(divided, divisor, fallback)
+    
+
     # Specific tasks
 
     def match_measurement_profiles(self, idx1: int, idx2: int, separ: str="+") -> str:

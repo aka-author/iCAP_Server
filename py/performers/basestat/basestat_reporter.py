@@ -364,25 +364,6 @@ class BasestatReporter(performers.Reporter):
       
       return total_pain_query
 
-   def assemble_indicators_query(self, subtotals_query, totals_query) -> sql_select.Select:
-
-      indicators_query = self.get_default_dbms().new_select()
-
-      indicators_query.subqueries \
-         .add(subtotals_query) \
-         .add(totals_query) 
-         
-      indicators_query \
-         .FROM((subtotals_query.get_query_name(),)) \
-         .INNER_JOIN((totals_query.get_query_name(),)) \
-         .ON("true") \
-         .SELECT_field(("*",)) \
-         .SELECT_expression("badness", "CASE WHEN group_pagereads > 0 THEN group_pain/group_pagereads ELSE 0 END") \
-         .SELECT_expression("joy_factor", "CASE WHEN total_joy > 0 THEN group_joy/total_joy ELSE 0 END") \
-         .SELECT_expression("pain_factor", "CASE WHEN total_pain > 0 THEN group_pain/total_pain ELSE 0 END")
-      
-      return indicators_query
-
    def assemble_summaries_field_manager(self, report_query_model) -> fields.FieldManager: 
 
       fm = fields.FieldManager()
@@ -392,8 +373,7 @@ class BasestatReporter(performers.Reporter):
       for dimension in dimensions:
          fm.add_field(fields.StringField(dimension.get_varname()))
 
-      fm \
-         .add_field(fields.BigintField("group_pagereads")) \
+      fm .add_field(fields.BigintField("group_pagereads")) \
          .add_field(fields.BigintField("group_joy")) \
          .add_field(fields.BigintField("group_pain")) \
          .add_field(fields.BigintField("total_pagereads")) \
@@ -404,6 +384,31 @@ class BasestatReporter(performers.Reporter):
          .add_field(fields.DoubleField("pain_factor"))
 
       return fm
+   
+   def assemble_indicators_query(self, report_query_model, subtotals_query, totals_query) -> sql_select.Select:
+
+      dbms = self.get_default_dbms()
+
+      indicators_query = dbms.new_select()
+
+      indicators_query.subqueries \
+         .add(subtotals_query) \
+         .add(totals_query) 
+         
+      sql_builder = dbms.new_sql_builder(None)
+
+      indicators_query \
+         .FROM((subtotals_query.get_query_name(),)) \
+         .INNER_JOIN((totals_query.get_query_name(),)) \
+         .ON("true") \
+         .SELECT_field(("*",)) \
+         .SELECT_expression("badness", sql_builder.safediv("group_pain", "group_pagereads")) \
+         .SELECT_expression("joy_factor", sql_builder.safediv("group_joy", "total_joy")) \
+         .SELECT_expression("pain_factor", sql_builder.safediv("group_pain", "total_pain"))
+      
+      indicators_query.set_field_manager(self.assemble_summaries_field_manager(report_query_model))
+      
+      return indicators_query
 
    def clean_summary(self, summary: dict) -> dict:
 
@@ -426,11 +431,7 @@ class BasestatReporter(performers.Reporter):
       scores_query = self.assemble_scores_query(report_query_model, actions_topics_query, coeff_sets_query)  
       subtotals_query = self.assemble_subtotals_query(report_query_model, scores_query)    
       totals_query = self.assemble_totals_query(scores_query)
-      indicators_query = self.assemble_indicators_query(subtotals_query, totals_query)
-      
-      fm = self.assemble_summaries_field_manager(report_query_model)
-
-      indicators_query.set_field_manager(fm)
+      indicators_query = self.assemble_indicators_query(report_query_model, subtotals_query, totals_query)
 
       dbms, db = self.get_default_dbms(), self.get_default_db()
 
