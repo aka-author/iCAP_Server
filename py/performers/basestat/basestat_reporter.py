@@ -373,12 +373,13 @@ class BasestatReporter(performers.Reporter):
       for dimension in dimensions:
          fm.add_field(fields.StringField(dimension.get_varname()))
 
-      fm .add_field(fields.BigintField("group_pagereads")) \
+      fm .add_field(fields.BigintField("pagereads")) \
          .add_field(fields.BigintField("group_joy")) \
          .add_field(fields.BigintField("group_pain")) \
          .add_field(fields.BigintField("total_pagereads")) \
          .add_field(fields.BigintField("total_joy")) \
          .add_field(fields.BigintField("total_pain")) \
+         .add_field(fields.DoubleField("goodness")) \
          .add_field(fields.DoubleField("badness")) \
          .add_field(fields.DoubleField("joy_factor")) \
          .add_field(fields.DoubleField("pain_factor"))
@@ -402,6 +403,7 @@ class BasestatReporter(performers.Reporter):
          .INNER_JOIN((totals_query.get_query_name(),)) \
          .ON("true") \
          .SELECT_field(("*",)) \
+         .SELECT_expression("goodness", sql_builder.safediv("group_joy", "group_pagereads")) \
          .SELECT_expression("badness", sql_builder.safediv("group_pain", "group_pagereads")) \
          .SELECT_expression("joy_factor", sql_builder.safediv("group_joy", "total_joy")) \
          .SELECT_expression("pain_factor", sql_builder.safediv("group_pain", "total_pain"))
