@@ -11,6 +11,16 @@ def get_content_type():
 def get_body(sample_number: int) -> dict:
 
     sample_requests = {
+        "directories": """{
+            "app_request_type_name": "performer_task",
+            "ver": 2,
+            "app_request_body": {
+                "performer_name": "basestat",
+                "task_name": "directories",
+                "task_body": {
+                }
+            }
+        }""",
         "summaries": """{
             "app_request_type_name": "performer_task",
             "ver": 2,
@@ -56,16 +66,34 @@ def get_body(sample_number: int) -> dict:
                 }
             }
         }""",
-        "directories": """{
+        "breakdown": """{
             "app_request_type_name": "performer_task",
             "ver": 2,
             "app_request_body": {
                 "performer_name": "basestat",
-                "task_name": "directories",
+                "task_name": "breakdown",
                 "task_body": {
+                    "scope": {
+                        "conditions": [
+                            {
+                                "condition_name": "time",
+                                "varname": "accepted_at", 
+                                "range": {
+                                    "datatype_name": "timestamp",
+                                    "range_type_name": "segment",
+                                    "constraints": { 
+                                        "min": "2023-04-01", 
+                                        "max": "2023-09-20"
+                                    }
+                                }
+                            }
+                        ],
+                        "expression": "*"
+                    }
                 }
             }
         }"""
+        
     }
     
     return sample_requests[sample_number]
@@ -73,7 +101,7 @@ def get_body(sample_number: int) -> dict:
 
 def mock_cgi_input():
 
-    body = get_body("summaries")
+    body = get_body("breakdown")
 
     os.environ["HTTP_COOKIE"] = "12345678-1234-1234-1234-123456789abc"
     os.environ["CONTENT_TYPE"] = get_content_type()

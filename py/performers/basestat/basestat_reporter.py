@@ -12,7 +12,7 @@ import pathlib
 sys.path.append(os.path.abspath(str(pathlib.Path(__file__).parent.parent.parent.absolute()))) 
 
 from kernel import (
-   utils, status, fields, dtos, performer_shortcuts, performers, 
+   status, fields, dtos, performer_shortcuts, performers, 
    perftask, sql_select, perfoutput, grq_report_query
 )
 
@@ -312,13 +312,13 @@ class BasestatReporter(performers.Reporter):
       
       sql_builder = self.get_app().get_default_dbms().new_sql_builder(None)
 
-      select_pain_where = report_query_model.assemble_where_expression(sql_builder)
+      select_scores_where = report_query_model.assemble_where_expression(sql_builder)
 
       scores_query \
          .FROM((actions_topics_query.get_query_name(),)) \
          .INNER_JOIN((coeff_set_query.get_query_name(),)) \
          .ON("true") \
-         .WHERE(select_pain_where) \
+         .WHERE(select_scores_where) \
          .SELECT_field(("*",)) \
          .SELECT_expression("pagereads", self.get_pagereads_expression()) \
          .SELECT_expression("joy", self.get_joy_expression()) \
@@ -441,11 +441,127 @@ class BasestatReporter(performers.Reporter):
       query_result = runner.execute_query(indicators_query).get_query_result()
       if query_result is not None:
          summaries_report_dict = [self.clean_summary(summary) for summary in query_result.dump_list_of_dicts()]
-            
+   
       runner.close()
       
       return summaries_report_dict
 
+
+   # Breajing down 
+
+   def assemble_pagereads_query(self, report_query_model, actions_topics_query, field_name) -> sql_select.Select:
+
+      pagereads_query = self.get_default_dbms().new_select() 
+
+      pagereads_query.subqueries \
+         .add(actions_topics_query) 
+      
+      sql_builder = self.get_app().get_default_dbms().new_sql_builder(None)
+
+      select_where = report_query_model.assemble_where_expression(sql_builder)
+
+      pagereads_query \
+         .FROM((actions_topics_query.get_query_name(),)) \
+         .WHERE(select_where) \
+         .SELECT_expression("code", field_name) \
+         .SELECT_expression("pagereads", self.get_pagereads_expression()) 
+      
+      return pagereads_query
+   
+
+   def assemble_total_pagereads_query(self, pagereads_query) -> sql_select.Select:
+
+      total_pagereads_query = self.get_default_dbms().new_select() 
+
+      total_pagereads_query \
+         .subqueries.add(pagereads_query)
+      
+      total_pagereads_query \
+         .FROM((pagereads_query.get_query_name(),)) \
+         .SELECT_expression("total_pagereads", "sum(pagereads)::double precision")
+      
+      return total_pagereads_query
+   
+   def assemble_group_pagereads_query(self, report_query_model, pagereads_query, field_name) -> sql_select.Select:
+
+      group_pagereads_query = self.get_default_dbms().new_select()
+
+      group_pagereads_query.subqueries \
+         .add(pagereads_query) 
+      
+      group_pagereads_query \
+         .FROM((pagereads_query.get_query_name(),)) \
+         .SELECT_field(("code", )) \
+         .SELECT_expression("group_pagereads", "sum(pagereads)::double precision") \
+         .GROUP_BY_expression("code")
+
+      return group_pagereads_query
+
+   def assemble_breakdown_field_manager(self) -> fields.FieldManager: 
+
+      fm = fields.FieldManager() \
+         .add_field(fields.StringField("code")) \
+         .add_field(fields.DoubleField("share")) 
+
+      return fm
+   
+   def assemble_partial_brakedown_query(self, report_query_model, field_name) -> sql_select.Select:
+
+      breakdown_query = self.get_default_dbms().new_select()
+
+      actions_topics_query = self.assemble_actions_topics_query()
+      pagereads_query = self.assemble_pagereads_query(report_query_model, actions_topics_query, field_name)
+      total_pagereads_query = self.assemble_total_pagereads_query(pagereads_query)
+      group_pagereads_query = self.assemble_group_pagereads_query(report_query_model, pagereads_query, field_name)
+
+      breakdown_query.subqueries \
+         .add(total_pagereads_query) \
+         .add(group_pagereads_query)
+      
+      sql_builder = self.get_app().get_default_dbms().new_sql_builder(None)
+      
+      breakdown_query \
+         .FROM((total_pagereads_query.get_query_name(),)) \
+         .INNER_JOIN((group_pagereads_query.get_query_name(),)) \
+         .ON("true") \
+         .SELECT_field(("code",)) \
+         .SELECT_expression("share", sql_builder.safediv("group_pagereads", "total_pagereads"))
+      
+      breakdown_query.set_field_manager(self.assemble_breakdown_field_manager())
+
+      return breakdown_query
+
+   def run_partial_breakdown_query(self, report_query_model, field_name) -> list:
+
+      brakedown_entries = []
+
+      dbms, db = self.get_default_dbms(), self.get_default_db()
+
+      partial_brakedown_query = self.assemble_partial_brakedown_query(report_query_model, field_name)
+
+      runner = dbms.new_query_runner(db)
+      query_result = runner.execute_query(partial_brakedown_query).get_query_result()
+      if query_result is not None:
+         brakedown_entries = [{"code": row["code"], "share": row["share"]} for row in query_result.dump_list_of_dicts()]
+
+      runner.close()
+
+      return brakedown_entries
+
+   def assemble_breakdown_report(self, report_query_dict: dict) -> dict:
+
+      report_query_model = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
+
+      breakdown_report_dict = {
+         "countries": self.run_partial_breakdown_query(report_query_model, "icap__countrycode"),
+         "userLangs": self.run_partial_breakdown_query(report_query_model, "userlangcode"),
+         "oss": self.run_partial_breakdown_query(report_query_model, "useros"),
+         "browsers": self.run_partial_breakdown_query(report_query_model, "userbrowser"),
+         "locals": self.run_partial_breakdown_query(report_query_model, "icap__cms__doc__localcode")
+      }
+      
+      return breakdown_report_dict
+   
 
    # Performer's main
 
@@ -463,6 +579,8 @@ class BasestatReporter(performers.Reporter):
          out_body = self.assemble_messages_report(task_body)  
       elif task.get_task_name() == "summaries":
          out_body = self.assemble_summaries_report(task_body)
+      elif task.get_task_name() == "breakdown":
+         out_body = self.assemble_breakdown_report(task_body)
       else:
          status_code = status.ERR_UNKNOWN_TASK 
          status_message = status.MSG_UNKNOWN_TASK
