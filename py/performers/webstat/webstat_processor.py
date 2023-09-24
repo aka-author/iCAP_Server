@@ -1,7 +1,7 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Layer:   Performer (Basestat)
-# Module:  basestat_processor.py                  (\(\
+# Layer:   Performer (Webstat)
+# Module:  webstat_processor.py                  (\(\
 # Func:    Preprocessing measurements             (^.^)
 # # ## ### ##### ######## ############# #####################
 
@@ -16,9 +16,9 @@ from kernel import (
 )
 
 
-class BasestatQueryBuilder(workers.Worker):
+class WebstatQueryBuilder(workers.Worker):
 
-    def get_basestat_actions_varnames(self): 
+    def get_webstat_actions_varnames(self): 
 
         varnames = [
             "accepted_at", "icap.pagereadId",
@@ -113,7 +113,7 @@ class BasestatQueryBuilder(workers.Worker):
         return full_actions_query
 
 
-class BasestatProcessor(performers.Processor):
+class WebstatProcessor(performers.Processor):
 
     def __init__(self, chief):
 
@@ -124,44 +124,44 @@ class BasestatProcessor(performers.Processor):
 
     def assemble_load_actions_query(self) -> sql_insert.Insert:
        
-        bqb = BasestatQueryBuilder(self)
+        bqb = WebstatQueryBuilder(self)
 
         dbms = self.get_default_dbms()
 
         scheme_name = self.get_default_db_scheme_name()
 
         timebase_query = dbms.new_select().set_query_name("timebase")\
-            .FROM(("basestat__actions", scheme_name))\
+            .FROM(("webstat__actions", scheme_name))\
             .SELECT_expression("start_from", "max({0})", ("accepted_at",))
 
         full_actions_query = bqb.assemble_full_actions_query()
 
-        basestat_actions_query = dbms.new_select().set_query_name("basestat_actions")
+        webstat_actions_query = dbms.new_select().set_query_name("webstat_actions")
 
-        basestat_actions_query.subqueries\
+        webstat_actions_query.subqueries\
             .add(full_actions_query)\
             .add(timebase_query)
         
-        basestat_actions_query\
+        webstat_actions_query\
             .FROM((full_actions_query.get_query_name(),))\
             .INNER_JOIN((timebase_query.get_query_name(),))\
             .ON("true")\
             .WHERE("CASE WHEN {1} IS NOT null THEN {0}>{1} ELSE true END", ("accepted_at", 0), ("start_from", 1))
         
-        for varname in bqb.get_basestat_actions_varnames():
-            basestat_actions_query.SELECT_field((varname, 0))
+        for varname in bqb.get_webstat_actions_varnames():
+            webstat_actions_query.SELECT_field((varname, 0))
                 
         load_actions = dbms.new_insert().set_query_name("load_actions")
 
         load_actions.subqueries\
-            .add(basestat_actions_query)
+            .add(webstat_actions_query)
                 
         load_actions\
-            .INTO("basestat__actions", scheme_name, *(["uuid"] + bqb.get_basestat_actions_varnames()))\
-            .FROM((basestat_actions_query.get_query_name(),))\
+            .INTO("webstat__actions", scheme_name, *(["uuid"] + bqb.get_webstat_actions_varnames()))\
+            .FROM((webstat_actions_query.get_query_name(),))\
             .SELECT_expression("uuid", "gen_random_uuid()")
         
-        for varname in bqb.get_basestat_actions_varnames():
+        for varname in bqb.get_webstat_actions_varnames():
             load_actions.SELECT_field((varname,))
             
         return load_actions
@@ -183,4 +183,4 @@ class BasestatProcessor(performers.Processor):
 
 def new_processor(shortcut: performer_shortcuts.PerformerShortcut) -> performers.Processor:
 
-   return BasestatProcessor(shortcut.get_chief()).set_shortcut(shortcut)
+   return WebstatProcessor(shortcut.get_chief()).set_shortcut(shortcut)

@@ -11,22 +11,22 @@ def get_content_type():
 def get_body(sample_number: int) -> dict:
 
     sample_requests = {
-        "directories": """{
+        "get_directories": """{
             "app_request_type_name": "performer_task",
             "ver": 2,
             "app_request_body": {
-                "performer_name": "basestat",
-                "task_name": "directories",
+                "performer_name": "webstat",
+                "task_name": "get_directories",
                 "task_body": {
                 }
             }
         }""",
-        "summaries": """{
+        "get_quality_summaries": """{
             "app_request_type_name": "performer_task",
             "ver": 2,
             "app_request_body": {
-                "performer_name": "basestat",
-                "task_name": "summaries",
+                "performer_name": "webstat",
+                "task_name": "get_quality_summaries",
                 "task_body": {
                     "scope": {
                         "conditions": [
@@ -54,7 +54,7 @@ def get_body(sample_number: int) -> dict:
                                 }
                             }
                         ],
-                        "expression": "doc AND browser AND countryCode AND langScope AND timeScope"
+                        "expression": "*"
                     },
                     "granularity": {
                         "dimensions": [
@@ -66,12 +66,12 @@ def get_body(sample_number: int) -> dict:
                 }
             }
         }""",
-        "breakdown": """{
+        "get_audience_breakdown": """{
             "app_request_type_name": "performer_task",
             "ver": 2,
             "app_request_body": {
-                "performer_name": "basestat",
-                "task_name": "breakdown",
+                "performer_name": "webstat",
+                "task_name": "get_audience_breakdown",
                 "task_body": {
                     "scope": {
                         "conditions": [
@@ -101,7 +101,7 @@ def get_body(sample_number: int) -> dict:
 
 def mock_cgi_input():
 
-    body = get_body("breakdown")
+    body = get_body("get_audience_breakdown")
 
     os.environ["HTTP_COOKIE"] = "12345678-1234-1234-1234-123456789abc"
     os.environ["CONTENT_TYPE"] = get_content_type()

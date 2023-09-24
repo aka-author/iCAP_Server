@@ -1,8 +1,8 @@
 # # ## ### ##### ######## ############# #####################
 # Product: iCAP platform
-# Layer:   Kernel
-# Module:  basestat_reporter.py                     (\(\
-# Func:    Building basic statistical reports       (^.^)
+# Layer:   Performer (Webstat)
+# Module:  webstat_reporter.py                         (\(\
+# Func:    Building statistical reports for webhelps   (^.^)
 # # ## ### ##### ######## ############# #####################
 
 import sys
@@ -19,7 +19,7 @@ from kernel import (
 from debug import deb_reporter
 
 
-class BasestatReporter(performers.Reporter):
+class WebstatReporter(performers.Reporter):
 
    def __init__(self, chief):
 
@@ -55,7 +55,7 @@ class BasestatReporter(performers.Reporter):
       return taxonomy_varnames
    
 
-   def assemble_basestat_topics_query(self) -> sql_select.Select:
+   def assemble_webstat_topics_query(self) -> sql_select.Select:
 
       arg_names = [
          "icap.cms.doc.uid", 
@@ -68,23 +68,23 @@ class BasestatReporter(performers.Reporter):
       out_names = self.get_taxonomy_varnames()
 
       src_desk = self.get_app().get_source_desk()
-      basestat_topics_query = src_desk.assemble_measurements_query(arg_names, out_names)\
+      webstat_topics_query = src_desk.assemble_measurements_query(arg_names, out_names)\
                               .set_query_name("topicmeta")
 
-      return basestat_topics_query
+      return webstat_topics_query
 
 
-   def assemble_basestat_actions_query(self) -> sql_select.Select:
+   def assemble_webstat_actions_query(self) -> sql_select.Select:
 
-      basestat_actions_query = self.get_default_dbms().new_select()
+      webstat_actions_query = self.get_default_dbms().new_select()
 
-      basestat_actions_query\
-         .FROM(("basestat__actions", self.get_default_db_scheme_name()))
+      webstat_actions_query\
+         .FROM(("webstat__actions", self.get_default_db_scheme_name()))
       
       for varname in self.get_action_varnames():
-         basestat_actions_query.SELECT_field((varname,))
+         webstat_actions_query.SELECT_field((varname,))
          
-      return basestat_actions_query
+      return webstat_actions_query
    
 
    # Grabbing directories
@@ -102,7 +102,7 @@ class BasestatReporter(performers.Reporter):
          .set_field_manager(dircodes_field_manager)
       
       dircodes_query\
-         .FROM(("basestat__actions", self.get_default_db_scheme_name()))\
+         .FROM(("webstat__actions", self.get_default_db_scheme_name()))\
          .DISTINCT()\
          .SELECT_field((directory_field_name,))
       
@@ -160,8 +160,8 @@ class BasestatReporter(performers.Reporter):
 
    def assemble_actions_topics_query(self) -> sql_select.Select:
         
-      actions_query = self.assemble_basestat_actions_query().set_query_name("actions") 
-      topics_query = self.assemble_basestat_topics_query().set_query_name("topics")
+      actions_query = self.assemble_webstat_actions_query().set_query_name("actions") 
+      topics_query = self.assemble_webstat_topics_query().set_query_name("topics")
 
       actions_topics_query = self.get_default_dbms().new_select()\
          .set_query_name("actions_topics") 
@@ -249,7 +249,7 @@ class BasestatReporter(performers.Reporter):
    def assemble_coeff_set_query(self) -> sql_select.Select:
 
       coeff_sets_query = self.get_default_dbms().new_select() \
-         .FROM(("basestat__coeff_sets", self.get_default_db_scheme_name())) \
+         .FROM(("webstat__coeff_sets", self.get_default_db_scheme_name())) \
          .WHERE("is_active") \
          .SELECT_field(("*",))
       
@@ -573,13 +573,13 @@ class BasestatReporter(performers.Reporter):
       status_message = status.MSG_SUCCESS
       out_prolog = out_body = None
 
-      if task.get_task_name() == "directories":
+      if task.get_task_name() == "get_directories":
          out_body = self.assemble_directories_report(task_body)
-      elif task.get_task_name() == "messages":
+      elif task.get_task_name() == "get_messages":
          out_body = self.assemble_messages_report(task_body)  
-      elif task.get_task_name() == "summaries":
+      elif task.get_task_name() == "get_quality_summaries":
          out_body = self.assemble_summaries_report(task_body)
-      elif task.get_task_name() == "breakdown":
+      elif task.get_task_name() == "get_audience_breakdown":
          out_body = self.assemble_breakdown_report(task_body)
       else:
          status_code = status.ERR_UNKNOWN_TASK 
@@ -597,4 +597,4 @@ class BasestatReporter(performers.Reporter):
 
 def new_reporter(shortcut: performer_shortcuts.PerformerShortcut) -> performers.Reporter:
 
-   return BasestatReporter(shortcut.get_chief()).set_shortcut(shortcut)
+   return WebstatReporter(shortcut.get_chief()).set_shortcut(shortcut)
