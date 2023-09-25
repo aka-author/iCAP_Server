@@ -43,7 +43,6 @@ class WebstatReporter(performers.Reporter):
       
       return varnames
 
-
    def get_taxonomy_varnames(self) -> list:
 
       dir_desk = self.get_app().get_directory_desk()
@@ -54,7 +53,6 @@ class WebstatReporter(performers.Reporter):
 
       return taxonomy_varnames
    
-
    def assemble_webstat_topics_query(self) -> sql_select.Select:
 
       arg_names = [
@@ -87,7 +85,7 @@ class WebstatReporter(performers.Reporter):
       return webstat_actions_query
    
 
-   # Grabbing directories
+   # Detecting available directory codes
 
    def grab_directory(self, directory_field_name: str) -> list:
 
@@ -156,7 +154,7 @@ class WebstatReporter(performers.Reporter):
       return directories_report_dict
 
 
-   # Reporting messages
+   # Selecting messages within a specified scope
 
    def assemble_actions_topics_query(self) -> sql_select.Select:
         
@@ -244,7 +242,7 @@ class WebstatReporter(performers.Reporter):
       return messages_report_dict
    
 
-   # Reporting summaries
+   # Calculating quality summaries for specified groups whithin a specified scope
 
    def assemble_coeff_set_query(self) -> sql_select.Select:
 
@@ -328,9 +326,9 @@ class WebstatReporter(performers.Reporter):
 
    def assemble_subtotals_query(self, report_query_model, scores_query) -> sql_select.Select:
 
-      group_pain_query = self.get_default_dbms().new_select() 
+      subtotals_query = self.get_default_dbms().new_select() 
 
-      group_pain_query \
+      subtotals_query \
          .subqueries.add(scores_query)
       
       sql_builder = self.get_app().get_default_dbms().new_sql_builder(None)
@@ -341,28 +339,28 @@ class WebstatReporter(performers.Reporter):
 
       subtotals = ", sum(pagereads) AS group_pagereads, sum(joy) AS group_joy, sum(pain) AS group_pain"
 
-      group_pain_query \
+      subtotals_query \
          .FROM((scores_query.get_query_name(),)) \
          .get_SELECT().set_snippet(group_by_fields + subtotals) 
          
-      group_pain_query.GROUP_BY_expression(group_by)
+      subtotals_query.GROUP_BY_expression(group_by)
 
-      return group_pain_query
+      return subtotals_query
    
    def assemble_totals_query(self, pain_query) -> sql_select.Select:
 
-      total_pain_query = self.get_default_dbms().new_select() 
+      totals_query = self.get_default_dbms().new_select() 
 
-      total_pain_query \
+      totals_query \
          .subqueries.add(pain_query)
       
-      total_pain_query \
+      totals_query \
          .FROM((pain_query.get_query_name(),)) \
          .SELECT_expression("total_pagereads", "sum(pagereads)") \
          .SELECT_expression("total_joy", "sum(joy)") \
          .SELECT_expression("total_pain", "sum(pain)")
       
-      return total_pain_query
+      return totals_query
 
    def assemble_summaries_field_manager(self, report_query_model) -> fields.FieldManager: 
 
@@ -447,7 +445,7 @@ class WebstatReporter(performers.Reporter):
       return summaries_report_dict
 
 
-   # Breajing down 
+   # Creating a breakdown based on audience characteristics within a specified scope. 
 
    def assemble_pagereads_query(self, report_query_model, actions_topics_query, field_name) -> sql_select.Select:
 

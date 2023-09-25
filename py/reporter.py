@@ -30,7 +30,6 @@ class Reporter(restserver.RestServer):
 
         self.performer_desk = performer_desks.PerformerDesk(self)
 
-
     def mock_cgi_input(self):
 
         super().mock_cgi_input()
@@ -39,16 +38,13 @@ class Reporter(restserver.RestServer):
 
         return self
 
-
     def get_performer_desk(self) -> performer_desks.PerformerDesk:
 
         return self.performer_desk
 
-
     def check_user_permissions(self, user: users.User) -> bool:
 
         return user.may_fetch_reports()
-
 
     def involve_performer_blade(self, perf_name: str) -> object:
 
