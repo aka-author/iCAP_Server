@@ -238,7 +238,15 @@ class SqlBuilder(workers.Worker):
 
     def safediv(self, divided: str, divisor: str, fallback: str=0) -> str:
 
-        return "CASE WHEN {1} <> 0 THEN {0}/{1} ELSE {2} END".format(divided, divisor, fallback)
+        safedivexpr = """
+            CASE 
+                WHEN {1} <> 0 THEN {0}::double precision/{1}::double precision 
+                ELSE {2} 
+            END
+        """
+
+
+        return safedivexpr.format(divided, divisor, fallback)
     
 
     # Specific tasks

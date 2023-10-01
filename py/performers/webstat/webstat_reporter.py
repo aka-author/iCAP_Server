@@ -30,6 +30,9 @@ class WebstatReporter(performers.Reporter):
 
    # Common queries
 
+   def get_source_data_age_sec(self) -> int:
+      return 5*60
+
    def get_action_varnames(self) -> list:
 
       varnames = [
@@ -144,6 +147,7 @@ class WebstatReporter(performers.Reporter):
    def assemble_directories_report(self, report_query_dict: dict) -> dict:
 
       directories_report_dict = {
+         "source_data_age_sec": self.get_source_data_age_sec(),
          "countries": self.grab_countries(),
          "browsers": self.grab_browsers(),
          "oss": self.grab_oss(),
@@ -236,7 +240,10 @@ class WebstatReporter(performers.Reporter):
       runner = dbms.new_query_runner(db)
       query_result = runner.execute_query(messages_report_query).get_query_result()
       if query_result is not None:
-         messages_report_dict["messages"] = query_result.dump_list_of_dicts()
+         messages_report_dict = {   
+            "source_data_age_sec": self.get_source_data_age_sec(),
+            "messages": query_result.dump_list_of_dicts()
+         }
       runner.close()
 
       return messages_report_dict
@@ -299,6 +306,34 @@ class WebstatReporter(performers.Reporter):
       """
 
       return pain_expression
+
+   def get_happy_readers_count(self) -> str:
+
+      happy_readers_count = """
+         CASE 
+            WHEN icap__action__code='LIKE' THEN 1
+            ELSE 0
+         END
+      """
+
+      return happy_readers_count
+
+   def get_unhappy_readers_count(self) -> str:
+
+      unhappy_readers_count = """
+         CASE 
+            WHEN icap__action__code='UNLOAD' THEN 
+               CASE
+                  WHEN icap__action__timeoffset < bounce_max_sec*1000 THEN 1
+                  WHEN icap__action__timeoffset > stuck_min_sec*1000 THEN 1
+                  ELSE 0
+               END
+            WHEN icap__action__code='DISLIKE' THEN 1
+            ELSE 0
+         END
+      """
+
+      return unhappy_readers_count
    
    def assemble_scores_query(self, report_query_model, actions_topics_query, coeff_set_query) -> sql_select.Select:
 
@@ -319,6 +354,8 @@ class WebstatReporter(performers.Reporter):
          .WHERE(select_scores_where) \
          .SELECT_field(("*",)) \
          .SELECT_expression("pagereads", self.get_pagereads_expression()) \
+         .SELECT_expression("happy_readers", self.get_happy_readers_count()) \
+         .SELECT_expression("unhappy_readers", self.get_unhappy_readers_count()) \
          .SELECT_expression("joy", self.get_joy_expression()) \
          .SELECT_expression("pain", self.get_pain_expression())
       
@@ -337,7 +374,13 @@ class WebstatReporter(performers.Reporter):
       group_by_fields = granularity.assemble_group_by_list(sql_builder)
       group_by = granularity.assemble_group_by_list(sql_builder)
 
-      subtotals = ", sum(pagereads) AS group_pagereads, sum(joy) AS group_joy, sum(pain) AS group_pain"
+      subtotals = """, 
+         sum(pagereads) AS group_pagereads, 
+         sum(happy_readers) AS group_happy_readers, 
+         sum(unhappy_readers) AS group_unhappy_readers, 
+         sum(joy) AS group_joy, 
+         sum(pain) AS group_pain
+      """
 
       subtotals_query \
          .FROM((scores_query.get_query_name(),)) \
@@ -372,6 +415,8 @@ class WebstatReporter(performers.Reporter):
          fm.add_field(fields.StringField(dimension.get_varname()))
 
       fm .add_field(fields.BigintField("pagereads")) \
+         .add_field(fields.BigintField("group_happy_readers")) \
+         .add_field(fields.BigintField("group_unhappy_readers")) \
          .add_field(fields.BigintField("group_joy")) \
          .add_field(fields.BigintField("group_pain")) \
          .add_field(fields.BigintField("total_pagereads")) \
@@ -401,8 +446,8 @@ class WebstatReporter(performers.Reporter):
          .INNER_JOIN((totals_query.get_query_name(),)) \
          .ON("true") \
          .SELECT_field(("*",)) \
-         .SELECT_expression("goodness", sql_builder.safediv("group_joy", "group_pagereads")) \
-         .SELECT_expression("badness", sql_builder.safediv("group_pain", "group_pagereads")) \
+         .SELECT_expression("goodness", sql_builder.safediv("group_happy_readers", "group_pagereads")) \
+         .SELECT_expression("badness", sql_builder.safediv("group_unhappy_readers", "group_pagereads")) \
          .SELECT_expression("joy_factor", sql_builder.safediv("group_joy", "total_joy")) \
          .SELECT_expression("pain_factor", sql_builder.safediv("group_pain", "total_pain"))
       
@@ -412,6 +457,8 @@ class WebstatReporter(performers.Reporter):
 
    def clean_summary(self, summary: dict) -> dict:
 
+      summary.pop("group_happy_readers")
+      summary.pop("group_unhappy_readers")
       summary.pop("group_joy")
       summary.pop("group_pain")
       summary.pop("total_pagereads")
@@ -427,8 +474,8 @@ class WebstatReporter(performers.Reporter):
       report_query_model = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
 
       actions_topics_query = self.assemble_actions_topics_query()
-      coeff_sets_query = self.assemble_coeff_set_query()      
-      scores_query = self.assemble_scores_query(report_query_model, actions_topics_query, coeff_sets_query)  
+      coeff_sets_query = self.assemble_coeff_set_query()  
+      scores_query = self.assemble_scores_query(report_query_model, actions_topics_query, coeff_sets_query) 
       subtotals_query = self.assemble_subtotals_query(report_query_model, scores_query)    
       totals_query = self.assemble_totals_query(scores_query)
       indicators_query = self.assemble_indicators_query(report_query_model, subtotals_query, totals_query)
@@ -438,8 +485,10 @@ class WebstatReporter(performers.Reporter):
       runner = dbms.new_query_runner(db)
       query_result = runner.execute_query(indicators_query).get_query_result()
       if query_result is not None:
-         summaries_report_dict = [self.clean_summary(summary) for summary in query_result.dump_list_of_dicts()]
-   
+         summaries_report_dict = {
+            "source_data_age_sec": self.get_source_data_age_sec(),
+            "summaries": [self.clean_summary(summary) for summary in query_result.dump_list_of_dicts()]
+         }
       runner.close()
       
       return summaries_report_dict
@@ -551,6 +600,7 @@ class WebstatReporter(performers.Reporter):
       report_query_model = grq_report_query.ReportQuery(self).import_dto(dtos.Dto(report_query_dict))
 
       breakdown_report_dict = {
+         "source_data_age_sec": self.get_source_data_age_sec(),
          "countries": self.run_partial_breakdown_query(report_query_model, "icap__countrycode"),
          "userLangs": self.run_partial_breakdown_query(report_query_model, "userlangcode"),
          "oss": self.run_partial_breakdown_query(report_query_model, "useros"),

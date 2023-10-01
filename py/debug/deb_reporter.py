@@ -48,8 +48,8 @@ def get_body(sample_number: int) -> dict:
                                     "datatype_name": "timestamp",
                                     "range_type_name": "segment",
                                     "constraints": { 
-                                        "min": "2023-04-01", 
-                                        "max": "2023-09-10"
+                                        "min": "2023-09-28", 
+                                        "max": "2023-10-01"
                                     }
                                 }
                             }
@@ -101,7 +101,7 @@ def get_body(sample_number: int) -> dict:
 
 def mock_cgi_input():
 
-    body = get_body("get_audience_breakdown")
+    body = get_body("get_quality_summaries")
 
     os.environ["HTTP_COOKIE"] = "12345678-1234-1234-1234-123456789abc"
     os.environ["CONTENT_TYPE"] = get_content_type()
